@@ -8,13 +8,14 @@ export class AxiosLikeResponseToFetchResponse<
     data: unknown;
   }
 > extends Response {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body: any;
+  body: ReadableStream<Uint8Array> | null;
+
   constructor(axiomResponse: T) {
     super(JSON.stringify(axiomResponse.data), {
       status: axiomResponse.status,
       statusText: axiomResponse.statusText,
     });
+    this.body = axiomResponse.data as unknown as ReadableStream<Uint8Array> | null;
   }
   async json() {
     return super.json() as unknown as T["data"];
