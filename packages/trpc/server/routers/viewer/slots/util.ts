@@ -37,6 +37,7 @@ import type { BookingRepository } from "@calcom/features/bookings/repositories/B
 import type { BusyTimesService } from "@calcom/features/busyTimes/services/getBusyTimes";
 import type { getBusyTimesService } from "@calcom/features/di/containers/BusyTimes";
 import { getDefaultEvent } from "@calcom/features/eventtypes/lib/defaultEvents";
+import { getDefinedBufferTimes } from "@calcom/features/eventtypes/lib/getDefinedBufferTimes";
 import type { EventTypeRepository } from "@calcom/features/eventtypes/repositories/eventTypeRepository";
 import type { PrismaOOORepository } from "@calcom/features/ooo/repositories/PrismaOOORepository";
 import type { IRedisService } from "@calcom/features/redis/IRedisService";
@@ -569,7 +570,10 @@ export class AvailableSlotsService {
 
             const selectedDuration = (duration || eventType.length) ?? 0;
 
-            const { title: durationTitle, source: durationSource } = LimitSources.eventDurationLimit({ limit, unit });
+            const { title: durationTitle, source: durationSource } = LimitSources.eventDurationLimit({
+              limit,
+              unit,
+            });
 
             if (selectedDuration > limit) {
               limitManager.addBusyTime({
@@ -726,10 +730,13 @@ export class AvailableSlotsService {
     const allUserIds = Array.from(userIdAndEmailMap.keys());
 
     const bookingRepo = this.dependencies.bookingRepo;
+    const definedBufferTimes = getDefinedBufferTimes();
+    const maxBuffer = definedBufferTimes[definedBufferTimes.length - 1];
+
     const [currentBookingsAllUsers, outOfOfficeDaysAllUsers] = await Promise.all([
       bookingRepo.findAllExistingBookingsForEventTypeBetween({
-        startDate: startTimeDate,
-        endDate: endTimeDate,
+        startDate: dayjs(startTimeDate).subtract(maxBuffer, "minute").toDate(),
+        endDate: dayjs(endTimeDate).add(maxBuffer, "minute").toDate(),
         eventTypeId: eventType.id,
         seatedEvent: Boolean(eventType.seatsPerTimeSlot),
         userIdAndEmailMap,
