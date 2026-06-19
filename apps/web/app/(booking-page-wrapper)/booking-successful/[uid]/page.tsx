@@ -6,6 +6,8 @@ import dayjs from "@calcom/dayjs";
 import { DecoyBookingSuccessCard } from "~/bookings/components/DecoyBookingSuccessCard";
 import { useDecoyBooking } from "~/bookings/hooks/useDecoyBooking";
 
+import { parseBookingTime } from "./parseBookingTime";
+
 export default function BookingSuccessful() {
   const params = useParams();
 
@@ -18,9 +20,8 @@ export default function BookingSuccessful() {
 
   const { booking } = bookingData;
 
-  // Format the data for the BookingSuccessCard
-  const startTime = booking.startTime ? dayjs(booking.startTime) : null;
-  const endTime = booking.endTime ? dayjs(booking.endTime) : null;
+  const startTime = parseBookingTime(booking.startTime);
+  const endTime = parseBookingTime(booking.endTime);
   const timeZone = booking.booker?.timeZone || booking.host?.timeZone || dayjs.tz.guess();
 
   const formattedDate = startTime ? startTime.tz(timeZone).format("dddd, MMMM D, YYYY") : "";
