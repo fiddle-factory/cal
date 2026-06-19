@@ -10,7 +10,7 @@ export class SlotsService_2024_04_15 {
   constructor(
     private readonly eventTypeRepo: EventTypesRepository_2024_04_15,
     private readonly slotsRepo: SlotsRepository_2024_04_15
-  ) {}
+  ) { }
 
   async reserveSlot(input: ReserveSlotInput_2024_04_15, headerUid?: string) {
     const uid = headerUid || uuid();
@@ -25,11 +25,9 @@ export class SlotsService_2024_04_15 {
         ? await this.slotsRepo.getBookingWithAttendees(input.bookingUid)
         : undefined;
       const bookingAttendeesLength = bookingWithAttendees?.attendees?.length;
-      if (bookingAttendeesLength) {
+      if (bookingAttendeesLength !== undefined) {
         const seatsLeft = eventType.seatsPerTimeSlot - bookingAttendeesLength;
         if (seatsLeft < 1) shouldReserveSlot = false;
-      } else {
-        shouldReserveSlot = false;
       }
     }
 
