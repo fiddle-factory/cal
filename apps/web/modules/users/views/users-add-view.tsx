@@ -22,7 +22,18 @@ export default function UsersAddView() {
       }
     },
     onError: (err) => {
-      console.error(err.message);
+      console.error(err);
+      const parsed = JSON.parse(err.message);
+      if (parsed?.code === "user_already_exists") {
+        if (parsed.fields?.includes("email")) {
+          showToast(t("user_with_email_already_exists"), "error");
+          return;
+        }
+        if (parsed.fields?.includes("username")) {
+          showToast(t("user_with_username_already_exists"), "error");
+          return;
+        }
+      }
       showToast(t("error_adding_user"), "error");
     },
   });
