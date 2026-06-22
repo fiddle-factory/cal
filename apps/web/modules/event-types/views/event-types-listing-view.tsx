@@ -87,6 +87,7 @@ interface InfiniteEventTypeListProps {
 
 interface InfiniteTeamsTabProps {
   activeEventTypeGroup: InfiniteEventTypeGroup;
+  searchTerm: string;
 }
 
 const querySchema = z.object({
@@ -94,10 +95,9 @@ const querySchema = z.object({
 });
 
 const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
-  const { activeEventTypeGroup } = props;
+  const { activeEventTypeGroup, searchTerm } = props;
   const { t } = useLocale();
 
-  const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const query = trpc.viewer.eventTypes.getEventTypesFromGroup.useInfiniteQuery(
@@ -122,18 +122,6 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
 
   return (
     <div>
-      <TextField
-        className="max-w-64"
-        addOnLeading={<Icon name="search" className="text-subtle h-4 w-4" />}
-        containerClassName="max-w-64 focus:ring-offset-0! mb-4"
-        type="search"
-        value={searchTerm}
-        autoComplete="false"
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-        }}
-        placeholder={t("search")}
-      />
       {!!activeEventTypeGroup && (
         <InfiniteEventTypeList
           pages={query?.data?.pages}
@@ -931,6 +919,8 @@ const InfiniteScrollMain = ({
   const searchParams = useSearchParams();
   const { data } = useTypedQuery(querySchema);
   const orgBranding = useOrgBranding();
+  const { t } = useLocale();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const tabs = eventTypeGroups.map((item) => ({
     name: item.profile.name ?? "",
@@ -957,8 +947,22 @@ const InfiniteScrollMain = ({
 
   return (
     <>
+      <TextField
+        className="max-w-64"
+        addOnLeading={<Icon name="search" className="text-subtle h-4 w-4" />}
+        containerClassName="max-w-64 focus:ring-offset-0! mb-4"
+        type="search"
+        value={searchTerm}
+        autoComplete="false"
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+        }}
+        placeholder={t("search")}
+      />
       {eventTypeGroups.length > 1 && <HorizontalTabs tabs={tabs} />}
-      {eventTypeGroups.length >= 1 && <InfiniteTeamsTab activeEventTypeGroup={activeEventTypeGroup[0]} />}
+      {eventTypeGroups.length >= 1 && (
+        <InfiniteTeamsTab activeEventTypeGroup={activeEventTypeGroup[0]} searchTerm={searchTerm} />
+      )}
       {eventTypeGroups.length === 0 && <CreateFirstEventTypeView slug={profiles[0].slug ?? ""} />}
       <EventTypeEmbedDialog />
       {searchParams?.get("dialog") === "duplicate" && <DuplicateDialog />}
@@ -1050,3 +1054,8 @@ const EventTypesPage = ({ userEventGroupsData, user }: Props) => {
 };
 
 export default EventTypesPage;
+
+
+
+
+
