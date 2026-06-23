@@ -138,7 +138,13 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
         </div>
       ) : (
         <>
-          <div className="border-subtle bg-default overflow-hidden rounded-md border">
+          <div className="text-default mb-4 block text-center text-sm">
+            {t("temporarily_out_of_office")}{" "}
+            <Link href="settings/my-account/out-of-office" className="underline">
+              {t("add_a_redirect")}
+            </Link>
+          </div>
+          <div className="border-subtle bg-default mb-16 overflow-hidden rounded-md border">
             <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
               {availabilities.schedules.map((schedule) => (
                 <ScheduleListItem
@@ -157,12 +163,6 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
                 />
               ))}
             </ul>
-          </div>
-          <div className="text-default mb-16 mt-4 block text-center text-sm">
-            {t("temporarily_out_of_office")}{" "}
-            <Link href="settings/my-account/out-of-office" className="underline">
-              {t("add_a_redirect")}
-            </Link>
           </div>
           {bulkUpdateModal && (
             <BulkEditDefaultForEventsModal
@@ -223,3 +223,4 @@ export const AvailabilityCTA = ({ canViewTeamAvailability }: AvailabilityCTAProp
     </div>
   );
 };
+
