@@ -158,6 +158,7 @@ export function Momentum({
         display: "grid",
         width: "100%",
         height: 200,
+        marginBottom: 24,
         justifyItems: "center",
         alignItems: "center",
         touchAction: "none",
@@ -192,4 +193,5 @@ export function Momentum({
 }
 
 export default Momentum;
+
 
