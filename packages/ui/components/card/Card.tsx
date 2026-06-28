@@ -42,7 +42,7 @@ const cvaCardTypeByVariant = cva("", {
     {
       variant: "basic",
       structure: "title",
-      className: "text-base mt-4",
+      className: "text-base mt-8",
     },
     {
       variant: "basic",
@@ -326,6 +326,7 @@ export function Card({
 }
 
 export default Card;
+
 
 
 
