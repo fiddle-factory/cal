@@ -194,23 +194,24 @@ export function Card({
         "border-subtle text-default bg-default relative flex flex-col justify-between rounded-md border",
         cvaCardTypeByVariant({ variant, structure: "card" })
       )}
+      {...containerProps}
       data-config-id="Card-div-0"
       data-testid="card-container"
       onMouseEnter={() => setPreviewHovered(true)}
-      onMouseLeave={() => setPreviewHovered(false)}
-      {...containerProps}>
+      onMouseLeave={() => setPreviewHovered(false)}>
       {variant === "basic" && image && (
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-60 -translate-x-1/2 overflow-hidden rounded-lg bg-white shadow-[0_5px_10px_rgba(0,0,0,0.12)]"
+          className="pointer-events-none absolute inset-x-3 top-3 z-50 overflow-hidden rounded-lg bg-white"
           style={{
-            height: previewHovered ? 150 : 0,
+            height: 140,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
             opacity: previewHovered ? 1 : 0,
-            transform: `translateX(-50%) translateY(${previewHovered ? 0 : previewOffset}px) scale(${
+            transform: `translateY(${previewHovered ? 0 : previewOffset}px) scale(${
               previewHovered ? 1 : previewScale
             })`,
-            transformOrigin: "bottom center",
-            transition: `height ${previewDuration}ms ease, opacity ${previewDuration}ms ease, transform ${previewDuration}ms ease`,
+            transformOrigin: "top center",
+            transition: `opacity ${previewDuration}ms ease, transform ${previewDuration}ms ease`,
           }}>
           <img
             src={previewImage}
@@ -339,4 +340,5 @@ export function Card({
 }
 
 export default Card;
+
 
