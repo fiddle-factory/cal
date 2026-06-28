@@ -162,15 +162,63 @@ export function Card({
   mediaLinkOnClick,
 }: BaseCardProps) {
   const LinkComponent = learnMore?.href?.startsWith("https") ? "a" : Link;
+
+  const [previewHovered, setPreviewHovered] = React.useState(false);
+  const [previewImage, setPreviewImage] = React.useState(
+    "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=480&q=80"
+  );
+  const [previewScale, setPreviewScale] = React.useState(0.9);
+  const [previewOffset, setPreviewOffset] = React.useState(8);
+  const [previewDuration, setPreviewDuration] = React.useState(200);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Card-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.previewImage === "string") setPreviewImage(p.previewImage);
+      if (typeof p.previewScale === "number") setPreviewScale(p.previewScale);
+      if (typeof p.previewOffset === "number") setPreviewOffset(p.previewOffset);
+      if (typeof p.previewDuration === "number") setPreviewDuration(p.previewDuration);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
     <div
       className={classNames(
         containerProps?.className,
-        "border-subtle text-default bg-default flex flex-col justify-between rounded-md border",
+        "border-subtle text-default bg-default relative flex flex-col justify-between rounded-md border",
         cvaCardTypeByVariant({ variant, structure: "card" })
       )}
+      data-config-id="Card-div-0"
       data-testid="card-container"
+      onMouseEnter={() => setPreviewHovered(true)}
+      onMouseLeave={() => setPreviewHovered(false)}
       {...containerProps}>
+      {variant === "basic" && image && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-60 -translate-x-1/2 overflow-hidden rounded-lg bg-white shadow-[0_5px_10px_rgba(0,0,0,0.12)]"
+          style={{
+            height: previewHovered ? 150 : 0,
+            opacity: previewHovered ? 1 : 0,
+            transform: `translateX(-50%) translateY(${previewHovered ? 0 : previewOffset}px) scale(${
+              previewHovered ? 1 : previewScale
+            })`,
+            transformOrigin: "bottom center",
+            transition: `height ${previewDuration}ms ease, opacity ${previewDuration}ms ease, transform ${previewDuration}ms ease`,
+          }}>
+          <img
+            src={previewImage}
+            alt=""
+            className="h-full w-full object-cover object-top"
+          />
+        </div>
+      )}
       <div>
         {icon && icon}
         {image && (
@@ -291,3 +339,4 @@ export function Card({
 }
 
 export default Card;
+
