@@ -8,6 +8,7 @@ import React from "react";
 import classNames from "@calcom/ui/classNames";
 
 import { Button } from "../button";
+import { Momentum } from "./Momentum";
 
 const cvaCardTypeByVariant = cva("", {
   // Variants won't have any style by default. Style will only be applied if the variants are combined.
@@ -172,6 +173,11 @@ export function Card({
       data-testid="card-container"
       {...containerProps}>
       <div>
+        {variant === "basic" && (
+          <div data-config-id="Card-div-0" className="mb-4 flex justify-center">
+            <Momentum />
+          </div>
+        )}
         {icon && icon}
         {image && (
           <img
@@ -291,3 +297,5 @@ export function Card({
 }
 
 export default Card;
+
+
