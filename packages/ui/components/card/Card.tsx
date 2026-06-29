@@ -8,6 +8,7 @@ import React from "react";
 import classNames from "@calcom/ui/classNames";
 
 import { Button } from "../button";
+import { Momentum } from "./Momentum";
 
 const cvaCardTypeByVariant = cva("", {
   // Variants won't have any style by default. Style will only be applied if the variants are combined.
@@ -162,6 +163,25 @@ export function Card({
   mediaLinkOnClick,
 }: BaseCardProps) {
   const LinkComponent = learnMore?.href?.startsWith("https") ? "a" : Link;
+
+  const [glowColor, setGlowColor] = React.useState("#62666d");
+  const [glowIntensity, setGlowIntensity] = React.useState(0.6);
+  const [amplitude, setAmplitude] = React.useState(121);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Card-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.glowColor === "string") setGlowColor(p.glowColor);
+      if (typeof p.glowIntensity === "number") setGlowIntensity(p.glowIntensity);
+      if (typeof p.amplitude === "number") setAmplitude(p.amplitude);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
   return (
     <div
       className={classNames(
@@ -170,8 +190,17 @@ export function Card({
         cvaCardTypeByVariant({ variant, structure: "card" })
       )}
       data-testid="card-container"
+      data-config-id="Card-div-0"
       {...containerProps}>
       <div>
+        {variant === "basic" && (
+          <Momentum
+            glowColor={glowColor}
+            glowIntensity={glowIntensity}
+            amplitude={amplitude}
+            className="mb-4 flex justify-center"
+          />
+        )}
         {icon && icon}
         {image && (
           <img
@@ -291,3 +320,6 @@ export function Card({
 }
 
 export default Card;
+
+
+
