@@ -8,6 +8,7 @@ import React from "react";
 import classNames from "@calcom/ui/classNames";
 
 import { Button } from "../button";
+import { Momentum } from "./Momentum";
 
 const cvaCardTypeByVariant = cva("", {
   // Variants won't have any style by default. Style will only be applied if the variants are combined.
@@ -162,6 +163,30 @@ export function Card({
   mediaLinkOnClick,
 }: BaseCardProps) {
   const LinkComponent = learnMore?.href?.startsWith("https") ? "a" : Link;
+
+  const [glowColor, setGlowColor] = React.useState("#62666d");
+  const [amplitude, setAmplitude] = React.useState(121);
+  const [falloff, setFalloff] = React.useState(0.6);
+  const [centerLerp, setCenterLerp] = React.useState(0.2);
+  const [heightLerp, setHeightLerp] = React.useState(0.22);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Card-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.glowColor === "string") setGlowColor(p.glowColor);
+      if (typeof p.amplitude === "number") setAmplitude(p.amplitude);
+      if (typeof p.falloff === "number") setFalloff(p.falloff);
+      if (typeof p.centerLerp === "number") setCenterLerp(p.centerLerp);
+      if (typeof p.heightLerp === "number") setHeightLerp(p.heightLerp);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
     <div
       className={classNames(
@@ -172,6 +197,16 @@ export function Card({
       data-testid="card-container"
       {...containerProps}>
       <div>
+        {variant === "basic" && (
+          <Momentum
+            configId="Card-div-0"
+            faceStroke={glowColor}
+            amplitude={amplitude}
+            falloff={falloff}
+            centerLerp={centerLerp}
+            heightLerp={heightLerp}
+          />
+        )}
         {icon && icon}
         {image && (
           <img
@@ -291,3 +326,6 @@ export function Card({
 }
 
 export default Card;
+
+
+
