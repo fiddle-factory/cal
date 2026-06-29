@@ -8,6 +8,7 @@ import React from "react";
 import classNames from "@calcom/ui/classNames";
 
 import { Button } from "../button";
+import { MomentumIllustration } from "./MomentumIllustration";
 
 const cvaCardTypeByVariant = cva("", {
   // Variants won't have any style by default. Style will only be applied if the variants are combined.
@@ -162,6 +163,28 @@ export function Card({
   mediaLinkOnClick,
 }: BaseCardProps) {
   const LinkComponent = learnMore?.href?.startsWith("https") ? "a" : Link;
+
+  const [momentumAmp, setMomentumAmp] = React.useState(121);
+  const [momentumFalloff, setMomentumFalloff] = React.useState(0.6);
+  const [momentumFaceColor, setMomentumFaceColor] = React.useState("#62666d");
+  const [momentumEdgeColor, setMomentumEdgeColor] = React.useState("#2e2e32");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Card-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.momentumAmp === "number") setMomentumAmp(p.momentumAmp);
+      if (typeof p.momentumFalloff === "number") setMomentumFalloff(p.momentumFalloff);
+      if (typeof p.momentumFaceColor === "string") setMomentumFaceColor(p.momentumFaceColor);
+      if (typeof p.momentumEdgeColor === "string") setMomentumEdgeColor(p.momentumEdgeColor);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
     <div
       className={classNames(
@@ -170,7 +193,17 @@ export function Card({
         cvaCardTypeByVariant({ variant, structure: "card" })
       )}
       data-testid="card-container"
+      data-config-id="Card-div-0"
       {...containerProps}>
+      {variant === "basic" && (
+        <MomentumIllustration
+          amp={momentumAmp}
+          falloff={momentumFalloff}
+          faceColor={momentumFaceColor}
+          edgeColor={momentumEdgeColor}
+          className="mx-auto mb-2"
+        />
+      )}
       <div>
         {icon && icon}
         {image && (
@@ -291,3 +324,6 @@ export function Card({
 }
 
 export default Card;
+
+
+
