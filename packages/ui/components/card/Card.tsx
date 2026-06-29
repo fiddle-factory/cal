@@ -164,7 +164,7 @@ export function Card({
 }: BaseCardProps) {
   const LinkComponent = learnMore?.href?.startsWith("https") ? "a" : Link;
 
-  const [glowColor, setGlowColor] = React.useState("#62666d");
+  const [glowColor, setGlowColor] = React.useState("#ef4444");
   const [amplitude, setAmplitude] = React.useState(121);
   const [falloff, setFalloff] = React.useState(0.6);
   const [centerLerp, setCenterLerp] = React.useState(0.2);
@@ -200,7 +200,9 @@ export function Card({
         {variant === "basic" && (
           <Momentum
             configId="Card-div-0"
+            faceColor={glowColor}
             faceStroke={glowColor}
+            edgeStroke={glowColor}
             amplitude={amplitude}
             falloff={falloff}
             centerLerp={centerLerp}
@@ -326,6 +328,8 @@ export function Card({
 }
 
 export default Card;
+
+
 
 
 
