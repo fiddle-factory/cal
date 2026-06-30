@@ -8,6 +8,7 @@ import React from "react";
 import classNames from "@calcom/ui/classNames";
 
 import { Button } from "../button";
+import { Momentum } from "./Momentum";
 
 const cvaCardTypeByVariant = cva("", {
   // Variants won't have any style by default. Style will only be applied if the variants are combined.
@@ -162,6 +163,30 @@ export function Card({
   mediaLinkOnClick,
 }: BaseCardProps) {
   const LinkComponent = learnMore?.href?.startsWith("https") ? "a" : Link;
+
+  const [responsiveness, setResponsiveness] = React.useState(0.2);
+  const [falloff, setFalloff] = React.useState(0.6);
+  const [amplitude, setAmplitude] = React.useState(121);
+  const [faceColor, setFaceColor] = React.useState("#08090a");
+  const [strokeColor, setStrokeColor] = React.useState("#62666d");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Card-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.responsiveness === "number") setResponsiveness(p.responsiveness);
+      if (typeof p.falloff === "number") setFalloff(p.falloff);
+      if (typeof p.amplitude === "number") setAmplitude(p.amplitude);
+      if (typeof p.faceColor === "string") setFaceColor(p.faceColor);
+      if (typeof p.strokeColor === "string") setStrokeColor(p.strokeColor);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
     <div
       className={classNames(
@@ -170,9 +195,19 @@ export function Card({
         cvaCardTypeByVariant({ variant, structure: "card" })
       )}
       data-testid="card-container"
+      data-config-id="Card-div-0"
       {...containerProps}>
       <div>
         {icon && icon}
+        {variant === "basic" && (
+          <Momentum
+            responsiveness={responsiveness}
+            falloff={falloff}
+            amplitude={amplitude}
+            faceColor={faceColor}
+            strokeColor={strokeColor}
+          />
+        )}
         {image && (
           <img
             src={image}
@@ -291,3 +326,6 @@ export function Card({
 }
 
 export default Card;
+
+
+
