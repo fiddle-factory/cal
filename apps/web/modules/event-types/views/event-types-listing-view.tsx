@@ -100,6 +100,32 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  // Diagonal floating-card stack controls
+  const [stackOffsetX, setStackOffsetX] = useState(56);
+  const [stackOffsetY, setStackOffsetY] = useState(72);
+  const [stackDepth, setStackDepth] = useState(48);
+  const [stackRotate, setStackRotate] = useState(-14);
+  const [stackScale, setStackScale] = useState(0.04);
+  const [stackSpread, setStackSpread] = useState(0.95);
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="InfiniteTeamsTab-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.stackOffsetX === "number") setStackOffsetX(p.stackOffsetX);
+      if (typeof p.stackOffsetY === "number") setStackOffsetY(p.stackOffsetY);
+      if (typeof p.stackDepth === "number") setStackDepth(p.stackDepth);
+      if (typeof p.stackRotate === "number") setStackRotate(p.stackRotate);
+      if (typeof p.stackScale === "number") setStackScale(p.stackScale);
+      if (typeof p.stackSpread === "number") setStackSpread(p.stackSpread);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const query = trpc.viewer.eventTypes.getEventTypesFromGroup.useInfiniteQuery(
     {
       limit: LIMIT,
@@ -121,7 +147,82 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
   }, null);
 
   return (
-    <div>
+    <div
+      data-config-id="InfiniteTeamsTab-div-0"
+      className="event-stack-scope"
+      style={
+        {
+          "--stack-x": `${stackOffsetX * stackSpread}px`,
+          "--stack-y": `${stackOffsetY * stackSpread}px`,
+          "--stack-z": `${stackDepth}px`,
+          "--stack-rot": `${stackRotate}deg`,
+          "--stack-scale": `${stackScale}`,
+        } as React.CSSProperties
+      }>
+      <style>{`
+        .event-stack-scope [data-testid="event-types"] {
+          list-style: none;
+          padding-top: 140px;
+          padding-bottom: 80px;
+          perspective: 1800px;
+          perspective-origin: 60% 40%;
+          transform-style: preserve-3d;
+          overflow: visible;
+        }
+        .event-stack-scope [data-testid="event-types"] > li {
+          position: relative;
+          transform-origin: 50% 50%;
+          transition: transform 550ms cubic-bezier(0.19, 1, 0.22, 1),
+            box-shadow 550ms cubic-bezier(0.19, 1, 0.22, 1),
+            opacity 550ms cubic-bezier(0.19, 1, 0.22, 1);
+          transform:
+            translate3d(
+              calc(var(--stack-i) * var(--stack-x)),
+              calc(var(--stack-i) * var(--stack-y) * -1),
+              calc(var(--stack-i) * var(--stack-z) * -1)
+            )
+            rotateX(8deg)
+            rotateY(var(--stack-rot))
+            scale(calc(1 - var(--stack-i) * var(--stack-scale)));
+          margin-top: -96px;
+          border: 1px solid var(--cal-border-subtle, rgba(0, 0, 0, 0.08));
+          border-radius: 14px;
+          background: var(--cal-bg, #fff);
+          box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.35),
+            0 8px 24px -12px rgba(0, 0, 0, 0.18);
+          backdrop-filter: blur(2px);
+        }
+        .event-stack-scope [data-testid="event-types"] > li:first-child {
+          margin-top: 0;
+        }
+        .event-stack-scope [data-testid="event-types"] > li:hover {
+          transform:
+            translate3d(
+              calc(var(--stack-i) * var(--stack-x)),
+              calc(var(--stack-i) * var(--stack-y) * -1),
+              40px
+            )
+            rotateX(0deg)
+            rotateY(0deg)
+            scale(1.02);
+          z-index: 50;
+          box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.45),
+            0 12px 32px -12px rgba(0, 0, 0, 0.25);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .event-stack-scope [data-testid="event-types"] {
+            perspective: none;
+            padding-top: 0;
+            padding-bottom: 0;
+          }
+          .event-stack-scope [data-testid="event-types"] > li,
+          .event-stack-scope [data-testid="event-types"] > li:hover {
+            transform: none;
+            margin-top: 0;
+            transition: none;
+          }
+        }
+      `}</style>
       <TextField
         className="max-w-64"
         addOnLeading={<Icon name="search" className="text-subtle h-4 w-4" />}
@@ -510,8 +611,8 @@ export const InfiniteEventTypeList = ({
   });
 
   return (
-    <div className="bg-default border-subtle flex flex-col overflow-hidden rounded-md border">
-      <ul ref={parent} className="divide-subtle static! w-full divide-y" data-testid="event-types">
+    <div className="flex flex-col">
+      <ul ref={parent} className="static! w-full" data-testid="event-types">
         {pages.map((page, pageIdx) => {
           return page?.eventTypes?.map((type, index) => {
             const embedLink = `${group.profile.slug}/${type.slug}`;
@@ -532,8 +633,10 @@ export const InfiniteEventTypeList = ({
               type.metadata?.managedEventConfig !== undefined &&
               type.schedulingType !== SchedulingType.MANAGED;
             return (
-              <li key={type.id}>
-                <div className="hover:bg-cal-muted flex w-full items-center justify-between transition">
+              <li
+                key={type.id}
+                style={{ ["--stack-i" as string]: `${LIMIT * pageIdx + index}` }}>
+                <div className="flex w-full items-center justify-between transition">
                   <div className="group flex w-full max-w-full items-center justify-between overflow-hidden px-4 py-4 sm:px-6">
                     {!(firstItem && firstItem.id === type.id) && (
                       <ArrowButton
@@ -1050,3 +1153,7 @@ const EventTypesPage = ({ userEventGroupsData, user }: Props) => {
 };
 
 export default EventTypesPage;
+
+
+
+
