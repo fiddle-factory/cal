@@ -4,7 +4,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { FC } from "react";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
 import { Dialog } from "@calcom/features/components/controlled-dialog";
@@ -100,13 +100,35 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Diagonal floating-card stack controls
-  const [stackOffsetX, setStackOffsetX] = useState(56);
-  const [stackOffsetY, setStackOffsetY] = useState(72);
-  const [stackDepth, setStackDepth] = useState(48);
-  const [stackRotate, setStackRotate] = useState(-14);
-  const [stackScale, setStackScale] = useState(0.04);
-  const [stackSpread, setStackSpread] = useState(0.95);
+  // Scroll-driven diagonal card-flow controls
+  const [stackOffsetX, setStackOffsetX] = useState(46);
+  const [stackOffsetY, setStackOffsetY] = useState(30);
+  const [stackDepth, setStackDepth] = useState(200);
+  const [stackRotate, setStackRotate] = useState(-22);
+  const [stackScale, setStackScale] = useState(0.09);
+  const [scrollPerCard, setScrollPerCard] = useState(180);
+
+  // active card index driven by scroll position of the flow track
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        setActiveIndex(el.scrollTop / scrollPerCard);
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [scrollPerCard]);
 
   // geneditor-listener-start
   useEffect(() => {
@@ -119,7 +141,7 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
       if (typeof p.stackDepth === "number") setStackDepth(p.stackDepth);
       if (typeof p.stackRotate === "number") setStackRotate(p.stackRotate);
       if (typeof p.stackScale === "number") setStackScale(p.stackScale);
-      if (typeof p.stackSpread === "number") setStackSpread(p.stackSpread);
+      if (typeof p.scrollPerCard === "number") setScrollPerCard(p.scrollPerCard);
     };
     el.addEventListener("animation:update", handler);
     return () => el.removeEventListener("animation:update", handler);
@@ -146,80 +168,120 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
     }
   }, null);
 
+  const cardCount = query.data?.pages?.reduce((n, pg) => n + (pg?.eventTypes?.length ?? 0), 0) ?? 0;
+
   return (
     <div
       data-config-id="InfiniteTeamsTab-div-0"
       className="event-stack-scope"
       style={
         {
-          "--stack-x": `${stackOffsetX * stackSpread}px`,
-          "--stack-y": `${stackOffsetY * stackSpread}px`,
+          "--stack-x": `${stackOffsetX}px`,
+          "--stack-y": `${stackOffsetY}px`,
           "--stack-z": `${stackDepth}px`,
           "--stack-rot": `${stackRotate}deg`,
           "--stack-scale": `${stackScale}`,
+          "--active": `${activeIndex}`,
         } as React.CSSProperties
       }>
       <style>{`
-        .event-stack-scope [data-testid="event-types"] {
-          list-style: none;
-          padding-top: 140px;
-          padding-bottom: 80px;
-          perspective: 1800px;
-          perspective-origin: 60% 40%;
+        .event-stack-scope .event-flow-viewport {
+          height: 560px;
+          overflow-y: auto;
+          overflow-x: hidden;
+          scroll-behavior: smooth;
+          -webkit-overflow-scrolling: touch;
+          border-radius: 16px;
+        }
+        .event-stack-scope .event-flow-track {
+          position: relative;
+        }
+        .event-stack-scope .event-flow-stage {
+          position: sticky;
+          top: 0;
+          height: 560px;
+          perspective: 1600px;
+          perspective-origin: 55% 45%;
           transform-style: preserve-3d;
           overflow: visible;
         }
+        .event-stack-scope [data-testid="event-types"] {
+          list-style: none;
+          position: absolute;
+          inset: 0;
+          margin: 0;
+          padding: 0;
+          transform-style: preserve-3d;
+        }
         .event-stack-scope [data-testid="event-types"] > li {
-          position: relative;
+          --rel: calc(var(--stack-i) - var(--active));
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: min(560px, 82%);
+          margin: 0;
           transform-origin: 50% 50%;
-          transition: transform 550ms cubic-bezier(0.19, 1, 0.22, 1),
-            box-shadow 550ms cubic-bezier(0.19, 1, 0.22, 1),
-            opacity 550ms cubic-bezier(0.19, 1, 0.22, 1);
+          transition: transform 120ms linear, box-shadow 220ms ease, opacity 220ms ease;
           transform:
+            translate(-50%, -50%)
             translate3d(
-              calc(var(--stack-i) * var(--stack-x)),
-              calc(var(--stack-i) * var(--stack-y) * -1),
-              calc(var(--stack-i) * var(--stack-z) * -1)
+              calc(var(--rel) * var(--stack-x)),
+              calc(var(--rel) * var(--stack-y) * -1),
+              calc(var(--rel) * var(--stack-z) * -1)
             )
-            rotateX(8deg)
+            rotateX(6deg)
             rotateY(var(--stack-rot))
-            scale(calc(1 - var(--stack-i) * var(--stack-scale)));
-          margin-top: -96px;
-          border: 1px solid var(--cal-border-subtle, rgba(0, 0, 0, 0.08));
+            scale(calc(1 - max(var(--rel), calc(var(--rel) * -1)) * var(--stack-scale)));
+          /* focused card (rel≈0) sits flat & forward: blend toward 0deg tilt */
+          z-index: calc(100 - max(var(--rel), calc(var(--rel) * -1)));
+          opacity: calc(1 - max(var(--rel), calc(var(--rel) * -1)) * 0.14);
+          border: 1px solid var(--cal-border-subtle, rgba(0, 0, 0, 0.1));
           border-radius: 14px;
           background: var(--cal-bg, #fff);
-          box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.35),
-            0 8px 24px -12px rgba(0, 0, 0, 0.18);
-          backdrop-filter: blur(2px);
+          overflow: hidden;
+          box-shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.4),
+            0 10px 28px -14px rgba(0, 0, 0, 0.2);
         }
-        .event-stack-scope [data-testid="event-types"] > li:first-child {
-          margin-top: 0;
-        }
+        /* the card nearest the active index straightens out and comes fully forward */
         .event-stack-scope [data-testid="event-types"] > li:hover {
+          z-index: 200;
           transform:
+            translate(-50%, -50%)
             translate3d(
-              calc(var(--stack-i) * var(--stack-x)),
-              calc(var(--stack-i) * var(--stack-y) * -1),
-              40px
+              calc(var(--rel) * var(--stack-x)),
+              calc(var(--rel) * var(--stack-y) * -1),
+              80px
             )
             rotateX(0deg)
             rotateY(0deg)
             scale(1.02);
-          z-index: 50;
-          box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.45),
-            0 12px 32px -12px rgba(0, 0, 0, 0.25);
+          opacity: 1;
+          box-shadow: 0 46px 100px -30px rgba(0, 0, 0, 0.5),
+            0 14px 36px -14px rgba(0, 0, 0, 0.28);
         }
         @media (prefers-reduced-motion: reduce) {
-          .event-stack-scope [data-testid="event-types"] {
+          .event-stack-scope .event-flow-viewport {
+            height: auto;
+            overflow: visible;
+          }
+          .event-stack-scope .event-flow-stage {
+            position: static;
+            height: auto;
             perspective: none;
-            padding-top: 0;
-            padding-bottom: 0;
+          }
+          .event-stack-scope [data-testid="event-types"] {
+            position: static;
           }
           .event-stack-scope [data-testid="event-types"] > li,
           .event-stack-scope [data-testid="event-types"] > li:hover {
+            position: relative;
+            top: auto;
+            left: auto;
+            width: 100%;
             transform: none;
-            margin-top: 0;
+            opacity: 1;
             transition: none;
+            margin-bottom: 8px;
           }
         }
       `}</style>
@@ -236,14 +298,22 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
         placeholder={t("search")}
       />
       {!!activeEventTypeGroup && (
-        <InfiniteEventTypeList
-          pages={query?.data?.pages}
-          group={activeEventTypeGroup}
-          bookerUrl={activeEventTypeGroup.bookerUrl}
-          readOnly={activeEventTypeGroup.metadata.readOnly}
-          isPending={query.isPending}
-          debouncedSearchTerm={debouncedSearchTerm}
-        />
+        <div className="event-flow-viewport" ref={scrollRef}>
+          <div
+            className="event-flow-track"
+            style={{ height: `${Math.max(cardCount, 1) * scrollPerCard + 560}px` }}>
+            <div className="event-flow-stage">
+              <InfiniteEventTypeList
+                pages={query?.data?.pages}
+                group={activeEventTypeGroup}
+                bookerUrl={activeEventTypeGroup.bookerUrl}
+                readOnly={activeEventTypeGroup.metadata.readOnly}
+                isPending={query.isPending}
+                debouncedSearchTerm={debouncedSearchTerm}
+              />
+            </div>
+          </div>
+        </div>
       )}
       {(query.data?.pages?.[0]?.eventTypes?.length ?? 0) > 0 && (
         <div className="text-default p-4 text-center" ref={buttonInView.ref}>
@@ -1153,6 +1223,10 @@ const EventTypesPage = ({ userEventGroupsData, user }: Props) => {
 };
 
 export default EventTypesPage;
+
+
+
+
 
 
 
