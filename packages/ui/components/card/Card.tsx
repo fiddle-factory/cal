@@ -8,6 +8,7 @@ import React from "react";
 import classNames from "@calcom/ui/classNames";
 
 import { Button } from "../button";
+import { CardArt } from "./CardArt";
 
 const cvaCardTypeByVariant = cva("", {
   // Variants won't have any style by default. Style will only be applied if the variants are combined.
@@ -162,6 +163,30 @@ export function Card({
   mediaLinkOnClick,
 }: BaseCardProps) {
   const LinkComponent = learnMore?.href?.startsWith("https") ? "a" : Link;
+
+  const [artStrokeColor, setArtStrokeColor] = React.useState("#D9D9D9");
+  const [artCount, setArtCount] = React.useState(35);
+  const [artVelocity, setArtVelocity] = React.useState(1.1);
+  const [artScale, setArtScale] = React.useState(2.59);
+  const [artTwist, setArtTwist] = React.useState(12.26);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Card-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.artStrokeColor === "string") setArtStrokeColor(p.artStrokeColor);
+      if (typeof p.artCount === "number") setArtCount(p.artCount);
+      if (typeof p.artVelocity === "number") setArtVelocity(p.artVelocity);
+      if (typeof p.artScale === "number") setArtScale(p.artScale);
+      if (typeof p.artTwist === "number") setArtTwist(p.artTwist);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
     <div
       className={classNames(
@@ -173,16 +198,14 @@ export function Card({
       {...containerProps}>
       <div>
         {icon && icon}
-        {image && (
-          <img
-            src={image}
-            // Stops eslint complaining - not smart enough to realise it comes from ...imageProps
-            alt={imageProps?.alt}
-            className={classNames(
-              imageProps?.className,
-              cvaCardTypeByVariant({ variant, structure: "image" })
-            )}
-            {...imageProps}
+        {(image || variant === "basic") && (
+          <CardArt
+            className={classNames(imageProps?.className, "mb-3 w-full")}
+            strokeColor={artStrokeColor}
+            count={artCount}
+            velocity={artVelocity}
+            scale={artScale}
+            twist={artTwist}
           />
         )}
         <h5
@@ -291,3 +314,7 @@ export function Card({
 }
 
 export default Card;
+
+
+
+
