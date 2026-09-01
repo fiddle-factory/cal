@@ -3,6 +3,8 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
+import { useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -72,12 +74,39 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
     top: `${bannersHeight}px`,
   };
 
+  // Collapse/expand state for the side panel, plus tunable transition knobs
+  // surfaced to the editor panel (duration + easing).
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [transitionDuration, setTransitionDuration] = useState(240);
+  const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionDuration === "number") setTransitionDuration(p.transitionDuration);
+      if (typeof p.transitionEasing === "string") setTransitionEasing(p.transitionEasing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
-    <div className="relative">
+    <div className="relative" data-config-id="Layout-div-0">
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        style={{
+          ...(!isPlatformPages ? sidebarStylingAttributes : {}),
+          transitionProperty: "width, padding",
+          transitionDuration: `${transitionDuration}ms`,
+          transitionTimingFunction: transitionEasing,
+        }}
+        data-sidebar-collapsed={isCollapsed}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "group/sidebar bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r motion-reduce:transition-none md:sticky md:flex lg:px-3",
+          isCollapsed ? "w-14 lg:w-14 lg:px-2" : "w-14 lg:w-56",
           !isPlatformPages && "max-h-screen"
         )}>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
@@ -91,7 +120,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                       imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
                       size="xsm"
                     />
-                    <p className="text line-clamp-1 text-sm">
+                    <p className="text line-clamp-1 text-sm group-data-[sidebar-collapsed=true]/sidebar:lg:hidden">
                       <span>{user.org.name}</span>
                     </p>
                   </div>
@@ -101,10 +130,10 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
               )
             ) : (
               <div data-testid="user-dropdown-trigger" className="todesktop:mt-4 w-full">
-                <span className="hidden lg:inline">
+                <span className="hidden lg:inline group-data-[sidebar-collapsed=true]/sidebar:lg:hidden">
                   <UserDropdown />
                 </span>
-                <span className="hidden md:inline lg:hidden">
+                <span className="hidden md:inline lg:hidden group-data-[sidebar-collapsed=true]/sidebar:md:inline group-data-[sidebar-collapsed=true]/sidebar:lg:inline">
                   <UserDropdown small />
                 </span>
               </div>
@@ -171,7 +200,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                     />
                   )}
                   {isLocaleReady ? (
-                    <span className="hidden w-full justify-between lg:flex">
+                    <span className="hidden w-full justify-between lg:flex group-data-[sidebar-collapsed=true]/sidebar:lg:hidden">
                       <div className="flex">{t(item.name)}</div>
                     </span>
                   ) : (
@@ -184,6 +213,27 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
           </div>
         )}
       </aside>
+      <button
+        type="button"
+        onClick={() => setIsCollapsed((prev) => !prev)}
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        style={{
+          transitionDuration: `${transitionDuration}ms`,
+          transitionTimingFunction: transitionEasing,
+        }}
+        className={classNames(
+          "bg-default border-muted text-subtle hover:text-emphasis absolute top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border shadow-sm transition-[right] motion-reduce:transition-none lg:flex",
+          isCollapsed ? "right-4" : "-right-3"
+        )}>
+        <Icon
+          name="chevron-right"
+          className={classNames("h-3.5 w-3.5 transition-transform motion-reduce:transition-none", !isCollapsed && "rotate-180")}
+          style={{
+            transitionDuration: `${transitionDuration}ms`,
+            transitionTimingFunction: transitionEasing,
+          }}
+        />
+      </button>
     </div>
   );
 }
