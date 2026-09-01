@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -72,14 +73,61 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
     top: `${bannersHeight}px`,
   };
 
+  // Collapsible side panel: local open/collapsed state driving a width + opacity
+  // transition. Duration/easing are tunable via the genEditor control panel.
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [transitionDuration, setTransitionDuration] = React.useState(250);
+  const [transitionEasing, setTransitionEasing] = React.useState(
+    "cubic-bezier(0.4, 0, 0.2, 1)"
+  );
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionDuration === "number")
+        setTransitionDuration(p.transitionDuration);
+      if (typeof p.transitionEasing === "string")
+        setTransitionEasing(p.transitionEasing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const sidebarTransitionStyle: React.CSSProperties = {
+    transitionProperty: "width, opacity",
+    transitionDuration: `${transitionDuration}ms`,
+    transitionTimingFunction: transitionEasing,
+  };
+
   return (
-    <div className="relative">
+    <div className="relative" data-config-id="Layout-div-0">
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        style={
+          !isPlatformPages
+            ? { ...sidebarStylingAttributes, ...sidebarTransitionStyle }
+            : sidebarTransitionStyle
+        }
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r motion-reduce:transition-none md:sticky md:flex",
+          isCollapsed ? "w-14 md:px-2" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
+        <button
+          type="button"
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!isCollapsed}
+          className="hover:bg-subtle hover:text-emphasis text-subtle absolute -right-3 top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-subtle bg-default shadow-sm transition-transform motion-reduce:transition-none md:flex"
+          style={sidebarTransitionStyle}>
+          <Icon
+            name={isCollapsed ? "chevron-right" : "chevron-left"}
+            className="h-3.5 w-3.5 shrink-0"
+          />
+        </button>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
