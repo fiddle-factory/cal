@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -67,20 +68,98 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
     user,
   });
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [transitionDuration, setTransitionDuration] = useState(220);
+  const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionDuration === "number") setTransitionDuration(p.transitionDuration);
+      if (typeof p.transitionEasing === "string") setTransitionEasing(p.transitionEasing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const sidebarStylingAttributes = {
     maxHeight: `calc(100vh - ${bannersHeight}px)`,
     top: `${bannersHeight}px`,
+    transitionProperty: "width",
+    transitionDuration: `${transitionDuration}ms`,
+    transitionTimingFunction: transitionEasing,
   };
 
   return (
     <div className="relative">
+      {isCollapsed && (
+        <style>{`
+          aside[data-sidebar-collapsed="true"] [data-testid$="-test"] {
+            display: none !important;
+          }
+          aside[data-sidebar-collapsed="true"] a[data-test-id],
+          aside[data-sidebar-collapsed="true"] button[data-test-id] {
+            justify-content: center;
+          }
+          aside[data-sidebar-collapsed="true"] a[data-test-id] svg,
+          aside[data-sidebar-collapsed="true"] button[data-test-id] svg {
+            margin-left: auto;
+            margin-right: auto;
+          }
+          aside[data-sidebar-collapsed="true"] a[id].justify-right span,
+          aside[data-sidebar-collapsed="true"] button[id].justify-right span {
+            display: none !important;
+          }
+        `}</style>
+      )}
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        data-config-id="Layout-div-0"
+        data-sidebar-collapsed={isCollapsed ? "true" : "false"}
+        style={
+          !isPlatformPages
+            ? sidebarStylingAttributes
+            : {
+                transitionProperty: "width",
+                transitionDuration: `${transitionDuration}ms`,
+                transitionTimingFunction: transitionEasing,
+              }
+        }
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex",
+          isCollapsed ? "w-14 lg:w-14 lg:px-1.5" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
-        <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
+        <button
+          type="button"
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          aria-label={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+          aria-expanded={!isCollapsed}
+          className="bg-default border-muted text-subtle hover:text-emphasis absolute -right-3 top-6 z-10 hidden h-6 w-6 items-center justify-center rounded-full border shadow-sm transition-transform lg:flex"
+          style={{
+            transitionProperty: "transform, background-color, color",
+            transitionDuration: `${transitionDuration}ms`,
+            transitionTimingFunction: transitionEasing,
+          }}>
+          <Icon
+            name={isCollapsed ? "chevron-right" : "chevron-left"}
+            className="h-3.5 w-3.5 shrink-0"
+            aria-hidden="true"
+          />
+        </button>
+        <div
+          className={classNames(
+            "flex h-full flex-col justify-between overflow-hidden py-3 lg:pt-4",
+            isCollapsed && "lg:items-center"
+          )}
+          style={{
+            transitionProperty: "opacity",
+            transitionDuration: `${transitionDuration}ms`,
+            transitionTimingFunction: transitionEasing,
+          }}>
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
               !ENABLE_PROFILE_SWITCHER ? (
