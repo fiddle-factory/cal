@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -58,6 +59,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const isPlatformPages = pathname?.startsWith("/settings/platform");
   const isAdmin = session.data?.user.role === UserPermissionRole.ADMIN;
   const flags = useFlagMap();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const publicPageUrl = `${getBookerBaseUrlSync(user?.org?.slug ?? null)}/${user?.orgAwareUsername}`;
 
@@ -77,9 +79,24 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
       <aside
         style={!isPlatformPages ? sidebarStylingAttributes : {}}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r transition-[width] duration-300 ease-in-out md:sticky md:flex lg:px-3",
+          isCollapsed ? "w-14 lg:w-14 lg:px-2" : "w-14 lg:w-56",
           !isPlatformPages && "max-h-screen"
         )}>
+        <button
+          type="button"
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!isCollapsed}
+          className="text-subtle hover:text-emphasis hover:bg-subtle absolute -right-3 top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-subtle bg-default shadow-sm transition-transform duration-300 ease-in-out lg:flex">
+          <Icon
+            name="chevron-right"
+            className={classNames(
+              "h-3.5 w-3.5 shrink-0 transition-transform duration-300 ease-in-out",
+              !isCollapsed && "rotate-180"
+            )}
+          />
+        </button>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
