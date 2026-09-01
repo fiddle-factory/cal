@@ -168,7 +168,7 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className="hidden w-full justify-between truncate text-ellipsis transition-all duration-300 ease-in-out lg:flex [[data-collapsed='true']_&]:lg:max-w-0 [[data-collapsed='true']_&]:lg:opacity-0"
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
@@ -217,7 +217,7 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className="hidden w-full justify-between truncate text-ellipsis transition-all duration-300 ease-in-out lg:flex [[data-collapsed='true']_&]:lg:max-w-0 [[data-collapsed='true']_&]:lg:opacity-0"
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}

@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -58,6 +59,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const isPlatformPages = pathname?.startsWith("/settings/platform");
   const isAdmin = session.data?.user.role === UserPermissionRole.ADMIN;
   const flags = useFlagMap();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const publicPageUrl = `${getBookerBaseUrlSync(user?.org?.slug ?? null)}/${user?.orgAwareUsername}`;
 
@@ -76,10 +78,25 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
     <div className="relative">
       <aside
         style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        data-collapsed={isCollapsed}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r transition-[width] duration-300 ease-in-out md:sticky md:flex lg:px-3",
+          isCollapsed ? "w-14 lg:w-14 lg:px-2" : "w-14 lg:w-56",
           !isPlatformPages && "max-h-screen"
         )}>
+        <button
+          type="button"
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          className="bg-default border-muted text-subtle hover:text-emphasis hover:bg-subtle absolute -right-3 top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border shadow-sm transition-transform duration-300 ease-in-out lg:flex">
+          <Icon
+            name="chevron-left"
+            className={classNames(
+              "h-3.5 w-3.5 shrink-0 transition-transform duration-300 ease-in-out",
+              isCollapsed && "rotate-180"
+            )}
+          />
+        </button>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
@@ -91,7 +108,11 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                       imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
                       size="xsm"
                     />
-                    <p className="text line-clamp-1 text-sm">
+                    <p
+                      className={classNames(
+                        "text line-clamp-1 overflow-hidden whitespace-nowrap text-sm transition-all duration-300 ease-in-out",
+                        isCollapsed ? "lg:max-w-0 lg:opacity-0" : "lg:max-w-[160px] lg:opacity-100"
+                      )}>
                       <span>{user.org.name}</span>
                     </p>
                   </div>
@@ -140,7 +161,11 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
         {!isPlatformPages && (
           <div className="md:px-2 md:pb-4 lg:p-0">
             {flags["sidebar-tips"] && (
-              <div className="overflow-hidden">
+              <div
+                className={classNames(
+                  "overflow-hidden transition-all duration-300 ease-in-out",
+                  isCollapsed && "lg:max-h-0 lg:opacity-0"
+                )}>
                 <Tips />
               </div>
             )}
@@ -171,7 +196,11 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                     />
                   )}
                   {isLocaleReady ? (
-                    <span className="hidden w-full justify-between lg:flex">
+                    <span
+                      className={classNames(
+                        "hidden w-full justify-between overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out lg:flex",
+                        isCollapsed && "lg:max-w-0 lg:opacity-0"
+                      )}>
                       <div className="flex">{t(item.name)}</div>
                     </span>
                   ) : (
