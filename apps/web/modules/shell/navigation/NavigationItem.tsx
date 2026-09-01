@@ -168,13 +168,13 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className="hidden w-full justify-between truncate text-ellipsis lg:flex group-data-[collapsed=true]/sidebar:lg:hidden"
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
               </span>
             ) : (
-              <SkeletonText className="h-[20px] w-full" />
+              <SkeletonText className="h-[20px] w-full group-data-[collapsed=true]/sidebar:lg:hidden" />
             )}
             {shouldShowChevron && (
               <Icon name={isExpanded ? "chevron-up" : "chevron-down"} className="ml-auto h-4 w-4" />
@@ -217,13 +217,13 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className="hidden w-full justify-between truncate text-ellipsis lg:flex group-data-[collapsed=true]/sidebar:lg:hidden"
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
               </span>
             ) : (
-              <SkeletonText className="h-[20px] w-full" />
+              <SkeletonText className="h-[20px] w-full group-data-[collapsed=true]/sidebar:lg:hidden" />
             )}
             {item.name === "workflows" && (
               <Badge startIcon="sparkles" variant="purple">
