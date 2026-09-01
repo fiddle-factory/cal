@@ -3,6 +3,9 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { CSSProperties } from "react";
+import * as React from "react";
+import { useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -58,6 +61,29 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const isPlatformPages = pathname?.startsWith("/settings/platform");
   const isAdmin = session.data?.user.role === UserPermissionRole.ADMIN;
   const flags = useFlagMap();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [transitionDuration, setTransitionDuration] = useState(300);
+  const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
+  // Tunable via the Fiddle editor controls — CSS custom properties so the
+  // width/opacity transition can be fine-tuned live.
+  const sidebarTransitionVars = {
+    "--sidebar-transition-duration": `${transitionDuration}ms`,
+    "--sidebar-transition-easing": transitionEasing,
+  } as CSSProperties;
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.duration === "number") setTransitionDuration(p.duration);
+      if (typeof p.easing === "string") setTransitionEasing(p.easing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   const publicPageUrl = `${getBookerBaseUrlSync(user?.org?.slug ?? null)}/${user?.orgAwareUsername}`;
 
@@ -75,11 +101,40 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   return (
     <div className="relative">
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        data-config-id="Layout-div-0"
+        style={{
+          ...(!isPlatformPages ? sidebarStylingAttributes : {}),
+          ...sidebarTransitionVars,
+          transitionProperty: "width, padding",
+          transitionDuration: "var(--sidebar-transition-duration)",
+          transitionTimingFunction: "var(--sidebar-transition-easing)",
+        }}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex",
+          isCollapsed ? "w-14 lg:w-14 lg:px-0" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
+        <button
+          type="button"
+          aria-label={isCollapsed ? t("expand_sidebar") : t("collapse_sidebar")}
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          className="bg-default border-muted text-subtle hover:text-emphasis absolute -right-3 top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border shadow-sm lg:flex"
+          style={{
+            transitionProperty: "transform",
+            transitionDuration: "var(--sidebar-transition-duration)",
+            transitionTimingFunction: "var(--sidebar-transition-easing)",
+          }}>
+          <Icon
+            name="chevron-left"
+            className="h-3.5 w-3.5 shrink-0"
+            style={{
+              transform: isCollapsed ? "rotate(180deg)" : "rotate(0deg)",
+              transitionProperty: "transform",
+              transitionDuration: "var(--sidebar-transition-duration)",
+              transitionTimingFunction: "var(--sidebar-transition-easing)",
+            }}
+          />
+        </button>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
@@ -134,11 +189,25 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
           <Link href="/event-types" className="text-center md:inline lg:hidden">
             <Logo small icon />
           </Link>
-          <Navigation isPlatformNavigation={isPlatformPages} />
+          <div
+            className={classNames(isCollapsed && "lg:opacity-0")}
+            style={{
+              transitionProperty: "opacity",
+              transitionDuration: "var(--sidebar-transition-duration)",
+              transitionTimingFunction: "var(--sidebar-transition-easing)",
+            }}>
+            <Navigation isPlatformNavigation={isPlatformPages} />
+          </div>
         </div>
 
         {!isPlatformPages && (
-          <div className="md:px-2 md:pb-4 lg:p-0">
+          <div
+            className={classNames("md:px-2 md:pb-4 lg:p-0", isCollapsed && "lg:opacity-0")}
+            style={{
+              transitionProperty: "opacity",
+              transitionDuration: "var(--sidebar-transition-duration)",
+              transitionTimingFunction: "var(--sidebar-transition-easing)",
+            }}>
             {flags["sidebar-tips"] && (
               <div className="overflow-hidden">
                 <Tips />
