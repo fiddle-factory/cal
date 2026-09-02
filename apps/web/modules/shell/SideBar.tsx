@@ -122,22 +122,30 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
           isCollapsed ? "w-14 lg:w-14 lg:px-0" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
-        <button
-          type="button"
-          aria-label={isCollapsed ? t("expand") || "Expand sidebar" : t("collapse") || "Collapse sidebar"}
-          onClick={() => setIsCollapsed((prev) => !prev)}
-          style={{
-            transitionProperty: "transform",
-            transitionDuration: `${transitionDuration}ms`,
-            transitionTimingFunction: transitionEasing,
-          }}
-          className={classNames(
-            "bg-default border-muted text-subtle hover:text-emphasis absolute -right-3 top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border shadow-sm md:flex",
-            isCollapsed && "rotate-180"
-          )}>
-          <Icon name="chevron-left" className="h-3.5 w-3.5" />
-        </button>
-        <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
+        <div className="flex h-14 shrink-0 items-center justify-between px-2">
+          <Link href="/event-types" aria-label={t("home")} className="flex min-w-0 items-center">
+            <Logo small icon={isCollapsed} className={classNames(isCollapsed && "[&_img]:w-6")} />
+          </Link>
+          <button
+            type="button"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!isCollapsed}
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            className="text-subtle hover:bg-subtle hover:text-emphasis flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-5 w-5 fill-none stroke-current"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+              <path d="M9 3v18" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col justify-between py-3">
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
               !ENABLE_PROFILE_SWITCHER ? (
