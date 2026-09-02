@@ -3,6 +3,8 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
+import { useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -67,17 +69,62 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
     user,
   });
 
+  // Collapse/expand — smooth transition, tunable via the canvas editor controls.
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [transitionDuration, setTransitionDuration] = useState(0.25);
+  const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionDuration === "number") setTransitionDuration(p.transitionDuration);
+      if (typeof p.transitionEasing === "string") setTransitionEasing(p.transitionEasing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const sidebarStylingAttributes = {
     maxHeight: `calc(100vh - ${bannersHeight}px)`,
     top: `${bannersHeight}px`,
   };
 
+  const sidebarTransitionStyle = {
+    transitionProperty: "width",
+    transitionDuration: `${transitionDuration}s`,
+    transitionTimingFunction: transitionEasing,
+  };
+
   return (
-    <div className="relative">
+    <div className="relative" data-config-id="Layout-div-0">
+      <button
+        type="button"
+        onClick={() => setIsCollapsed((prev) => !prev)}
+        aria-label={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+        aria-expanded={!isCollapsed}
+        className="bg-default border-muted text-subtle hover:text-emphasis absolute -right-3 top-4 z-10 hidden h-6 w-6 items-center justify-center rounded-full border shadow-sm transition-transform md:flex"
+        style={{
+          transitionProperty: "right",
+          transitionDuration: `${transitionDuration}s`,
+          transitionTimingFunction: transitionEasing,
+        }}>
+        <Icon
+          name={isCollapsed ? "chevron-right" : "chevron-left"}
+          className="h-3.5 w-3.5 shrink-0"
+        />
+      </button>
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        style={{
+          ...(!isPlatformPages ? sidebarStylingAttributes : {}),
+          ...sidebarTransitionStyle,
+        }}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:px-3",
+          isCollapsed ? "w-14 lg:w-14 lg:px-0 [&_.sidebar-label]:lg:hidden" : "w-14 lg:w-56",
           !isPlatformPages && "max-h-screen"
         )}>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
@@ -91,7 +138,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                       imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
                       size="xsm"
                     />
-                    <p className="text line-clamp-1 text-sm">
+                    <p className="sidebar-label text line-clamp-1 text-sm">
                       <span>{user.org.name}</span>
                     </p>
                   </div>
@@ -101,10 +148,10 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
               )
             ) : (
               <div data-testid="user-dropdown-trigger" className="todesktop:mt-4 w-full">
-                <span className="hidden lg:inline">
+                <span className="sidebar-label hidden lg:inline">
                   <UserDropdown />
                 </span>
-                <span className="hidden md:inline lg:hidden">
+                <span className={classNames("hidden md:inline", !isCollapsed && "lg:hidden")}>
                   <UserDropdown small />
                 </span>
               </div>
@@ -171,7 +218,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                     />
                   )}
                   {isLocaleReady ? (
-                    <span className="hidden w-full justify-between lg:flex">
+                    <span className="sidebar-label hidden w-full justify-between lg:flex">
                       <div className="flex">{t(item.name)}</div>
                     </span>
                   ) : (
@@ -180,7 +227,11 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </ButtonOrLink>
               </Tooltip>
             ))}
-            {!IS_VISUAL_REGRESSION_TESTING && <Credits />}
+            {!IS_VISUAL_REGRESSION_TESTING && (
+              <div className={classNames(isCollapsed && "lg:hidden")}>
+                <Credits />
+              </div>
+            )}
           </div>
         )}
       </aside>
