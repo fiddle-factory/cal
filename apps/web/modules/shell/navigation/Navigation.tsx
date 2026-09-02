@@ -209,13 +209,19 @@ const useNavigationItems = (isPlatformNavigation = false) => {
   }, [hasPaidPlan, isPending, isPlatformNavigation, orgBranding]);
 };
 
-export const Navigation = ({ isPlatformNavigation = false }: { isPlatformNavigation?: boolean }) => {
+export const Navigation = ({
+  isPlatformNavigation = false,
+  isCollapsed = false,
+}: {
+  isPlatformNavigation?: boolean;
+  isCollapsed?: boolean;
+}) => {
   const { desktopNavigationItems } = useNavigationItems(isPlatformNavigation);
 
   return (
     <nav className="mt-2 flex-1 md:px-2 lg:mt-4 lg:px-0">
       {desktopNavigationItems.map((item) => (
-        <NavigationItem key={item.name} item={item} />
+        <NavigationItem key={item.name} item={item} isCollapsed={isCollapsed} />
       ))}
       <div className="text-subtle mt-0.5 lg:hidden">
         <KBarTrigger />

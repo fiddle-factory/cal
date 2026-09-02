@@ -72,8 +72,9 @@ export const NavigationItem: React.FC<{
   index?: number;
   item: NavigationItemType;
   isChild?: boolean;
+  isCollapsed?: boolean;
 }> = (props) => {
-  const { item, isChild } = props;
+  const { item, isChild, isCollapsed } = props;
   const { t, isLocaleReady } = useLocale();
   const pathname = usePathname();
   const isCurrent: NavigationItemType["isCurrent"] = item.isCurrent || defaultIsCurrent;
@@ -168,7 +169,10 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className={classNames(
+                  "hidden w-full justify-between truncate text-ellipsis lg:flex",
+                  isCollapsed && "lg:hidden"
+                )}
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
@@ -217,7 +221,10 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className={classNames(
+                  "hidden w-full justify-between truncate text-ellipsis lg:flex",
+                  isCollapsed && "lg:hidden"
+                )}
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
@@ -235,7 +242,9 @@ export const NavigationItem: React.FC<{
       )}
       {item.child &&
         shouldShowChildren &&
-        item.child.map((item, index) => <NavigationItem index={index} key={item.name} item={item} isChild />)}
+        item.child.map((item, index) => (
+          <NavigationItem index={index} key={item.name} item={item} isChild isCollapsed={isCollapsed} />
+        ))}
     </Fragment>
   );
 };
