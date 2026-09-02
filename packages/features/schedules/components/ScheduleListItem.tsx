@@ -52,14 +52,6 @@ export function ScheduleListItem({
       <div className="hover:bg-cal-muted flex items-center justify-between px-3 py-5 transition sm:px-4">
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
-            <div className="space-x-2 rtl:space-x-reverse">
-              <span className="text-emphasis truncate font-medium">{schedule.name}</span>
-              {schedule.isDefault && (
-                <Badge variant="gray" className="text-xs">
-                  {t("default")}
-                </Badge>
-              )}
-            </div>
             <p className="text-subtle mt-1">
               {schedule.availability
                 .filter(
@@ -91,6 +83,14 @@ export function ScheduleListItem({
                 </span>
               )}
             </p>
+            <div className="space-x-2 rtl:space-x-reverse">
+              <span className="text-emphasis truncate font-medium">{schedule.name}</span>
+              {schedule.isDefault && (
+                <Badge variant="gray" className="text-xs">
+                  {t("default")}
+                </Badge>
+              )}
+            </div>
           </Link>
         </div>
         <Dropdown>

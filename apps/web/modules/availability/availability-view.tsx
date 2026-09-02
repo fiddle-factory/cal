@@ -192,7 +192,7 @@ export const AvailabilityCTA = ({ canViewTeamAvailability }: AvailabilityCTAProp
   const { t } = useLocale();
 
   const toggleGroupOptions = [
-    { value: "mine", label: t("my_availability") },
+    { value: "mine", label: <span className="text-2xl">MY CALENDAR</span> },
     ...(canViewTeamAvailability ? [{ value: "team", label: t("team_availability"), onClick: () => { posthog.capture("team_availability_toggle_clicked") } }] : []),
   ]
 
@@ -210,6 +210,7 @@ export const AvailabilityCTA = ({ canViewTeamAvailability }: AvailabilityCTAProp
 
   return (
     <div className="flex items-center gap-2">
+      <NewScheduleButton />
       <ToggleGroup
         className="hidden h-fit md:block"
         defaultValue={searchParams?.get("type") ?? "mine"}
@@ -219,7 +220,6 @@ export const AvailabilityCTA = ({ canViewTeamAvailability }: AvailabilityCTAProp
         }}
         options={toggleGroupOptions}
       />
-      <NewScheduleButton />
     </div>
   );
 };
