@@ -42,6 +42,42 @@ export type SideBarProps = {
   isPlatformUser?: boolean;
 };
 
+function SidebarToggleButton({
+  isCollapsed,
+  onToggle,
+  overlay = false,
+}: {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  overlay?: boolean;
+}) {
+  const label = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-expanded={!isCollapsed}
+      onClick={onToggle}
+      className={classNames(
+        "text-subtle hover:bg-subtle hover:text-emphasis flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+        overlay &&
+          "bg-cal-muted absolute inset-0 z-10 opacity-0 transition-opacity group-hover/sidebar-user:opacity-100 group-focus-within/sidebar-user:opacity-100"
+      )}
+      title={label}>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-5 w-5 fill-none stroke-current"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round">
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <path d="M9 3v18" />
+      </svg>
+    </button>
+  );
+}
+
 export function SideBarContainer({ bannersHeight, isPlatformUser = false }: SideBarContainerProps) {
   const { status, data } = useSession();
 
@@ -154,37 +190,37 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
         )}>
         <div className="flex min-h-0 flex-1 flex-col justify-between py-3">
           <header className="fiddle-sidebar-header todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
-            {isCollapsed ? (
-              <div data-testid="user-dropdown-trigger" className="fiddle-sidebar-user flex items-center">
+            <div
+              data-testid="user-dropdown-trigger"
+              className="fiddle-sidebar-user group/sidebar-user relative w-full">
+              {isCollapsed ? (
                 <UserDropdown small />
-              </div>
-            ) : user?.org ? (
-              !ENABLE_PROFILE_SWITCHER ? (
-                <Link href="/settings/organizations/profile" className="w-full px-1.5">
-                  <div className="flex items-center gap-2 font-medium">
-                    <Avatar
-                      alt={`${user.org.name} logo`}
-                      imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
-                      size="xsm"
-                    />
-                    <p className="fiddle-sidebar-label text line-clamp-1 text-sm">
-                      <span>{user.org.name}</span>
-                    </p>
-                  </div>
-                </Link>
+              ) : user?.org ? (
+                !ENABLE_PROFILE_SWITCHER ? (
+                  <Link href="/settings/organizations/profile" className="w-full px-1.5">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Avatar
+                        alt={`${user.org.name} logo`}
+                        imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
+                        size="xsm"
+                      />
+                      <p className="fiddle-sidebar-label text line-clamp-1 text-sm">
+                        <span>{user.org.name}</span>
+                      </p>
+                    </div>
+                  </Link>
+                ) : (
+                  <ProfileDropdown />
+                )
               ) : (
-                <ProfileDropdown />
-              )
-            ) : (
-              <div data-testid="user-dropdown-trigger" className="fiddle-sidebar-user todesktop:mt-4 w-full">
                 <span className="fiddle-sidebar-label hidden lg:inline">
                   <UserDropdown />
                 </span>
-                <span className="hidden md:inline lg:hidden">
-                  <UserDropdown small />
-                </span>
-              </div>
-            )}
+              )}
+              {isCollapsed && (
+                <SidebarToggleButton isCollapsed overlay onToggle={() => setIsCollapsed((prev) => !prev)} />
+              )}
+            </div>
             <div className="fiddle-sidebar-header-controls flex w-full justify-end rtl:space-x-reverse">
               <button
                 color="minimal"
@@ -204,24 +240,9 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </div>
               )}
               <KBarTrigger />
-              <button
-                type="button"
-                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                aria-expanded={!isCollapsed}
-                onClick={() => setIsCollapsed((prev) => !prev)}
-                className="text-subtle hover:bg-subtle hover:text-emphasis flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
-                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5 fill-none stroke-current"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round">
-                  <rect width="18" height="18" x="3" y="3" rx="2" />
-                  <path d="M9 3v18" />
-                </svg>
-              </button>
+              {!isCollapsed && (
+                <SidebarToggleButton isCollapsed={false} onToggle={() => setIsCollapsed((prev) => !prev)} />
+              )}
             </div>
           </header>
           {/* logo icon for tablet */}
