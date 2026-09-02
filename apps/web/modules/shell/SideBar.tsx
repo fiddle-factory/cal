@@ -122,7 +122,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
           isCollapsed ? "w-14 lg:w-14 lg:px-0" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
-        <div className="flex h-14 shrink-0 items-center justify-between px-2">
+        <div className="flex h-14 shrink-0 items-center gap-2 px-2">
           <Link href="/event-types" aria-label={t("home")} className="flex min-w-0 items-center">
             <Logo small icon={isCollapsed} className={classNames(isCollapsed && "[&_img]:w-6")} />
           </Link>
