@@ -99,8 +99,38 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
           transition-property: width, padding;
         }
         aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-label {
+          display: none !important;
           opacity: 0;
           pointer-events: none;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-header {
+          flex-direction: column;
+          justify-content: flex-start;
+          gap: 0.25rem;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-user,
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-header-controls {
+          width: auto;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-header-controls {
+          flex-direction: column;
+          align-items: center;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] nav > a,
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] nav > button,
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-bottom-item {
+          justify-content: center;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] nav svg,
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-bottom-item svg {
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] [data-sidebar-child="true"],
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-credits {
+          display: none !important;
         }
         aside[data-fiddle-sidebar="true"] .fiddle-sidebar-label {
           transition-property: opacity;
@@ -123,8 +153,12 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
           !isPlatformPages && "max-h-screen"
         )}>
         <div className="flex min-h-0 flex-1 flex-col justify-between py-3">
-          <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
-            {user?.org ? (
+          <header className="fiddle-sidebar-header todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
+            {isCollapsed ? (
+              <div data-testid="user-dropdown-trigger" className="fiddle-sidebar-user flex items-center">
+                <UserDropdown small />
+              </div>
+            ) : user?.org ? (
               !ENABLE_PROFILE_SWITCHER ? (
                 <Link href="/settings/organizations/profile" className="w-full px-1.5">
                   <div className="flex items-center gap-2 font-medium">
@@ -142,7 +176,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 <ProfileDropdown />
               )
             ) : (
-              <div data-testid="user-dropdown-trigger" className="todesktop:mt-4 w-full">
+              <div data-testid="user-dropdown-trigger" className="fiddle-sidebar-user todesktop:mt-4 w-full">
                 <span className="fiddle-sidebar-label hidden lg:inline">
                   <UserDropdown />
                 </span>
@@ -151,7 +185,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </span>
               </div>
             )}
-            <div className="flex w-full justify-end rtl:space-x-reverse">
+            <div className="fiddle-sidebar-header-controls flex w-full justify-end rtl:space-x-reverse">
               <button
                 color="minimal"
                 onClick={() => window.history.back()}
@@ -212,6 +246,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                   aria-label={t(item.name)}
                   target={item.target}
                   className={classNames(
+                    "fiddle-sidebar-bottom-item",
                     "text-left",
                     "[&[aria-current='page']]:bg-emphasis text-default justify-right group flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition",
                     "[&[aria-current='page']]:text-emphasis mt-0.5 w-full text-sm",
@@ -240,7 +275,11 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </ButtonOrLink>
               </Tooltip>
             ))}
-            {!IS_VISUAL_REGRESSION_TESTING && <Credits />}
+            {!IS_VISUAL_REGRESSION_TESTING && (
+              <div className="fiddle-sidebar-credits">
+                <Credits />
+              </div>
+            )}
           </div>
         )}
       </aside>

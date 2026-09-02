@@ -65,7 +65,7 @@ export type NavigationItemType = {
 };
 
 const defaultIsCurrent: NavigationItemType["isCurrent"] = ({ isChild, item, pathname }) => {
-  return isChild ? item.href === pathname : item.href ? pathname?.startsWith(item.href) ?? false : false;
+  return isChild ? item.href === pathname : item.href ? (pathname?.startsWith(item.href) ?? false) : false;
 };
 
 export const NavigationItem: React.FC<{
@@ -187,6 +187,7 @@ export const NavigationItem: React.FC<{
       ) : (
         <Tooltip side="right" content={t(item.name)} className="lg:hidden">
           <Link
+            data-sidebar-child={isChild || undefined}
             data-test-id={item.name}
             onClick={() => trackNavigationClick(item.name)}
             href={item.href}
@@ -229,9 +230,11 @@ export const NavigationItem: React.FC<{
               <SkeletonText className="h-[20px] w-full" />
             )}
             {item.name === "workflows" && (
-              <Badge startIcon="sparkles" variant="purple">
-                Cal.ai
-              </Badge>
+              <span className="fiddle-sidebar-label">
+                <Badge startIcon="sparkles" variant="purple">
+                  Cal.ai
+                </Badge>
+              </span>
             )}
           </Link>
         </Tooltip>
