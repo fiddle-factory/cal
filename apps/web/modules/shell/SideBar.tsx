@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -51,6 +52,12 @@ export function SideBarContainer({ bannersHeight, isPlatformUser = false }: Side
   return <SideBar isPlatformUser={isPlatformUser} bannersHeight={bannersHeight} user={data?.user} />;
 }
 
+// Default transition tuning for the collapsible side nav. Overridable at runtime
+// via the Fiddle editor panel (postMessage), which is why these live as plain
+// constants rather than inline literals.
+const DEFAULT_SIDENAV_TRANSITION_MS = 260;
+const DEFAULT_SIDENAV_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+
 export function SideBar({ bannersHeight, user }: SideBarProps) {
   const session = useSession();
   const { t, isLocaleReady } = useLocale();
@@ -58,6 +65,24 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const isPlatformPages = pathname?.startsWith("/settings/platform");
   const isAdmin = session.data?.user.role === UserPermissionRole.ADMIN;
   const flags = useFlagMap();
+
+  const [collapsed, setCollapsed] = useState(false);
+  const [transitionMs, setTransitionMs] = useState(DEFAULT_SIDENAV_TRANSITION_MS);
+  const [easing, setEasing] = useState(DEFAULT_SIDENAV_EASING);
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionMs === "number") setTransitionMs(p.transitionMs);
+      if (typeof p.easing === "string") setEasing(p.easing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   const publicPageUrl = `${getBookerBaseUrlSync(user?.org?.slug ?? null)}/${user?.orgAwareUsername}`;
 
@@ -70,16 +95,42 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const sidebarStylingAttributes = {
     maxHeight: `calc(100vh - ${bannersHeight}px)`,
     top: `${bannersHeight}px`,
+    transitionProperty: "width",
+    transitionDuration: `${transitionMs}ms`,
+    transitionTimingFunction: easing,
   };
 
   return (
     <div className="relative">
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        data-config-id="Layout-div-0"
+        style={
+          !isPlatformPages
+            ? sidebarStylingAttributes
+            : {
+                transitionProperty: "width",
+                transitionDuration: `${transitionMs}ms`,
+                transitionTimingFunction: easing,
+              }
+        }
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:px-3",
+          collapsed ? "w-14 lg:w-14 lg:px-2" : "w-14 lg:w-56",
           !isPlatformPages && "max-h-screen"
         )}>
+        <button
+          type="button"
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          onClick={() => setCollapsed((c) => !c)}
+          className="border-muted bg-default text-subtle hover:text-emphasis absolute -right-3 top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border shadow-sm lg:flex"
+          style={{
+            transitionProperty: "transform",
+            transitionDuration: `${transitionMs}ms`,
+            transitionTimingFunction: easing,
+            transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
+          }}>
+          <Icon name="chevron-left" className="h-3.5 w-3.5" />
+        </button>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
