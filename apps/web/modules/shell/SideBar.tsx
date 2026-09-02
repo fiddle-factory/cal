@@ -103,7 +103,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
 
   // geneditor-listener-start
   useEffect(() => {
-    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
     if (!el) return;
     const handler = (e: Event) => {
       const p = (e as CustomEvent).detail as Record<string, unknown>;
@@ -175,6 +175,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
         }
       `}</style>
       <aside
+        data-config-id="Layout-div-0"
         data-fiddle-sidebar="true"
         data-collapsed={isCollapsed}
         style={{
