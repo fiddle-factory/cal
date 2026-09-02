@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -72,12 +73,40 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
     top: `${bannersHeight}px`,
   };
 
+  // Collapse/expand state for the side panel, plus the tunables the
+  // genEditor panel controls: how long the collapse/expand transition
+  // takes and what easing curve it follows.
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [transitionDuration, setTransitionDuration] = React.useState(240);
+  const [transitionEasing, setTransitionEasing] = React.useState("cubic-bezier(0.4, 0, 0.2, 1)");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionDuration === "number") setTransitionDuration(p.transitionDuration);
+      if (typeof p.transitionEasing === "string") setTransitionEasing(p.transitionEasing);
+      if (typeof p.isCollapsed === "boolean") setIsCollapsed(p.isCollapsed);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
-    <div className="relative">
+    <div className="relative" data-config-id="Layout-div-0">
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        style={{
+          ...(!isPlatformPages ? sidebarStylingAttributes : {}),
+          transitionProperty: "width, padding",
+          transitionDuration: `${transitionDuration}ms`,
+          transitionTimingFunction: transitionEasing,
+        }}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex",
+          isCollapsed ? "w-14 lg:w-14 lg:px-0" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
@@ -128,6 +157,21 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </div>
               )}
               <KBarTrigger />
+              <button
+                type="button"
+                aria-label={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+                onClick={() => setIsCollapsed((prev) => !prev)}
+                className="hover:bg-subtle hover:text-emphasis text-subtle hidden h-6 w-6 shrink-0 items-center justify-center rounded-md lg:flex">
+                <Icon
+                  name={isCollapsed ? "chevron-right" : "chevron-left"}
+                  className="h-4 w-4 shrink-0"
+                  style={{
+                    transitionProperty: "transform",
+                    transitionDuration: `${transitionDuration}ms`,
+                    transitionTimingFunction: transitionEasing,
+                  }}
+                />
+              </button>
             </div>
           </header>
           {/* logo icon for tablet */}
