@@ -192,7 +192,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
           <header className="fiddle-sidebar-header todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             <div
               data-testid="user-dropdown-trigger"
-              className="fiddle-sidebar-user group/sidebar-user relative w-full">
+              className="fiddle-sidebar-user group/sidebar-user relative min-w-0 flex-1">
               {isCollapsed ? (
                 <UserDropdown small />
               ) : user?.org ? (
@@ -214,14 +214,14 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 )
               ) : (
                 <span className="fiddle-sidebar-label hidden lg:inline">
-                  <UserDropdown />
+                  <UserDropdown compact />
                 </span>
               )}
               {isCollapsed && (
                 <SidebarToggleButton isCollapsed overlay onToggle={() => setIsCollapsed((prev) => !prev)} />
               )}
             </div>
-            <div className="fiddle-sidebar-header-controls flex w-full justify-end rtl:space-x-reverse">
+            <div className="fiddle-sidebar-header-controls flex w-auto shrink-0 justify-end rtl:space-x-reverse">
               <button
                 color="minimal"
                 onClick={() => window.history.back()}

@@ -33,9 +33,10 @@ declare global {
 
 interface UserDropdownProps {
   small?: boolean;
+  compact?: boolean;
 }
 
-export function UserDropdown({ small }: UserDropdownProps) {
+export function UserDropdown({ small, compact }: UserDropdownProps) {
   const { isPlatformUser } = useGetUserAttributes();
   const { t } = useLocale();
   const { data: user, isPending } = useMeQuery();
@@ -108,10 +109,11 @@ export function UserDropdown({ small }: UserDropdownProps) {
             />
           </span>
           {!small && (
-            <span className="flex grow items-center gap-2">
-              <span className="w-24 shrink-0 text-sm leading-none">
+            <span className="flex min-w-0 grow items-center gap-2">
+              <span
+                className={classNames("text-sm leading-none", compact ? "min-w-0 flex-1" : "w-24 shrink-0")}>
                 <span className="text-emphasis block truncate py-0.5 font-medium leading-normal">
-                  {isPending ? "Loading..." : user?.name ?? "Nameless User"}
+                  {isPending ? "Loading..." : (user?.name ?? "Nameless User")}
                 </span>
               </span>
               <Icon
