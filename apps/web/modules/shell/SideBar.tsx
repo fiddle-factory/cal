@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -51,6 +52,13 @@ export function SideBarContainer({ bannersHeight, isPlatformUser = false }: Side
   return <SideBar isPlatformUser={isPlatformUser} bannersHeight={bannersHeight} user={data?.user} />;
 }
 
+// Fiddle-tunable defaults for the sidebar collapse/expand transition. A
+// genEditor control panel posts overrides for these at runtime (see the
+// `fiddle:sidebar-transition` message listener below); the constants stay as
+// the fallback so the sidebar animates sensibly with no panel attached.
+const DEFAULT_SIDEBAR_TRANSITION_DURATION_MS = 260;
+const DEFAULT_SIDEBAR_TRANSITION_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+
 export function SideBar({ bannersHeight, user }: SideBarProps) {
   const session = useSession();
   const { t, isLocaleReady } = useLocale();
@@ -67,19 +75,61 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
     user,
   });
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [transitionDurationMs, setTransitionDurationMs] = useState(
+    DEFAULT_SIDEBAR_TRANSITION_DURATION_MS
+  );
+  const [transitionEasing, setTransitionEasing] = useState(DEFAULT_SIDEBAR_TRANSITION_EASING);
+
+  // Lets a Fiddle canvas control panel fine-tune the collapse/expand
+  // transition live, without a rebuild. Ignored outside the Fiddle canvas.
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="sidebar-transition"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionDurationMs === "number") setTransitionDurationMs(p.transitionDurationMs);
+      if (typeof p.transitionEasing === "string") setTransitionEasing(p.transitionEasing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const sidebarTransitionVars = {
+    ["--sidebar-transition-duration" as string]: `${transitionDurationMs}ms`,
+    ["--sidebar-transition-easing" as string]: transitionEasing,
+  } as React.CSSProperties;
+
   const sidebarStylingAttributes = {
+    ...sidebarTransitionVars,
     maxHeight: `calc(100vh - ${bannersHeight}px)`,
     top: `${bannersHeight}px`,
-  };
+  } as React.CSSProperties;
 
   return (
     <div className="relative">
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        data-config-id="sidebar-transition"
+        style={!isPlatformPages ? sidebarStylingAttributes : sidebarTransitionVars}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex",
+          isCollapsed ? "lg:w-14 lg:px-0" : "lg:w-56 lg:px-3",
+          "transition-[width] [transition-duration:var(--sidebar-transition-duration)] [transition-timing-function:var(--sidebar-transition-easing)]",
           !isPlatformPages && "max-h-screen"
         )}>
+        <button
+          type="button"
+          onClick={() => setIsCollapsed((prev) => !prev)}
+          aria-label={isCollapsed ? "Expand navigation" : "Collapse navigation"}
+          aria-expanded={!isCollapsed}
+          className="hover:bg-subtle text-subtle hover:text-emphasis absolute -right-3 top-16 z-10 hidden h-6 w-6 items-center justify-center rounded-full border border-subtle bg-default shadow-sm transition md:flex">
+          <Icon
+            name={isCollapsed ? "chevron-right" : "chevron-left"}
+            className="h-3.5 w-3.5 shrink-0"
+          />
+        </button>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
           <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
             {user?.org ? (
