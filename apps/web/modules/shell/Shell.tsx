@@ -39,7 +39,7 @@ const Layout = (props: LayoutProps) => {
       <TimezoneChangeDialog />
       <DynamicModals />
 
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen">
         {banners && !props.isPlatformUser && <BannerContainer banners={banners} />}
 
         <div className="flex flex-1" data-testid="dashboard-shell">
