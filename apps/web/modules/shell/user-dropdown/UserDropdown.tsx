@@ -108,8 +108,8 @@ export function UserDropdown({ small }: UserDropdownProps) {
             />
           </span>
           {!small && (
-            <span className="flex grow items-center gap-2">
-              <span className="w-24 shrink-0 text-sm leading-none">
+            <span className="flex min-w-0 grow items-center gap-2 overflow-hidden">
+              <span className="min-w-0 w-24 shrink-0 text-sm leading-none">
                 <span className="text-emphasis block truncate py-0.5 font-medium leading-normal">
                   {isPending ? "Loading..." : user?.name ?? "Nameless User"}
                 </span>
