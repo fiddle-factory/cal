@@ -53,7 +53,7 @@ export function ScheduleListItem({
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
             <div className="space-x-2 rtl:space-x-reverse">
-              <span className="text-emphasis truncate font-medium">{schedule.name}</span>
+              <span className="text-emphasis truncate font-medium text-xs">{schedule.name}</span>
               {schedule.isDefault && (
                 <Badge variant="gray" className="text-xs">
                   {t("default")}
