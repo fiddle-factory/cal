@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -59,6 +60,25 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const isAdmin = session.data?.user.role === UserPermissionRole.ADMIN;
   const flags = useFlagMap();
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Fiddle: sidebar collapse transition — tunable via the canvas editor controls.
+  const [transitionDuration, setTransitionDuration] = useState(240);
+  const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="SideBar-aside-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.transitionDuration === "number") setTransitionDuration(p.transitionDuration);
+      if (typeof p.transitionEasing === "string") setTransitionEasing(p.transitionEasing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const publicPageUrl = `${getBookerBaseUrlSync(user?.org?.slug ?? null)}/${user?.orgAwareUsername}`;
 
   const bottomNavItems = useBottomNavItems({
@@ -74,10 +94,48 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
 
   return (
     <div className="relative">
+      <style jsx global>{`
+        aside[data-fiddle-sidebar="true"] {
+          transition-property: width, padding;
+          transition-duration: ${transitionDuration}ms;
+          transition-timing-function: ${transitionEasing};
+        }
+        aside[data-fiddle-sidebar="true"] .fiddle-sidebar-label {
+          transition-property: opacity;
+          transition-duration: ${transitionDuration}ms;
+          transition-timing-function: ${transitionEasing};
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] .fiddle-sidebar-label {
+          display: none !important;
+          opacity: 0;
+          pointer-events: none;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] nav > a,
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] nav > button {
+          justify-content: center;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] nav svg {
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+        }
+        aside[data-fiddle-sidebar="true"][data-collapsed="true"] [data-sidebar-child="true"] {
+          display: none !important;
+        }
+      `}</style>
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        data-fiddle-sidebar="true"
+        data-collapsed={isCollapsed}
+        style={{
+          ...(!isPlatformPages ? sidebarStylingAttributes : {}),
+          transitionProperty: "width, padding",
+          transitionDuration: `${transitionDuration}ms`,
+          transitionTimingFunction: transitionEasing,
+        }}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex",
+          isCollapsed ? "w-14 lg:w-14 lg:px-0" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
         <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
@@ -91,7 +149,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                       imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
                       size="xsm"
                     />
-                    <p className="text line-clamp-1 text-sm">
+                    <p className="fiddle-sidebar-label text line-clamp-1 text-sm">
                       <span>{user.org.name}</span>
                     </p>
                   </div>
@@ -128,6 +186,24 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </div>
               )}
               <KBarTrigger />
+              <button
+                type="button"
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-expanded={!isCollapsed}
+                onClick={() => setIsCollapsed((prev) => !prev)}
+                title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className="text-subtle hover:bg-subtle hover:text-emphasis hidden h-8 w-8 shrink-0 items-center justify-center rounded-md lg:flex">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5 fill-none stroke-current"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round">
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <path d="M9 3v18" />
+                </svg>
+              </button>
             </div>
           </header>
           {/* logo icon for tablet */}
@@ -171,7 +247,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                     />
                   )}
                   {isLocaleReady ? (
-                    <span className="hidden w-full justify-between lg:flex">
+                    <span className="fiddle-sidebar-label hidden w-full justify-between lg:flex">
                       <div className="flex">{t(item.name)}</div>
                     </span>
                   ) : (
