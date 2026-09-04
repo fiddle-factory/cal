@@ -87,7 +87,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   // Fiddle: sidebar collapse transition — duration/easing tunable via the canvas editor controls.
-  const [transitionDuration, setTransitionDuration] = useState(240);
+  const [transitionDuration, setTransitionDuration] = useState(80);
   const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
 
   // geneditor-listener-start
