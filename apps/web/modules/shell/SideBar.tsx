@@ -98,7 +98,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const flags = useFlagMap();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [transitionDuration, setTransitionDuration] = useState(240);
+  const [transitionDuration, setTransitionDuration] = useState(270);
   const [transitionEasing, setTransitionEasing] = useState(
     "cubic-bezier(0.4, 0, 0.2, 1)"
   );
