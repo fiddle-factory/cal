@@ -213,7 +213,7 @@ export const Navigation = ({ isPlatformNavigation = false }: { isPlatformNavigat
   const { desktopNavigationItems } = useNavigationItems(isPlatformNavigation);
 
   return (
-    <nav className="mt-2 flex-1 gap-0 px-7 md:px-2 lg:mt-4 lg:px-0">
+    <nav className="mt-2 flex-1 gap-2.5 px-1.5 md:px-2 lg:mt-4 lg:px-0">
       {desktopNavigationItems.map((item) => (
         <NavigationItem key={item.name} item={item} />
       ))}

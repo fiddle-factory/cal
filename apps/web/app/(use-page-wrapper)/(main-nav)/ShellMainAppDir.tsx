@@ -27,7 +27,7 @@ export function ShellMainAppDir(props: LayoutProps) {
                 {props.heading && (
                   <h3
                     className={classNames(
-                      "font-heading text-emphasis max-w-28 sm:max-w-72 md:max-w-80 inline truncate text-6xl tracking-wide sm:text-xl md:block xl:max-w-full",
+                      "font-heading text-red-600 max-w-28 sm:max-w-72 md:max-w-80 inline truncate text-6xl tracking-wide sm:text-xl md:block xl:max-w-full",
                       props.smallHeading ? "text-base" : "text-xl"
                     )}>
                     {props.heading}
