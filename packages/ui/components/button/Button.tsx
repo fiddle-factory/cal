@@ -150,7 +150,7 @@ export const buttonClasses = cva(
       },
       size: {
         xs: "h-6 p-2 leading-none text-xs rounded-md",
-        sm: "h-7 px-2 py-1.5 leading-none text-sm" /** For backwards compatibility */,
+        sm: "h-7 px-7 py-6 leading-none text-sm" /** For backwards compatibility */,
         base: "px-2.5 py-2 text-sm leading-none",
         lg: "px-3 py-2.5 ",
       },

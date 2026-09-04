@@ -53,7 +53,7 @@ export function ScheduleListItem({
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
             <div className="space-x-2 rtl:space-x-reverse">
-              <span className="text-emphasis truncate font-medium text-xs">{schedule.name}</span>
+              <span className="text-darkgray-50 truncate font-medium text-xs">{schedule.name}</span>
               {schedule.isDefault && (
                 <Badge variant="gray" className="text-xs">
                   {t("default")}
@@ -85,7 +85,7 @@ export function ScheduleListItem({
                   </Fragment>
                 ))}
               {(schedule.timeZone || displayOptions?.timeZone) && (
-                <span className="my-1 flex items-center first-letter:text-xs">
+                <span className="my-1 flex items-center first-letter:text-xs text-7xl">
                   <Icon name="globe" className="h-3.5 w-3.5" />
                   &nbsp;{schedule.timeZone ?? displayOptions?.timeZone}
                 </span>
