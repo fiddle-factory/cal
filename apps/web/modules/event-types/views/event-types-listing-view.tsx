@@ -542,7 +542,7 @@ export const InfiniteEventTypeList = ({
                   delay: Math.min(LIMIT * pageIdx + index, 14) * 0.045,
                   ease: [0.16, 1, 0.3, 1],
                 }}>
-                <div className="hover:bg-cal-muted flex w-full items-center justify-between transition">
+                <div className="hover:bg-info flex w-full items-center justify-between bg-blue-50 transition dark:bg-blue-950">
                   <div className="group flex w-full max-w-full items-center justify-between overflow-hidden px-4 py-4 sm:px-6">
                     {!(firstItem && firstItem.id === type.id) && (
                       <ArrowButton
