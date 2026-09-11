@@ -1,6 +1,7 @@
 "use client";
 
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { FC } from "react";
@@ -532,7 +533,15 @@ export const InfiniteEventTypeList = ({
               type.metadata?.managedEventConfig !== undefined &&
               type.schedulingType !== SchedulingType.MANAGED;
             return (
-              <li key={type.id}>
+              <motion.li
+                key={type.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.35,
+                  delay: Math.min(LIMIT * pageIdx + index, 14) * 0.045,
+                  ease: [0.16, 1, 0.3, 1],
+                }}>
                 <div className="hover:bg-cal-muted flex w-full items-center justify-between transition">
                   <div className="group flex w-full max-w-full items-center justify-between overflow-hidden px-4 py-4 sm:px-6">
                     {!(firstItem && firstItem.id === type.id) && (
@@ -828,7 +837,7 @@ export const InfiniteEventTypeList = ({
                     </Dropdown>
                   </div>
                 </div>
-              </li>
+              </motion.li>
             );
           });
         })}
