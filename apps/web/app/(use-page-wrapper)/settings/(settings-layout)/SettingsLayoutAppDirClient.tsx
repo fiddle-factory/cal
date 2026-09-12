@@ -440,7 +440,11 @@ const BackButtonInSidebar = ({ name }: { name: string }) => {
         name="arrow-left"
         className="h-4 w-4 stroke-[2px] ltr:mr-[10px] rtl:ml-[10px] rtl:rotate-180 md:mt-0"
       />
-      <Skeleton title={name} as="p" className="min-h-4 max-w-36 truncate" loadingClassName="ms-3">
+      <Skeleton
+        title={name}
+        as="p"
+        className="fiddle-settings-sidebar-label min-h-4 max-w-36 truncate"
+        loadingClassName="ms-3">
         {name}
       </Skeleton>
     </Link>
@@ -658,6 +662,11 @@ const TeamListCollapsible = ({ teamFeatures }: { teamFeatures?: Record<number, T
   );
 };
 
+// Tunable via the "Settings sidebar collapse transition" editor controls
+// (data-config-id="settings-sidebar-collapse-transition").
+const DEFAULT_SETTINGS_SIDEBAR_COLLAPSE_DURATION_MS = 240;
+const DEFAULT_SETTINGS_SIDEBAR_COLLAPSE_EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
+
 const SettingsSidebarContainer = ({
   className = "",
   navigationIsOpenedOnMobile,
@@ -675,6 +684,26 @@ const SettingsSidebarContainer = ({
     }[]
   >();
   const session = useSession();
+
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [collapseDurationMs, setCollapseDurationMs] = useState(
+    DEFAULT_SETTINGS_SIDEBAR_COLLAPSE_DURATION_MS
+  );
+  const [collapseEasing, setCollapseEasing] = useState(DEFAULT_SETTINGS_SIDEBAR_COLLAPSE_EASING);
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.collapseDurationMs === "number") setCollapseDurationMs(p.collapseDurationMs);
+      if (typeof p.collapseEasing === "string") setCollapseEasing(p.collapseEasing);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   const organizationId = session.data?.user?.org?.id;
 
@@ -721,15 +750,45 @@ const SettingsSidebarContainer = ({
 
   return (
     <nav
-      style={{ maxHeight: `calc(100vh - ${bannersHeight}px)`, top: `${bannersHeight}px` }}
+      data-config-id="settings-sidebar-collapse-transition"
+      data-collapsed={isCollapsed}
+      style={{
+        maxHeight: `calc(100vh - ${bannersHeight}px)`,
+        top: `${bannersHeight}px`,
+        transitionProperty: "width, transform, opacity",
+        transitionDuration: `${collapseDurationMs}ms`,
+        transitionTimingFunction: collapseEasing,
+      }}
       className={classNames(
-        "no-scrollbar bg-cal-muted stack-y-1 fixed bottom-0 left-0 top-0 z-20 flex max-h-screen w-56 flex-col overflow-x-hidden overflow-y-scroll px-2 pb-3 transition-transform max-lg:z-10 lg:sticky lg:flex",
+        "no-scrollbar bg-cal-muted stack-y-1 fixed bottom-0 left-0 top-0 z-20 flex max-h-screen flex-col overflow-x-hidden overflow-y-scroll px-2 pb-3 max-lg:z-10 lg:sticky lg:flex",
+        isCollapsed ? "w-14" : "w-56",
         className,
         navigationIsOpenedOnMobile
           ? "translate-x-0 opacity-100"
           : "-translate-x-full opacity-0 lg:translate-x-0 lg:opacity-100"
       )}
       aria-label={t("settings_navigation")}>
+      <style jsx global>{`
+        nav[data-config-id="settings-sidebar-collapse-transition"] .fiddle-settings-sidebar-label {
+          transition-property: opacity;
+          transition-duration: ${collapseDurationMs}ms;
+          transition-timing-function: ${collapseEasing};
+        }
+        nav[data-config-id="settings-sidebar-collapse-transition"][data-collapsed="true"]
+          .fiddle-settings-sidebar-label {
+          opacity: 0;
+          pointer-events: none;
+        }
+      `}</style>
+      <button
+        type="button"
+        aria-label={isCollapsed ? t("expand_menu") : t("collapse_menu")}
+        aria-expanded={!isCollapsed}
+        onClick={() => setIsCollapsed((prev) => !prev)}
+        title={isCollapsed ? t("expand_menu") : t("collapse_menu")}
+        className="text-subtle hover:bg-subtle hover:text-emphasis mb-1 mt-2 flex h-8 w-8 shrink-0 items-center justify-center self-end rounded-md">
+        <Icon name={isCollapsed ? "chevron-right" : "chevron-left"} className="h-4 w-4 shrink-0" />
+      </button>
       <>
         <BackButtonInSidebar name={t("back")} />
         {tabsWithPermissions.map((tab) => {
@@ -758,13 +817,17 @@ const SettingsSidebarContainer = ({
                       <Skeleton
                         title={tab.name}
                         as="p"
-                        className="text-subtle truncate text-sm font-medium leading-5"
+                        className="fiddle-settings-sidebar-label text-subtle truncate text-sm font-medium leading-5"
                         loadingClassName="ms-3">
                         {t(tab.name)}
                       </Skeleton>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-1">
+                  <div
+                    className={classNames(
+                      "fiddle-settings-sidebar-label flex flex-col space-y-1",
+                      isCollapsed && "hidden"
+                    )}>
                     {tab.children?.map((child, index) => (
                       <div key={child.href} className="flex items-start gap-2">
                         <VerticalTabItem
@@ -791,7 +854,9 @@ const SettingsSidebarContainer = ({
 
               {tab.name === "teams" && (
                 <React.Fragment key={tab.href}>
-                  <div data-testid="tab-teams" className={`${!tab.children?.length ? "mb-3" : ""}`}>
+                  <div
+                    data-testid="tab-teams"
+                    className={classNames(!tab.children?.length ? "mb-3" : "", isCollapsed && "hidden")}>
                     <Link href={tab.href}>
                       <div className="hover:bg-subtle [&[aria-current='page']]:bg-emphasis [&[aria-current='page']]:text-emphasis group-hover:text-default text-default group flex h-9 w-full flex-row items-center rounded-md px-2 py-[10px] text-sm font-medium leading-none transition">
                         {tab && tab.icon && (
@@ -827,7 +892,7 @@ const SettingsSidebarContainer = ({
 
               {tab.name === "other_teams" && (
                 <React.Fragment key={tab.href}>
-                  <div className={`${!tab.children?.length ? "mb-3" : ""}`}>
+                  <div className={classNames(!tab.children?.length ? "mb-3" : "", isCollapsed && "hidden")}>
                     <Link href={tab.href}>
                       <div className="hover:bg-subtle [&[aria-current='page']]:bg-emphasis [&[aria-current='page']]:text-emphasis group-hover:text-default text-default group flex h-9 w-full flex-row items-center rounded-md px-2 py-[10px] text-sm font-medium leading-none transition">
                         {tab && tab.icon && (

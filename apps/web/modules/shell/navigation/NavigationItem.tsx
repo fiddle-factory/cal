@@ -168,7 +168,7 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className="fiddle-sidebar-label hidden w-full justify-between truncate text-ellipsis lg:flex"
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
@@ -177,7 +177,10 @@ export const NavigationItem: React.FC<{
               <SkeletonText className="h-[20px] w-full" />
             )}
             {shouldShowChevron && (
-              <Icon name={isExpanded ? "chevron-up" : "chevron-down"} className="ml-auto h-4 w-4" />
+              <Icon
+                name={isExpanded ? "chevron-up" : "chevron-down"}
+                className="fiddle-sidebar-label ml-auto h-4 w-4"
+              />
             )}
           </button>
         </Tooltip>
@@ -185,6 +188,7 @@ export const NavigationItem: React.FC<{
         <Tooltip side="right" content={t(item.name)} className="lg:hidden">
           <Link
             data-test-id={item.name}
+            data-sidebar-child={isChild || undefined}
             onClick={() => trackNavigationClick(item.name)}
             href={item.href}
             aria-label={t(item.name)}
@@ -217,7 +221,7 @@ export const NavigationItem: React.FC<{
             )}
             {isLocaleReady ? (
               <span
-                className="hidden w-full justify-between truncate text-ellipsis lg:flex"
+                className="fiddle-sidebar-label hidden w-full justify-between truncate text-ellipsis lg:flex"
                 data-testid={`${item.name}-test`}>
                 {t(item.name)}
                 {item.badge && item.badge}
@@ -226,9 +230,11 @@ export const NavigationItem: React.FC<{
               <SkeletonText className="h-[20px] w-full" />
             )}
             {item.name === "workflows" && (
-              <Badge startIcon="sparkles" variant="purple">
-                Cal.ai
-              </Badge>
+              <span className="fiddle-sidebar-label">
+                <Badge startIcon="sparkles" variant="purple">
+                  Cal.ai
+                </Badge>
+              </span>
             )}
           </Link>
         </Tooltip>
