@@ -40,13 +40,13 @@ export type ButtonProps = ButtonBaseProps &
   );
 
 export const buttonClasses = cva(
-  "group whitespace-nowrap inline-flex items-center text-sm font-medium relative rounded-[10px] transition cursor-pointer disabled:cursor-not-allowed gap-1",
+  "group whitespace-nowrap inline-flex items-center text-sm font-medium relative rounded-none transition cursor-pointer disabled:cursor-not-allowed gap-1",
   {
     variants: {
       variant: {
         button: "",
         icon: "flex justify-center",
-        fab: "min-w-14 min-h-14 md:min-w-min md:min-h-min rounded-full justify-center md:rounded-[10px] radix-state-open:rotate-45 md:radix-state-open:rotate-0 radix-state-open:shadown-none radix-state-open:ring-0",
+        fab: "min-w-14 min-h-14 md:min-w-min md:min-h-min rounded-none justify-center md:rounded-none radix-state-open:rotate-45 md:radix-state-open:rotate-0 radix-state-open:shadown-none radix-state-open:ring-0",
       },
       color: {
         primary: [
@@ -149,7 +149,7 @@ export const buttonClasses = cva(
         ],
       },
       size: {
-        xs: "h-6 p-2 leading-none text-xs rounded-md",
+        xs: "h-6 p-2 leading-none text-xs rounded-none",
         sm: "h-7 px-2 py-1.5 leading-none text-sm" /** For backwards compatibility */,
         base: "px-2.5 py-2 text-sm leading-none",
         lg: "px-3 py-2.5 ",
@@ -192,12 +192,12 @@ export const buttonClasses = cva(
       {
         variant: "icon",
         size: "xs",
-        className: "h-5 w-5 p-1! rounded-md",
+        className: "h-5 w-5 p-1! rounded-none",
       },
       {
         variant: "icon",
         size: "sm",
-        className: "h-6 w-6 p-1! rounded-md",
+        className: "h-6 w-6 p-1! rounded-none",
       },
       {
         variant: "icon",
