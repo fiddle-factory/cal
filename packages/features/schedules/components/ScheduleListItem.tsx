@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Fragment, useState } from "react";
+import { motion } from "framer-motion";
 
 import { availabilityAsString } from "@calcom/lib/availability";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -29,6 +30,7 @@ export function ScheduleListItem({
   isDeletable,
   duplicateFunction,
   redirectUrl,
+  index = 0,
 }: {
   schedule: RouterOutputs["viewer"]["availability"]["list"]["schedules"][number];
   deleteFunction: ({ scheduleId }: { scheduleId: number }) => void;
@@ -41,6 +43,7 @@ export function ScheduleListItem({
   updateDefault: ({ scheduleId, isDefault }: { scheduleId: number; isDefault: boolean }) => void;
   duplicateFunction: ({ scheduleId }: { scheduleId: number }) => void;
   redirectUrl: string;
+  index?: number;
 }) {
   const { t, i18n } = useLocale();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -48,7 +51,11 @@ export function ScheduleListItem({
   type AvailabilityItem = (typeof schedule.availability)[number];
 
   return (
-    <li key={schedule.id}>
+    <motion.li
+      key={schedule.id}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}>
       <div className="hover:bg-cal-muted flex items-center justify-between px-3 py-5 transition sm:px-4">
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
@@ -167,6 +174,6 @@ export function ScheduleListItem({
           </ConfirmationDialogContent>
         </Dialog>
       </div>
-    </li>
+    </motion.li>
   );
 }
