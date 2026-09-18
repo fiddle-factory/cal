@@ -30,6 +30,21 @@ const Layout = (props: LayoutProps) => {
 
   useFormbricks();
 
+  const [layoutOpacity, setLayoutOpacity] = React.useState(1);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-1"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.layoutOpacity === "number") setLayoutOpacity(p.layoutOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
     <>
       <div>
@@ -39,10 +54,10 @@ const Layout = (props: LayoutProps) => {
       <TimezoneChangeDialog />
       <DynamicModals />
 
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col" data-config-id="Layout-div-1" style={{ opacity: layoutOpacity }}>
         {banners && !props.isPlatformUser && <BannerContainer banners={banners} />}
 
-        <div className="flex flex-1" data-testid="dashboard-shell">
+        <div className="flex flex-1 bg-subtle opacity-50" data-testid="dashboard-shell">
           {props.SidebarContainer ? (
             cloneElement(props.SidebarContainer, { bannersHeight })
           ) : (
