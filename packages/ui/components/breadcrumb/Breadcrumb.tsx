@@ -25,7 +25,7 @@ export const Breadcrumb = ({ children }: BreadcrumbProps) => {
   });
 
   return (
-    <nav className="text-default text-sm font-normal leading-5">
+    <nav className="text-default text-sm font-bold leading-5">
       <ol className="flex items-center space-x-2 rtl:space-x-reverse">{childrenSeperated}</ol>
     </nav>
   );
