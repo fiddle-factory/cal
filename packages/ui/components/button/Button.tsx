@@ -51,8 +51,8 @@ export const buttonClasses = cva(
       color: {
         primary: [
           // Base colors
-          "bg-brand-default",
-          "text-brand",
+          "bg-subtle",
+          "text-emphasis",
           // Hover state
           "not-disabled:hover:bg-brand-emphasis",
           // Focus state
