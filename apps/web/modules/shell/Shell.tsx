@@ -30,7 +30,7 @@ const Layout = (props: LayoutProps) => {
 
   useFormbricks();
 
-  const [layoutOpacity, setLayoutOpacity] = React.useState(1);
+  const [layoutOpacity, setLayoutOpacity] = React.useState(0.8);
 
   // geneditor-listener-start
   React.useEffect(() => {
