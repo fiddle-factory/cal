@@ -35,12 +35,15 @@ type BreadcrumbItemProps = {
   children: React.ReactNode;
   href: string;
   listProps?: JSX.IntrinsicElements["li"];
+  className?: string;
 };
 
-export const BreadcrumbItem = ({ children, href, listProps }: BreadcrumbItemProps) => {
+export const BreadcrumbItem = ({ children, href, listProps, className }: BreadcrumbItemProps) => {
   return (
     <li {...listProps}>
-      <Link href={href}>{children}</Link>
+      <Link href={href} className={className}>
+        {children}
+      </Link>
     </li>
   );
 };
