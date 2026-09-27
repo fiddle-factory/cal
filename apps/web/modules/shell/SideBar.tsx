@@ -3,6 +3,7 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { getBookerBaseUrlSync } from "@calcom/features/ee/organizations/lib/getBookerBaseUrlSync";
 import { useFlagMap } from "@calcom/features/flags/context/provider";
@@ -41,6 +42,42 @@ export type SideBarProps = {
   isPlatformUser?: boolean;
 };
 
+function SidebarToggleButton({
+  isCollapsed,
+  onToggle,
+  overlay = false,
+}: {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  overlay?: boolean;
+}) {
+  const label = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-expanded={!isCollapsed}
+      onClick={onToggle}
+      className={classNames(
+        "text-subtle hover:bg-subtle hover:text-emphasis flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+        overlay &&
+          "bg-cal-muted absolute inset-0 z-10 opacity-0 transition-opacity group-hover/sidebar-user:opacity-100 group-focus-within/sidebar-user:opacity-100"
+      )}
+      title={label}>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-5 w-5 fill-none stroke-current"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round">
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <path d="M9 3v18" />
+      </svg>
+    </button>
+  );
+}
+
 export function SideBarContainer({ bannersHeight, isPlatformUser = false }: SideBarContainerProps) {
   const { status, data } = useSession();
 
@@ -59,6 +96,8 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
   const isAdmin = session.data?.user.role === UserPermissionRole.ADMIN;
   const flags = useFlagMap();
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const publicPageUrl = `${getBookerBaseUrlSync(user?.org?.slug ?? null)}/${user?.orgAwareUsername}`;
 
   const bottomNavItems = useBottomNavItems({
@@ -74,42 +113,98 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
 
   return (
     <div className="relative">
+      <style jsx global>{`
+        aside[data-app-sidebar="true"] {
+          transition-property: width, padding;
+        }
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-label {
+          display: none;
+          opacity: 0;
+          pointer-events: none;
+        }
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-header {
+          flex-direction: column;
+          justify-content: flex-start;
+          gap: 0.25rem;
+        }
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-user,
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-header-controls {
+          width: auto;
+        }
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-header-controls {
+          flex-direction: column;
+          align-items: center;
+        }
+        aside[data-app-sidebar="true"][data-collapsed="true"] nav > a,
+        aside[data-app-sidebar="true"][data-collapsed="true"] nav > button,
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-bottom-item {
+          justify-content: center;
+          padding-left: 0;
+          padding-right: 0;
+        }
+        aside[data-app-sidebar="true"][data-collapsed="true"] nav svg,
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-bottom-item svg {
+          margin-left: 0;
+          margin-right: 0;
+        }
+        aside[data-app-sidebar="true"][data-collapsed="true"] [data-sidebar-child="true"],
+        aside[data-app-sidebar="true"][data-collapsed="true"] .app-sidebar-credits {
+          display: none;
+        }
+        aside[data-app-sidebar="true"] .app-sidebar-label {
+          transition-property: opacity;
+          transition-duration: 240ms;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+      `}</style>
       <aside
-        style={!isPlatformPages ? sidebarStylingAttributes : {}}
+        data-app-sidebar="true"
+        data-collapsed={isCollapsed}
+        style={{
+          ...(!isPlatformPages ? sidebarStylingAttributes : {}),
+          transitionProperty: "width, padding",
+          transitionDuration: "240ms",
+          transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
         className={classNames(
-          "bg-cal-muted border-muted fixed left-0 hidden h-full w-14 flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex lg:w-56 lg:px-3",
+          "bg-cal-muted border-muted fixed left-0 hidden h-full flex-col overflow-y-auto overflow-x-hidden border-r md:sticky md:flex",
+          isCollapsed ? "w-14 lg:w-14 lg:px-0" : "w-14 lg:w-56 lg:px-3",
           !isPlatformPages && "max-h-screen"
         )}>
-        <div className="flex h-full flex-col justify-between py-3 lg:pt-4">
-          <header className="todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
-            {user?.org ? (
-              !ENABLE_PROFILE_SWITCHER ? (
-                <Link href="/settings/organizations/profile" className="w-full px-1.5">
-                  <div className="flex items-center gap-2 font-medium">
-                    <Avatar
-                      alt={`${user.org.name} logo`}
-                      imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
-                      size="xsm"
-                    />
-                    <p className="text line-clamp-1 text-sm">
-                      <span>{user.org.name}</span>
-                    </p>
-                  </div>
-                </Link>
+        <div className="flex min-h-0 flex-1 flex-col justify-between py-3">
+          <header className="app-sidebar-header todesktop:-mt-3 todesktop:flex-col-reverse todesktop:[-webkit-app-region:drag] items-center justify-between md:hidden lg:flex">
+            <div
+              data-testid="user-dropdown-trigger"
+              className="app-sidebar-user group/sidebar-user relative min-w-0 flex-1 overflow-hidden">
+              {isCollapsed ? (
+                <UserDropdown small />
+              ) : user?.org ? (
+                !ENABLE_PROFILE_SWITCHER ? (
+                  <Link href="/settings/organizations/profile" className="w-full px-1.5">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Avatar
+                        alt={`${user.org.name} logo`}
+                        imageSrc={getPlaceholderAvatar(user.org.logoUrl, user.org.name)}
+                        size="xsm"
+                      />
+                      <p className="app-sidebar-label text line-clamp-1 text-sm">
+                        <span>{user.org.name}</span>
+                      </p>
+                    </div>
+                  </Link>
+                ) : (
+                  <ProfileDropdown />
+                )
               ) : (
-                <ProfileDropdown />
-              )
-            ) : (
-              <div data-testid="user-dropdown-trigger" className="todesktop:mt-4 w-full">
-                <span className="hidden lg:inline">
-                  <UserDropdown />
+                <span className="app-sidebar-label hidden lg:inline">
+                  <UserDropdown compact />
                 </span>
-                <span className="hidden md:inline lg:hidden">
-                  <UserDropdown small />
-                </span>
-              </div>
-            )}
-            <div className="flex w-full justify-end rtl:space-x-reverse">
+              )}
+              {isCollapsed && (
+                <SidebarToggleButton isCollapsed overlay onToggle={() => setIsCollapsed((prev) => !prev)} />
+              )}
+            </div>
+            <div className="app-sidebar-header-controls ml-1 flex w-auto shrink-0 items-center gap-1 justify-end rtl:space-x-reverse">
               <button
                 color="minimal"
                 onClick={() => window.history.back()}
@@ -128,6 +223,9 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </div>
               )}
               <KBarTrigger />
+              {!isCollapsed && (
+                <SidebarToggleButton isCollapsed={false} onToggle={() => setIsCollapsed((prev) => !prev)} />
+              )}
             </div>
           </header>
           {/* logo icon for tablet */}
@@ -152,6 +250,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                   aria-label={t(item.name)}
                   target={item.target}
                   className={classNames(
+                    "app-sidebar-bottom-item",
                     "text-left",
                     "[&[aria-current='page']]:bg-emphasis text-default justify-right group flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition",
                     "[&[aria-current='page']]:text-emphasis mt-0.5 w-full text-sm",
@@ -171,7 +270,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                     />
                   )}
                   {isLocaleReady ? (
-                    <span className="hidden w-full justify-between lg:flex">
+                    <span className="app-sidebar-label hidden w-full justify-between lg:flex">
                       <div className="flex">{t(item.name)}</div>
                     </span>
                   ) : (
@@ -180,7 +279,11 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
                 </ButtonOrLink>
               </Tooltip>
             ))}
-            {!IS_VISUAL_REGRESSION_TESTING && <Credits />}
+            {!IS_VISUAL_REGRESSION_TESTING && (
+              <div className="app-sidebar-credits">
+                <Credits />
+              </div>
+            )}
           </div>
         )}
       </aside>
