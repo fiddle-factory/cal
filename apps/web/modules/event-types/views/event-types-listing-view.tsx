@@ -510,8 +510,8 @@ export const InfiniteEventTypeList = ({
   });
 
   return (
-    <div className="bg-default border-subtle flex flex-col overflow-hidden rounded-md border">
-      <ul ref={parent} className="divide-subtle static! w-full divide-y" data-testid="event-types">
+    <div className="flex flex-col">
+      <ul ref={parent} className="static! flex w-full flex-col gap-3" data-testid="event-types">
         {pages.map((page, pageIdx) => {
           return page?.eventTypes?.map((type, index) => {
             const embedLink = `${group.profile.slug}/${type.slug}`;
@@ -532,9 +532,11 @@ export const InfiniteEventTypeList = ({
               type.metadata?.managedEventConfig !== undefined &&
               type.schedulingType !== SchedulingType.MANAGED;
             return (
-              <li key={type.id}>
+              <li
+                key={type.id}
+                className="bg-default border-subtle overflow-hidden rounded-2xl border">
                 <div className="hover:bg-cal-muted flex w-full items-center justify-between transition">
-                  <div className="group flex w-full max-w-full items-center justify-between overflow-hidden px-4 py-4 sm:px-6">
+                  <div className="group flex w-full max-w-full items-center justify-between overflow-hidden px-5 py-5 sm:px-7">
                     {!(firstItem && firstItem.id === type.id) && (
                       <ArrowButton
                         onClick={() => moveEventType(LIMIT * pageIdx + index, -1)}
