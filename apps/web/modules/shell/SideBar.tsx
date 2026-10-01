@@ -98,7 +98,7 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [transitionDuration, setTransitionDuration] = useState(240);
-  const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
+  const [transitionEasing, setTransitionEasing] = useState("ease-in-out");
 
   // geneditor-listener-start
   useEffect(() => {
