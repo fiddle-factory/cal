@@ -31,8 +31,8 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
   const router = useRouter();
 
   // Tunable onmount stagger animation values, adjustable from the editor panel.
-  const [staggerStepMs, setStaggerStepMs] = useState(60);
-  const [animationDurationMs, setAnimationDurationMs] = useState(600);
+  const [staggerStepMs, setStaggerStepMs] = useState(300);
+  const [animationDurationMs, setAnimationDurationMs] = useState(1500);
   const [animationDistancePx, setAnimationDistancePx] = useState(10);
 
   // geneditor-listener-start
