@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { availabilityAsString } from "@calcom/lib/availability";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -30,6 +30,9 @@ export function ScheduleListItem({
   duplicateFunction,
   redirectUrl,
   staggerIndex,
+  staggerStepMs,
+  animationDurationMs,
+  animationDistancePx,
 }: {
   schedule: RouterOutputs["viewer"]["availability"]["list"]["schedules"][number];
   deleteFunction: ({ scheduleId }: { scheduleId: number }) => void;
@@ -44,17 +47,43 @@ export function ScheduleListItem({
   redirectUrl: string;
   /** Zero-based position in the list; staggers this row's onmount entrance animation. */
   staggerIndex?: number;
+  /** ms delay added per staggerIndex step. */
+  staggerStepMs?: number;
+  /** Entrance animation duration, in ms. */
+  animationDurationMs?: number;
+  /** Starting vertical offset the row slides up from, in px. */
+  animationDistancePx?: number;
 }) {
   const { t, i18n } = useLocale();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   type AvailabilityItem = (typeof schedule.availability)[number];
 
+  const stepMs = staggerStepMs ?? 60;
+  const durationMs = animationDurationMs ?? 600;
+  const distancePx = animationDistancePx ?? 10;
+  const delayMs = (staggerIndex ?? 0) * stepMs;
+
+  // Entrance is driven by a plain opacity/transform transition (not a CSS
+  // keyframe) so every value below is a live, tunable inline style.
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const timer = setTimeout(() => setEntered(true), delayMs);
+      return () => clearTimeout(timer);
+    });
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <li
       key={schedule.id}
-      className="animate-fade-in-up opacity-0"
-      style={{ animationDelay: `${(staggerIndex ?? 0) * 60}ms` }}>
+      style={{
+        opacity: entered ? 1 : 0,
+        transform: entered ? "none" : `translateY(${distancePx}px)`,
+        transition: `opacity ${durationMs}ms cubic-bezier(.21, 1.02, .73, 1), transform ${durationMs}ms cubic-bezier(.21, 1.02, .73, 1)`,
+      }}>
       <div className="hover:bg-cal-muted flex items-center justify-between px-3 py-5 transition sm:px-4">
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>

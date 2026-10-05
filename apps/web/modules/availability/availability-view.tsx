@@ -4,7 +4,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { revalidateAvailabilityList } from "app/(use-page-wrapper)/(main-nav)/availability/actions";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import posthog from "posthog-js";
 
 import { BulkEditDefaultForEventsModal } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
@@ -29,6 +29,26 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
   const [bulkUpdateModal, setBulkUpdateModal] = useState(false);
   const utils = trpc.useUtils();
   const router = useRouter();
+
+  // Tunable onmount stagger animation values, adjustable from the editor panel.
+  const [staggerStepMs, setStaggerStepMs] = useState(60);
+  const [animationDurationMs, setAnimationDurationMs] = useState(600);
+  const [animationDistancePx, setAnimationDistancePx] = useState(10);
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.staggerStepMs === "number") setStaggerStepMs(p.staggerStepMs);
+      if (typeof p.animationDurationMs === "number") setAnimationDurationMs(p.animationDurationMs);
+      if (typeof p.animationDistancePx === "number") setAnimationDistancePx(p.animationDistancePx);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
   const { data: user } = useMeQuery();
 
   const deleteMutation = trpc.viewer.availability.schedule.delete.useMutation({
@@ -139,7 +159,11 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
       ) : (
         <>
           <div className="border-subtle bg-default overflow-hidden rounded-md border">
-            <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
+            <ul
+              className="divide-subtle divide-y"
+              data-testid="schedules"
+              data-config-id="Layout-div-0"
+              ref={animationParentRef}>
               {availabilities.schedules.map((schedule, index) => (
                 <ScheduleListItem
                   redirectUrl={`/availability/${schedule.id}`}
@@ -155,6 +179,9 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
                   deleteFunction={deleteMutation.mutate}
                   duplicateFunction={duplicateMutation.mutate}
                   staggerIndex={index}
+                  staggerStepMs={staggerStepMs}
+                  animationDurationMs={animationDurationMs}
+                  animationDistancePx={animationDistancePx}
                 />
               ))}
             </ul>
