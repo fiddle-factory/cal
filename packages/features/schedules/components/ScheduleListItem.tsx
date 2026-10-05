@@ -29,6 +29,7 @@ export function ScheduleListItem({
   isDeletable,
   duplicateFunction,
   redirectUrl,
+  staggerIndex,
 }: {
   schedule: RouterOutputs["viewer"]["availability"]["list"]["schedules"][number];
   deleteFunction: ({ scheduleId }: { scheduleId: number }) => void;
@@ -41,6 +42,8 @@ export function ScheduleListItem({
   updateDefault: ({ scheduleId, isDefault }: { scheduleId: number; isDefault: boolean }) => void;
   duplicateFunction: ({ scheduleId }: { scheduleId: number }) => void;
   redirectUrl: string;
+  /** Zero-based position in the list; staggers this row's onmount entrance animation. */
+  staggerIndex?: number;
 }) {
   const { t, i18n } = useLocale();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -48,7 +51,10 @@ export function ScheduleListItem({
   type AvailabilityItem = (typeof schedule.availability)[number];
 
   return (
-    <li key={schedule.id}>
+    <li
+      key={schedule.id}
+      className="animate-fade-in-up opacity-0"
+      style={{ animationDelay: `${(staggerIndex ?? 0) * 60}ms` }}>
       <div className="hover:bg-cal-muted flex items-center justify-between px-3 py-5 transition sm:px-4">
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
