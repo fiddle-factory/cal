@@ -75,7 +75,9 @@ function BookingsContent({ status, permissions, bookingsV3Enabled, bookingAuditE
   useBookingsShellHeadingVisibility({ visible: view === "list" });
 
   return (
-    <div className={classNames(view === "calendar" && "-mb-8")}>
+    // Tint the surrounding page area (the Shell's <main>) with the light-blue info token;
+    // the token has its own dark-mode value, so dark mode stays readable.
+    <div className={classNames("[main:has(&)]:bg-cal-info", view === "calendar" && "-mb-8")}>
       {view === "list" && (
         <BookingListContainer
           status={status}
