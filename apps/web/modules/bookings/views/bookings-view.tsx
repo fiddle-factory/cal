@@ -75,9 +75,9 @@ function BookingsContent({ status, permissions, bookingsV3Enabled, bookingAuditE
   useBookingsShellHeadingVisibility({ visible: view === "list" });
 
   return (
-    // Tint the surrounding page area (the Shell's <main>) with the light-blue info token;
+    // Tint the surrounding page area (the Shell's <main>) with the light-red error token;
     // the token has its own dark-mode value, so dark mode stays readable.
-    <div className={classNames("[main:has(&)]:bg-cal-info", view === "calendar" && "-mb-8")}>
+    <div className={classNames("[main:has(&)]:bg-error", view === "calendar" && "-mb-8")}>
       {view === "list" && (
         <BookingListContainer
           status={status}
