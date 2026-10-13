@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -10,6 +10,12 @@ import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks
 import { useToggleableLegend } from "@calcom/web/modules/insights/hooks/useToggleableLegend";
 import { valueFormatter } from "@calcom/features/insights/lib/valueFormatter";
 import { ChartCard } from "../ChartCard";
+import {
+  ditherFilterId,
+  ditherGradientId,
+  renderDitherDefs,
+  useDitherSettings,
+} from "../DitheredAreaFill";
 
 const COLOR = {
   CREATED: "#a855f7",
@@ -66,6 +72,7 @@ const CustomTooltip = ({
 export const EventTrendsChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const dither = useDitherSettings();
   const { enabledLegend, toggleSeries } = useToggleableLegend(legend);
 
   const {
@@ -92,7 +99,7 @@ export const EventTrendsChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <ComposedChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -102,7 +109,27 @@ export const EventTrendsChart = () => {
                 tickLine={false}
                 tickFormatter={valueFormatter}
               />
+              {renderDitherDefs(
+                dither,
+                legend.map((item) => ({ key: item.label, color: item.color }))
+              )}
               <Tooltip content={<CustomTooltip />} />
+              {enabledLegend.map((item) => (
+                <Area
+                  key={`${item.label}-fill`}
+                  type="linear"
+                  dataKey={item.label}
+                  stroke="none"
+                  fill={`url(#${ditherGradientId(dither.idPrefix, item.label)})`}
+                  fillOpacity={1}
+                  filter={`url(#${ditherFilterId(dither.idPrefix, item.label)})`}
+                  tooltipType="none"
+                  legendType="none"
+                  dot={false}
+                  activeDot={false}
+                  animationDuration={1000}
+                />
+              ))}
               {enabledLegend.map((item) => (
                 <Line
                   key={item.label}
@@ -116,7 +143,7 @@ export const EventTrendsChart = () => {
                   animationDuration={1000}
                 />
               ))}
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       ) : null}

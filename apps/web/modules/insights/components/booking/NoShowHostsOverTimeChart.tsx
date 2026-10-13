@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -9,6 +9,12 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { valueFormatter } from "@calcom/features/insights/lib/valueFormatter";
 import { ChartCard } from "../ChartCard";
+import {
+  ditherFilterId,
+  ditherGradientId,
+  renderDitherDefs,
+  useDitherSettings,
+} from "../DitheredAreaFill";
 
 const COLOR = {
   NO_SHOW_HOST: "#64748b",
@@ -52,6 +58,7 @@ const CustomTooltip = ({
 export const NoShowHostsOverTimeChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const dither = useDitherSettings();
 
   const {
     data: noShowHostsData,
@@ -71,7 +78,7 @@ export const NoShowHostsOverTimeChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={noShowHostsData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <ComposedChart data={noShowHostsData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -81,7 +88,21 @@ export const NoShowHostsOverTimeChart = () => {
                 tickLine={false}
                 tickFormatter={valueFormatter}
               />
+              {renderDitherDefs(dither, [{ key: "Count", color: COLOR.NO_SHOW_HOST }])}
               <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="linear"
+                dataKey="Count"
+                stroke="none"
+                fill={`url(#${ditherGradientId(dither.idPrefix, "Count")})`}
+                fillOpacity={1}
+                filter={`url(#${ditherFilterId(dither.idPrefix, "Count")})`}
+                tooltipType="none"
+                legendType="none"
+                dot={false}
+                activeDot={false}
+                animationDuration={1000}
+              />
               <Line
                 type="linear"
                 dataKey="Count"
@@ -92,7 +113,7 @@ export const NoShowHostsOverTimeChart = () => {
                 activeDot={{ r: 6 }}
                 animationDuration={1000}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       ) : null}
