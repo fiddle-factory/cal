@@ -14,6 +14,7 @@ export function UpgradeTip({
   isParentLoading,
   children,
   plan,
+  lockedView,
 }: {
   title: string;
   description: string;
@@ -25,6 +26,8 @@ export function UpgradeTip({
   children: ReactNode;
   isParentLoading?: ReactNode;
   plan: "team" | "enterprise";
+  /** Replaces the default banner and feature grid shown to users without the plan */
+  lockedView?: ReactNode;
 }) {
   const { resolvedTheme } = useGetTheme();
   const { isPending, hasTeamPlan } = useHasTeamPlan();
@@ -41,6 +44,8 @@ export function UpgradeTip({
   if (plan === "enterprise" && hasEnterprisePlan) return <>{children}</>;
 
   if (isPending) return <>{isParentLoading}</>;
+
+  if (lockedView) return <>{lockedView}</>;
 
   return (
     <>

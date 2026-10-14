@@ -4218,5 +4218,14 @@
   "audit_logs_permission_check_error": "An error occurred while checking permissions.",
   "account_already_exists_please_login": "An account with this email already exists. Please log in to accept the invitation.",
   "unverified_email_oauth_error": "Please verify your email address before signing in with Google or SAML. Sign in with your password to resend the verification email.",
+  "see_whats_getting_booked_and_whats_not": "See what's getting booked, and what's not",
+  "insights_upsell_description": "Turn booking data into clarity for you and your team so you can spot gaps, balance workload, and make better scheduling decisions.",
+  "understand_booking_volume_and_cancellations": "Understand booking volume and cancellations",
+  "see_how_meetings_are_distributed_across_team_members": "See how meetings are distributed across team members",
+  "spot_trends_that_help_you_improve_availability_and_routing": "Spot trends that help you improve availability and routing",
+  "available_on": "Available on",
+  "orgs": "Orgs",
+  "booking_hours_by_available_hours": "Booking hours - by available hours",
+  "no_show": "No-show",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Add your new strings above here ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }
