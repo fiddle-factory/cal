@@ -132,7 +132,7 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
             Icon="clock"
             headline={t("new_schedule_heading")}
             description={t("new_schedule_description")}
-            className="w-full"
+            className="w-full border-blue-200 bg-blue-100 dark:border-blue-800 dark:bg-blue-950"
             buttonRaw={<NewScheduleButton />}
           />
         </div>
