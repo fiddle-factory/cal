@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 
 import {
   DataTableProvider,
@@ -32,6 +32,7 @@ import {
   RecentFeedbackTable,
   TimezoneBadge,
 } from "@calcom/web/modules/insights/components/booking";
+import { DEFAULT_DITHER_SETTINGS, DitherSettingsProvider } from "../components/DitherFill";
 import { InsightsOrgTeamsProvider } from "../components/context/InsightsOrgTeamsProvider";
 import { DateTargetSelector, type DateTarget } from "../components/filters/DateTargetSelector";
 import { Download } from "../components/filters/Download/Download";
@@ -71,6 +72,28 @@ function InsightsPageContent() {
   const { isAll, teamId, userId } = useInsightsOrgTeams();
   const { removeFilter } = useDataTable();
   const [dateTarget, _setDateTarget] = useState<"startTime" | "createdAt">("startTime");
+  const [ditherIntensity, setDitherIntensity] = useState(DEFAULT_DITHER_SETTINGS.ditherIntensity);
+  const [patternScale, setPatternScale] = useState(DEFAULT_DITHER_SETTINGS.patternScale);
+  const [fillOpacity, setFillOpacity] = useState(DEFAULT_DITHER_SETTINGS.fillOpacity);
+  const ditherSettings = useMemo(
+    () => ({ ditherIntensity, patternScale, fillOpacity }),
+    [ditherIntensity, patternScale, fillOpacity]
+  );
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.ditherIntensity === "number") setDitherIntensity(p.ditherIntensity);
+      if (typeof p.patternScale === "number") setPatternScale(p.patternScale);
+      if (typeof p.fillOpacity === "number") setFillOpacity(p.fillOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   const setDateTarget = useCallback(
     (target: "startTime" | "createdAt") => {
@@ -81,7 +104,7 @@ function InsightsPageContent() {
   );
 
   return (
-    <>
+    <DitherSettingsProvider value={ditherSettings}>
       <div
         className="flex flex-wrap items-center gap-2"
         data-testid={`insights-filters-${isAll}-${teamId}-${userId}`}>
@@ -158,6 +181,6 @@ function InsightsPageContent() {
           </a>
         </small>
       </div>
-    </>
+    </DitherSettingsProvider>
   );
 }

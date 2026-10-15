@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -8,6 +8,7 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { renderDitherPattern, useDitherPatternId, useDitherSettings } from "../DitherFill";
 
 const COLOR = {
   CSAT: "#22c55e",
@@ -51,6 +52,8 @@ const CustomTooltip = ({
 export const CSATOverTimeChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const ditherSettings = useDitherSettings();
+  const patternId = useDitherPatternId();
 
   const {
     data: csatData,
@@ -71,7 +74,10 @@ export const CSATOverTimeChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={csatData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <AreaChart data={csatData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <defs>
+                {renderDitherPattern({ id: patternId("CSAT"), color: COLOR.CSAT, settings: ditherSettings })}
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -83,17 +89,19 @@ export const CSATOverTimeChart = () => {
                 domain={[0, 100]}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Line
+              <Area
                 type="linear"
                 dataKey="CSAT"
                 name={t("csat")}
                 stroke={COLOR.CSAT}
+                fill={`url(#${patternId("CSAT")})`}
+                fillOpacity={ditherSettings.fillOpacity}
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
                 animationDuration={1000}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       ) : null}

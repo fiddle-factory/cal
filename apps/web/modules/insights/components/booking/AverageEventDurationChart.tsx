@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -8,6 +8,7 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { renderDitherPattern, useDitherPatternId, useDitherSettings } from "../DitherFill";
 
 const COLOR = {
   AVERAGE: "#3b82f6",
@@ -67,6 +68,8 @@ const CustomTooltip = ({
 export const AverageEventDurationChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const ditherSettings = useDitherSettings();
+  const patternId = useDitherPatternId();
 
   const { data, isSuccess, isPending, isError } = trpc.viewer.insights.averageEventDuration.useQuery(
     insightsBookingParams,
@@ -89,7 +92,10 @@ export const AverageEventDurationChart = () => {
         ) : (
           <div className="mt-4 h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <AreaChart data={data} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+                <defs>
+                  {renderDitherPattern({ id: patternId("AVERAGE"), color: COLOR.AVERAGE, settings: ditherSettings })}
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="Date" className="text-xs" axisLine={false} tickLine={false} />
                 <YAxis
@@ -100,17 +106,19 @@ export const AverageEventDurationChart = () => {
                   tickFormatter={formatDuration}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Line
+                <Area
                   type="linear"
                   dataKey="Average"
                   name={t("average_event_duration")}
                   stroke={COLOR.AVERAGE}
+                  fill={`url(#${patternId("AVERAGE")})`}
+                  fillOpacity={ditherSettings.fillOpacity}
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
                   animationDuration={1000}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         )

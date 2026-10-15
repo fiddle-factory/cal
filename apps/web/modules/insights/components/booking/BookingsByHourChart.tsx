@@ -17,11 +17,16 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { renderDitherPattern, useDitherPatternId, useDitherSettings } from "../DitherFill";
+
+const BAR_COLOR = "#64748b";
 
 type BookingsByHourData = RouterOutputs["viewer"]["insights"]["bookingsByHourStats"][number];
 
 export const BookingsByHourChartContent = ({ data }: { data: BookingsByHourData[] }) => {
   const { t } = useLocale();
+  const ditherSettings = useDitherSettings();
+  const patternId = useDitherPatternId();
 
   const chartData = data.map((item) => ({
     hour: `${item.hour.toString().padStart(2, "0")}:00`,
@@ -43,13 +48,17 @@ export const BookingsByHourChartContent = ({ data }: { data: BookingsByHourData[
     <div className="mt-4 h-80">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 20, right: 0, left: -10, bottom: 5 }}>
+          <defs>
+            {renderDitherPattern({ id: patternId("bar"), color: BAR_COLOR, settings: ditherSettings })}
+          </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="hour" className="text-xs" axisLine={false} tickLine={false} />
           <YAxis allowDecimals={false} className="text-xs opacity-50" axisLine={false} tickLine={false} />
           <Tooltip cursor={false} content={<CustomTooltip />} />
           <Bar
             dataKey="count"
-            fill="var(--cal-bg-subtle)"
+            fill={`url(#${patternId("bar")})`}
+            fillOpacity={ditherSettings.fillOpacity}
             radius={[2, 2, 0, 0]}
             activeBar={<Rectangle fill="var(--cal-bg-info)" />}
           />
