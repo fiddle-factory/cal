@@ -70,7 +70,11 @@ const AddCalendarButton = () => {
   const { t } = useLocale();
   return (
     <>
-      <Button color="secondary" StartIcon="plus" href="/apps/categories/calendar">
+      <Button
+        color="primary"
+        StartIcon="plus"
+        href="/apps/categories/calendar"
+        className="bg-gradient-to-r from-violet-600 to-fuchsia-500 border-0 shadow-sm shadow-fuchsia-500/30 hover:from-violet-500 hover:to-fuchsia-400">
         {t("add_calendar")}
       </Button>
     </>

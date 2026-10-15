@@ -65,7 +65,7 @@ const ConnectedCalendarList = ({
               title={connectedCalendar.integration.name}
               logo={connectedCalendar.integration.logo}
               description={connectedCalendar.primary?.email ?? connectedCalendar.integration.description}
-              className="border-subtle mt-4 rounded-lg border"
+              className="mt-4 rounded-lg border-2 border-teal-400/60 shadow-sm shadow-teal-400/20"
               actions={
                 <div className="flex w-32 justify-end">
                   <CredentialActionsDropdown
@@ -76,10 +76,10 @@ const ConnectedCalendarList = ({
                   />
                 </div>
               }>
-              <div className="border-subtle border-t">
+              <div className="border-t-2 border-teal-400/30">
                 {!fromOnboarding && (
                   <>
-                    <p className="text-subtle px-5 pt-4 text-sm">{t("toggle_calendars_conflict")}</p>
+                    <p className="px-5 pt-4 text-sm font-medium text-orange-500">{t("toggle_calendars_conflict")}</p>
                     <ul className="stack-y-4 px-5 py-4">
                       {connectedCalendar.calendars?.map((cal) => (
                         <CalendarSwitch
@@ -239,10 +239,10 @@ const SelectedCalendarsSettingsHeading = (props: {
   ];
   const switchScopeSelectValue = optionsToSwitchScope.find((option) => option.value === props.scope);
   return (
-    <div className="border-subtle border-b p-6">
+    <div className="border-b-2 border-fuchsia-400/30 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-emphasis text-base font-semibold leading-5">{t("check_for_conflicts")}</h4>
+          <h4 className="text-base font-semibold leading-5 text-violet-600">{t("check_for_conflicts")}</h4>
           <p className="text-default text-sm leading-tight">{t("select_calendars")}</p>
         </div>
 
