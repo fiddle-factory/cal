@@ -39,7 +39,7 @@ const Layout = (props: LayoutProps) => {
       <TimezoneChangeDialog />
       <DynamicModals />
 
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col bg-red-500">
         {banners && !props.isPlatformUser && <BannerContainer banners={banners} />}
 
         <div className="flex flex-1" data-testid="dashboard-shell">
@@ -130,7 +130,7 @@ export function ShellMain(props: LayoutProps) {
       {(props.heading || !!props.backPath) && (
         <div
           className={classNames(
-            "bg-default sticky top-0 z-10 mb-0 flex items-center md:mb-6 md:mt-0",
+            "bg-red-500 sticky top-0 z-10 mb-0 flex items-center md:mb-6 md:mt-0",
             props.smallHeading ? "lg:mb-7" : "lg:mb-8"
           )}>
           {!!props.backPath && (
@@ -202,7 +202,7 @@ function MainContainer({
   ...props
 }: LayoutProps) {
   return (
-    <main className="bg-default relative z-0 flex-1 pb-8 focus:outline-none">
+    <main className="relative z-0 flex-1 pb-8 focus:outline-none">
       {/* show top navigation for md and smaller (tablet and phones) */}
       {TopNavContainerProp}
       <div className="max-w-full p-2 sm:py-4 lg:px-6">
