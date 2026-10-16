@@ -101,49 +101,50 @@ function InsightsPageContent() {
       </div>
 
       <div className="my-4 stack-y-4">
-        <BookingKPICards />
-
-        <EventTrendsChart />
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <NoShowHostsOverTimeChart />
-          <CSATOverTimeChart />
+        {/* Hero row: wide event trends chart next to a compact column of key metrics */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="min-w-0 lg:col-span-2 *:h-full">
+            <EventTrendsChart />
+          </div>
+          <div className="min-w-0">
+            <BookingKPICards />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <div className="sm:col-span-2">
+        {/* Bento tiles: mixed-size charts and tables */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="min-w-0 sm:col-span-2 *:h-full">
+            <NoShowHostsOverTimeChart />
+          </div>
+          <div className="min-w-0 sm:col-span-2 *:h-full">
+            <CSATOverTimeChart />
+          </div>
+
+          <div className="min-w-0 sm:col-span-2 *:h-full">
             <BookingsByHourChart />
           </div>
-          <div className="sm:col-span-2">
-            <AverageEventDurationChart />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           <MostBookedTeamMembersTable />
           <LeastBookedTeamMembersTable />
+
           <MostCompletedTeamMembersTable />
           <LeastCompletedTeamMembersTable />
-        </div>
+          <div className="min-w-0 sm:col-span-2 *:h-full">
+            <AverageEventDurationChart />
+          </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <MostCancelledBookingsTables />
-          <HighestNoShowHostTable />
-          <div className="sm:col-span-2">
+          <div className="min-w-0 sm:col-span-2 *:h-full">
             <RecentNoShowGuestsChart />
           </div>
-        </div>
+          <MostCancelledBookingsTables />
+          <HighestNoShowHostTable />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           <HighestRatedMembersTable />
           <LowestRatedMembersTable />
-          <div className="sm:col-span-2">
+          <div className="min-w-0 sm:col-span-2 *:h-full">
             <RecentFeedbackTable />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <div className="sm:col-span-2">
+          <div className="min-w-0 sm:col-span-2 lg:col-span-4 *:h-full">
             <PopularEventsTable />
           </div>
         </div>
