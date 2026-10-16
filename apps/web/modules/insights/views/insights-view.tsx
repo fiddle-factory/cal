@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 import {
   DataTableProvider,
@@ -40,6 +40,7 @@ import { useInsightsBookings } from "@calcom/web/modules/insights/hooks/useInsig
 import { useInsightsOrgTeams } from "@calcom/web/modules/insights/hooks/useInsightsOrgTeams";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { ButtonGroup } from "@calcom/ui/components/buttonGroup";
+import { ToggleGroup } from "@calcom/ui/components/form";
 
 export default function InsightsPage({ timeZone }: { timeZone: string }) {
   const pathname = usePathname();
@@ -65,11 +66,23 @@ const startTimeColumn: Extract<FilterableColumn, { type: Extract<FilterType, "dr
   type: ColumnFilterType.DATE_RANGE,
 };
 
+type InsightsSection = "events" | "performance" | "bookings" | "users";
+
 function InsightsPageContent() {
   const { t } = useLocale();
   const { table } = useInsightsBookings();
   const { isAll, teamId, userId } = useInsightsOrgTeams();
   const { removeFilter } = useDataTable();
+  const [section, setSection] = useState<InsightsSection>("events");
+  const sectionOptions = useMemo(
+    () => [
+      { value: "events", label: t("events") },
+      { value: "performance", label: t("performance") },
+      { value: "bookings", label: t("bookings") },
+      { value: "users", label: t("users") },
+    ],
+    [t]
+  );
   const [dateTarget, _setDateTarget] = useState<"startTime" | "createdAt">("startTime");
 
   const setDateTarget = useCallback(
@@ -100,53 +113,58 @@ function InsightsPageContent() {
         <TimezoneBadge />
       </div>
 
-      <div className="my-4 stack-y-4">
+      <div className="my-4 flex flex-col gap-4">
         <BookingKPICards />
 
-        <EventTrendsChart />
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <NoShowHostsOverTimeChart />
-          <CSATOverTimeChart />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <ToggleGroup
+            value={section}
+            onValueChange={(value) => {
+              if (value) setSection(value as InsightsSection);
+            }}
+            options={sectionOptions}
+            customClassNames="max-w-full overflow-x-auto"
+            data-testid="insights-section-tabs"
+          />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <div className="sm:col-span-2">
-            <BookingsByHourChart />
-          </div>
-          <div className="sm:col-span-2">
+        {section === "events" && (
+          <div className="flex flex-col gap-4">
+            <EventTrendsChart />
             <AverageEventDurationChart />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <MostBookedTeamMembersTable />
-          <LeastBookedTeamMembersTable />
-          <MostCompletedTeamMembersTable />
-          <LeastCompletedTeamMembersTable />
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <MostCancelledBookingsTables />
-          <HighestNoShowHostTable />
-          <div className="sm:col-span-2">
-            <RecentNoShowGuestsChart />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <HighestRatedMembersTable />
-          <LowestRatedMembersTable />
-          <div className="sm:col-span-2">
-            <RecentFeedbackTable />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <div className="sm:col-span-2">
             <PopularEventsTable />
           </div>
-        </div>
+        )}
+
+        {section === "performance" && (
+          <div className="flex flex-col gap-4">
+            <NoShowHostsOverTimeChart />
+            <CSATOverTimeChart />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <HighestNoShowHostTable />
+              <RecentNoShowGuestsChart />
+            </div>
+            <RecentFeedbackTable />
+          </div>
+        )}
+
+        {section === "bookings" && (
+          <div className="flex flex-col gap-4">
+            <BookingsByHourChart />
+            <MostCancelledBookingsTables />
+          </div>
+        )}
+
+        {section === "users" && (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <MostBookedTeamMembersTable />
+            <LeastBookedTeamMembersTable />
+            <MostCompletedTeamMembersTable />
+            <LeastCompletedTeamMembersTable />
+            <HighestRatedMembersTable />
+            <LowestRatedMembersTable />
+          </div>
+        )}
 
         <small className="text-default block text-center">
           {t("looking_for_more_insights")}{" "}

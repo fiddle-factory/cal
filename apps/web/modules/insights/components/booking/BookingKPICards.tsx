@@ -2,11 +2,9 @@
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
-import classNames from "@calcom/ui/classNames";
 import { SkeletonText } from "@calcom/ui/components/skeleton";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
-import { ChartCard } from "../ChartCard";
 import { KPICard } from "../KPICard";
 
 export const BookingKPICards = () => {
@@ -70,116 +68,85 @@ export const BookingKPICards = () => {
 
   if (isPending) {
     return (
-      <LoadingKPICards
-        eventCategories={eventCategories}
-        performanceCategories={performanceCategories}
-        isPending={isPending}
-        isError={isError}
-      />
+      <LoadingKPICards eventCategories={eventCategories} performanceCategories={performanceCategories} />
     );
   }
 
   if (!isSuccess || !data) return null;
 
   return (
-    <div className="stack-y-4">
-      <ChartCard title={t("events")} isPending={isPending} isError={isError}>
-        <StatContainer>
-          {eventCategories.map((item, index) => (
-            <StatItem key={item.title} index={index}>
-              <KPICard
-                title={item.title}
-                previousMetricData={data[item.index]}
-                previousDateRange={data.previousRange}
-              />
-            </StatItem>
-          ))}
-        </StatContainer>
-      </ChartCard>
-
-      <ChartCard title={t("performance")} isPending={isPending} isError={isError}>
-        <StatContainer>
-          {performanceCategories.map((item, index) => (
-            <StatItem key={item.title} index={index}>
-              <KPICard
-                title={item.title}
-                previousMetricData={data[item.index]}
-                previousDateRange={data.previousRange}
-              />
-            </StatItem>
-          ))}
-        </StatContainer>
-      </ChartCard>
-    </div>
+    <StatStrip>
+      <StatGroup title={t("events")}>
+        {eventCategories.map((item) => (
+          <StatItem key={item.title}>
+            <KPICard
+              title={item.title}
+              previousMetricData={data[item.index]}
+              previousDateRange={data.previousRange}
+            />
+          </StatItem>
+        ))}
+      </StatGroup>
+      <StatGroup title={t("performance")}>
+        {performanceCategories.map((item) => (
+          <StatItem key={item.title}>
+            <KPICard
+              title={item.title}
+              previousMetricData={data[item.index]}
+              previousDateRange={data.previousRange}
+            />
+          </StatItem>
+        ))}
+      </StatGroup>
+    </StatStrip>
   );
 };
 
 const LoadingKPICards = (props: {
   eventCategories: { title: string; index: string }[];
   performanceCategories: { title: string; index: string }[];
-  isPending: boolean;
-  isError: boolean;
 }) => {
-  const { eventCategories, performanceCategories, isPending, isError } = props;
+  const { eventCategories, performanceCategories } = props;
   const { t } = useLocale();
 
-  return (
-    <div className="stack-y-4">
-      <ChartCard title={t("events")} isPending={isPending} isError={isError}>
-        <StatContainer>
-          {eventCategories.map((item, index) => (
-            <StatItem key={item.title} index={index}>
-              <div>
-                <SkeletonText className="mb-2 h-4 w-24" />
-                <div className="items-baseline justify-start space-x-3 truncate">
-                  <SkeletonText className="h-8 w-16" />
-                </div>
-                <div className="mt-4 justify-start space-x-2">
-                  <SkeletonText className="h-4 w-20" />
-                </div>
-              </div>
-            </StatItem>
-          ))}
-        </StatContainer>
-      </ChartCard>
+  const renderSkeleton = (item: { title: string }) => (
+    <StatItem key={item.title}>
+      <SkeletonText className="mb-1.5 h-3 w-20" />
+      <SkeletonText className="h-6 w-12" />
+      <SkeletonText className="mt-1.5 h-3 w-16" />
+    </StatItem>
+  );
 
-      <ChartCard title={t("performance")} isPending={isPending} isError={isError}>
-        <StatContainer>
-          {performanceCategories.map((item, index) => (
-            <StatItem key={item.title} index={index}>
-              <div>
-                <SkeletonText className="mb-2 h-4 w-24" />
-                <div className="items-baseline justify-start space-x-3 truncate">
-                  <SkeletonText className="h-8 w-16" />
-                </div>
-                <div className="mt-4 justify-start space-x-2">
-                  <SkeletonText className="h-4 w-20" />
-                </div>
-              </div>
-            </StatItem>
-          ))}
-        </StatContainer>
-      </ChartCard>
-    </div>
+  return (
+    <StatStrip>
+      <StatGroup title={t("events")}>{eventCategories.map(renderSkeleton)}</StatGroup>
+      <StatGroup title={t("performance")}>{performanceCategories.map(renderSkeleton)}</StatGroup>
+    </StatStrip>
   );
 };
 
-// StatContainer: wraps the grid
-function StatContainer({ children }: { children: React.ReactNode }) {
-  return <div className="group grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">{children}</div>;
-}
-
-// StatItem: handles border logic
-function StatItem({ index, children }: { index: number; children: React.ReactNode }) {
+// StatStrip: a single horizontal strip holding every KPI group
+function StatStrip({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className={classNames(
-        "border-muted flex-1 p-4",
-        index === 0 && "border-b sm:border-r md:border-b-0 md:border-r",
-        index === 1 && "border-b sm:border-r-0 md:border-b-0 md:border-r",
-        index === 2 && "border-b sm:border-b-0 sm:border-r md:border-b-0"
-      )}>
+      data-testid="insights-kpi-strip"
+      className="bg-cal-muted flex w-full flex-col gap-1 rounded-2xl p-1 xl:flex-row">
       {children}
     </div>
   );
+}
+
+// StatGroup: a labelled set of compact stats within the strip
+function StatGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="bg-default border-muted flex min-w-0 flex-1 flex-col rounded-xl border">
+      <h2 className="text-subtle px-3 pt-2 text-xs font-medium uppercase tracking-wide">{title}</h2>
+      <div className="divide-muted grid grid-cols-2 sm:grid-cols-4 sm:divide-x">{children}</div>
+    </section>
+  );
+}
+
+// StatItem: a single compact stat cell
+function StatItem({ children }: { children: React.ReactNode }) {
+  return <div className="min-w-0 px-3 py-2">{children}</div>;
 }

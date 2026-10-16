@@ -57,28 +57,28 @@ export const KPICard = ({
   const deltaIcon = getDeltaIcon(deltaType);
 
   return (
-    <div>
-      <div className="text-default text-sm">{title}</div>
-      <div className="flex items-baseline justify-start space-x-3 truncate">
-        <div className="text-emphasis text-2xl font-semibold">{valueFormatter(previousMetricData.count)}</div>
+    <div className="min-w-0">
+      <div className="text-default truncate text-xs" title={title}>
+        {title}
       </div>
-      <div className="mt-4 flex items-center justify-start space-x-2">
-        <Badge variant={badgeVariant} className="flex items-center gap-1">
+      <div className="mt-0.5 flex items-baseline gap-2">
+        <div className="text-emphasis text-xl font-semibold leading-tight">
+          {valueFormatter(previousMetricData.count)}
+        </div>
+        <Badge variant={badgeVariant} size="sm" className="flex items-center gap-0.5">
           {deltaIcon && <Icon name={deltaIcon} className="h-3 w-3" />}
           {deltaValue}%
         </Badge>
-        <div className="flex justify-start space-x-1 truncate">
-          <Tooltip
-            content={t("from_to_date_period", {
-              startDate: previousDateRange.startDate,
-              endDate: previousDateRange.endDate,
-            })}>
-            <small className="text-default relative top-px cursor-pointer text-xs">
-              {t("from_last_period")}
-            </small>
-          </Tooltip>
-        </div>
       </div>
+      <Tooltip
+        content={t("from_to_date_period", {
+          startDate: previousDateRange.startDate,
+          endDate: previousDateRange.endDate,
+        })}>
+        <small className="text-muted inline-block max-w-full cursor-pointer truncate text-[11px] leading-tight">
+          {t("from_last_period")}
+        </small>
+      </Tooltip>
     </div>
   );
 };
