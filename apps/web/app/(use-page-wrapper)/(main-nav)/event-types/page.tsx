@@ -71,7 +71,7 @@ const Page = async ({ searchParams }: PageProps) => {
 
   return (
     <ShellMainAppDir
-      heading={t("event_types_page_title")}
+      heading={t("your_event_types")}
       subtitle={t("event_types_page_subtitle")}
       CTA={<EventTypesCTA userEventGroupsData={userEventGroupsData} />}>
       <EventTypes userEventGroupsData={userEventGroupsData} user={session.user} />

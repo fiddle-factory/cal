@@ -966,6 +966,7 @@
   "plan_upgrade_teams": "You need to upgrade your plan to create a team.",
   "plan_upgrade_instructions": "You can <1>upgrade here</1>.",
   "event_types_page_title": "Event Types",
+  "your_event_types": "Your event types",
   "event_types_page_subtitle": "Create events to share for people to book on your calendar.",
   "new": "New",
   "new_event_type_btn": "New event type",
