@@ -1058,6 +1058,7 @@
   "availability": "Availability",
   "edit_availability": "Edit availability",
   "configure_availability": "Configure times when you are available for bookings.",
+  "your_weekly_availability": "Your weekly availability",
   "copy_times_to": "Copy times to",
   "copy_times_to_tooltip": "Copy times to …",
   "change_weekly_schedule": "Change your weekly schedule",

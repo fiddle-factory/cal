@@ -12,7 +12,7 @@ export default function AvailabilityLoader() {
 
   return (
     <ShellMainAppDir
-      heading={t("availability")}
+      heading={t("your_weekly_availability")}
       subtitle={t("configure_availability")}
       CTA={<AvailabilityCTA canViewTeamAvailability />}>
       <SkeletonLoader />
