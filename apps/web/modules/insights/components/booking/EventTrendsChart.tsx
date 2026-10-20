@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -92,7 +92,21 @@ export const EventTrendsChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <AreaChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <defs>
+                {legend.map((item) => (
+                  <linearGradient
+                    key={item.label}
+                    id={`eventTrends-fill-${item.label.replace(/[^a-zA-Z0-9]/g, "")}`}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1">
+                    <stop offset="5%" stopColor={item.color} stopOpacity={0.35} />
+                    <stop offset="95%" stopColor={item.color} stopOpacity={0.02} />
+                  </linearGradient>
+                ))}
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -104,19 +118,21 @@ export const EventTrendsChart = () => {
               />
               <Tooltip content={<CustomTooltip />} />
               {enabledLegend.map((item) => (
-                <Line
+                <Area
                   key={item.label}
                   type="linear"
                   dataKey={item.label}
                   name={item.label}
                   stroke={item.color}
                   strokeWidth={2}
-                  dot={{ r: 4 }}
+                  fill={`url(#eventTrends-fill-${item.label.replace(/[^a-zA-Z0-9]/g, "")})`}
+                  fillOpacity={1}
+                  dot={{ r: 4, fill: "#fff" }}
                   activeDot={{ r: 6 }}
                   animationDuration={1000}
                 />
               ))}
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       ) : null}
