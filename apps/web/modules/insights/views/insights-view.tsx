@@ -1,13 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 
-import {
-  DataTableProvider,
-  ColumnFilterType,
-  type FilterableColumn,
-} from "@calcom/features/data-table";
+import { DataTableProvider, ColumnFilterType, type FilterableColumn } from "@calcom/features/data-table";
 import { DataTableFilters, DateRangeFilter } from "~/data-table/components";
 import type { FilterType } from "@calcom/types/data-table";
 import { useDataTable } from "@calcom/features/data-table/hooks/useDataTable";
@@ -32,6 +28,7 @@ import {
   RecentFeedbackTable,
   TimezoneBadge,
 } from "@calcom/web/modules/insights/components/booking";
+import { DitherProvider } from "../components/DitherPattern";
 import { InsightsOrgTeamsProvider } from "../components/context/InsightsOrgTeamsProvider";
 import { DateTargetSelector, type DateTarget } from "../components/filters/DateTargetSelector";
 import { Download } from "../components/filters/Download/Download";
@@ -80,6 +77,25 @@ function InsightsPageContent() {
     [_setDateTarget, removeFilter]
   );
 
+  const [ditherEnabled, setDitherEnabled] = useState(true);
+  const [ditherDensity, setDitherDensity] = useState(0.35);
+  const [ditherPixelSize, setDitherPixelSize] = useState(2);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="InsightsPage-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.ditherEnabled === "boolean") setDitherEnabled(p.ditherEnabled);
+      if (typeof p.ditherDensity === "number") setDitherDensity(p.ditherDensity);
+      if (typeof p.ditherPixelSize === "number") setDitherPixelSize(p.ditherPixelSize);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   return (
     <>
       <div
@@ -100,64 +116,66 @@ function InsightsPageContent() {
         <TimezoneBadge />
       </div>
 
-      <div className="my-4 stack-y-4">
-        <BookingKPICards />
+      <DitherProvider value={{ enabled: ditherEnabled, density: ditherDensity, pixelSize: ditherPixelSize }}>
+        <div className="my-4 stack-y-4" data-config-id="InsightsPage-controls">
+          <BookingKPICards />
 
-        <EventTrendsChart />
+          <EventTrendsChart />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <NoShowHostsOverTimeChart />
-          <CSATOverTimeChart />
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <div className="sm:col-span-2">
-            <BookingsByHourChart />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <NoShowHostsOverTimeChart />
+            <CSATOverTimeChart />
           </div>
-          <div className="sm:col-span-2">
-            <AverageEventDurationChart />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <div className="sm:col-span-2">
+              <BookingsByHourChart />
+            </div>
+            <div className="sm:col-span-2">
+              <AverageEventDurationChart />
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <MostBookedTeamMembersTable />
-          <LeastBookedTeamMembersTable />
-          <MostCompletedTeamMembersTable />
-          <LeastCompletedTeamMembersTable />
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <MostCancelledBookingsTables />
-          <HighestNoShowHostTable />
-          <div className="sm:col-span-2">
-            <RecentNoShowGuestsChart />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <MostBookedTeamMembersTable />
+            <LeastBookedTeamMembersTable />
+            <MostCompletedTeamMembersTable />
+            <LeastCompletedTeamMembersTable />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <HighestRatedMembersTable />
-          <LowestRatedMembersTable />
-          <div className="sm:col-span-2">
-            <RecentFeedbackTable />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <MostCancelledBookingsTables />
+            <HighestNoShowHostTable />
+            <div className="sm:col-span-2">
+              <RecentNoShowGuestsChart />
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          <div className="sm:col-span-2">
-            <PopularEventsTable />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <HighestRatedMembersTable />
+            <LowestRatedMembersTable />
+            <div className="sm:col-span-2">
+              <RecentFeedbackTable />
+            </div>
           </div>
-        </div>
 
-        <small className="text-default block text-center">
-          {t("looking_for_more_insights")}{" "}
-          <a
-            className="text-blue-500 hover:underline"
-            href="mailto:updates@cal.com?subject=Feature%20Request%3A%20More%20Analytics&body=Hey%20Cal.com%20Team%2C%20I%20love%20the%20analytics%20page%20but%20I%20am%20looking%20for%20...">
-            {" "}
-            {t("contact_support")}
-          </a>
-        </small>
-      </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <div className="sm:col-span-2">
+              <PopularEventsTable />
+            </div>
+          </div>
+
+          <small className="text-default block text-center">
+            {t("looking_for_more_insights")}{" "}
+            <a
+              className="text-blue-500 hover:underline"
+              href="mailto:updates@cal.com?subject=Feature%20Request%3A%20More%20Analytics&body=Hey%20Cal.com%20Team%2C%20I%20love%20the%20analytics%20page%20but%20I%20am%20looking%20for%20...">
+              {" "}
+              {t("contact_support")}
+            </a>
+          </small>
+        </div>
+      </DitherProvider>
     </>
   );
 }

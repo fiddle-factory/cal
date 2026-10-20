@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -9,6 +9,7 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { valueFormatter } from "@calcom/features/insights/lib/valueFormatter";
 import { ChartCard } from "../ChartCard";
+import { DitherDefs, useDitherId, useDitherSettings } from "../DitherPattern";
 
 const COLOR = {
   NO_SHOW_HOST: "#64748b",
@@ -52,6 +53,8 @@ const CustomTooltip = ({
 export const NoShowHostsOverTimeChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const dither = useDitherSettings();
+  const ditherId = useDitherId("no-show-hosts-dither");
 
   const {
     data: noShowHostsData,
@@ -71,7 +74,8 @@ export const NoShowHostsOverTimeChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={noShowHostsData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <AreaChart data={noShowHostsData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <DitherDefs patterns={[{ id: ditherId, color: COLOR.NO_SHOW_HOST }]} />
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -82,17 +86,19 @@ export const NoShowHostsOverTimeChart = () => {
                 tickFormatter={valueFormatter}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Line
+              <Area
                 type="linear"
                 dataKey="Count"
                 name={t("no_show_hosts")}
                 stroke={COLOR.NO_SHOW_HOST}
+                fill={dither.enabled ? `url(#${ditherId})` : "none"}
+                fillOpacity={1}
                 strokeWidth={2}
-                dot={{ r: 4 }}
+                dot={{ r: 4, fill: "#fff" }}
                 activeDot={{ r: 6 }}
                 animationDuration={1000}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       ) : null}

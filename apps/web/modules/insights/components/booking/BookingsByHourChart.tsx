@@ -17,11 +17,15 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { DitherDefs, useDitherId, useDitherSettings } from "../DitherPattern";
 
 type BookingsByHourData = RouterOutputs["viewer"]["insights"]["bookingsByHourStats"][number];
 
 export const BookingsByHourChartContent = ({ data }: { data: BookingsByHourData[] }) => {
   const { t } = useLocale();
+  const dither = useDitherSettings();
+  const ditherId = useDitherId("bookings-by-hour-dither");
+  const activeDitherId = `${ditherId}-active`;
 
   const chartData = data.map((item) => ({
     hour: `${item.hour.toString().padStart(2, "0")}:00`,
@@ -43,15 +47,23 @@ export const BookingsByHourChartContent = ({ data }: { data: BookingsByHourData[
     <div className="mt-4 h-80">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 20, right: 0, left: -10, bottom: 5 }}>
+          <DitherDefs
+            patterns={[
+              { id: ditherId, color: "var(--cal-bg-emphasis)", background: "var(--cal-bg-subtle)" },
+              { id: activeDitherId, color: "var(--cal-text-info)", background: "var(--cal-bg-info)" },
+            ]}
+          />
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="hour" className="text-xs" axisLine={false} tickLine={false} />
           <YAxis allowDecimals={false} className="text-xs opacity-50" axisLine={false} tickLine={false} />
           <Tooltip cursor={false} content={<CustomTooltip />} />
           <Bar
             dataKey="count"
-            fill="var(--cal-bg-subtle)"
+            fill={dither.enabled ? `url(#${ditherId})` : "var(--cal-bg-subtle)"}
             radius={[2, 2, 0, 0]}
-            activeBar={<Rectangle fill="var(--cal-bg-info)" />}
+            activeBar={
+              <Rectangle fill={dither.enabled ? `url(#${activeDitherId})` : "var(--cal-bg-info)"} />
+            }
           />
         </BarChart>
       </ResponsiveContainer>

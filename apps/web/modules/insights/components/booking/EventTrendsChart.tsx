@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -10,6 +10,7 @@ import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks
 import { useToggleableLegend } from "@calcom/web/modules/insights/hooks/useToggleableLegend";
 import { valueFormatter } from "@calcom/features/insights/lib/valueFormatter";
 import { ChartCard } from "../ChartCard";
+import { DitherDefs, useDitherId, useDitherSettings } from "../DitherPattern";
 
 const COLOR = {
   CREATED: "#a855f7",
@@ -67,6 +68,9 @@ export const EventTrendsChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
   const { enabledLegend, toggleSeries } = useToggleableLegend(legend);
+  const dither = useDitherSettings();
+  const ditherId = useDitherId("event-trends-dither");
+  const patternId = (label: string) => `${ditherId}-${label.replace(/[^a-zA-Z0-9]/g, "")}`;
 
   const {
     data: eventTrends,
@@ -92,7 +96,15 @@ export const EventTrendsChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <AreaChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <DitherDefs
+                patterns={legend.map((item) => ({
+                  id: patternId(item.label),
+                  color: item.color,
+                  // Several series overlap, so keep their dither lighter to stay readable
+                  density: dither.density / 2,
+                }))}
+              />
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -104,19 +116,21 @@ export const EventTrendsChart = () => {
               />
               <Tooltip content={<CustomTooltip />} />
               {enabledLegend.map((item) => (
-                <Line
+                <Area
                   key={item.label}
                   type="linear"
                   dataKey={item.label}
                   name={item.label}
                   stroke={item.color}
+                  fill={dither.enabled ? `url(#${patternId(item.label)})` : "none"}
+                  fillOpacity={1}
                   strokeWidth={2}
-                  dot={{ r: 4 }}
+                  dot={{ r: 4, fill: "#fff" }}
                   activeDot={{ r: 6 }}
                   animationDuration={1000}
                 />
               ))}
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       ) : null}
