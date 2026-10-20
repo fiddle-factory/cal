@@ -1,6 +1,15 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -8,6 +17,7 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { DitheredAreaDefs, ditherFill, useDitherId } from "../DitheredAreaFill";
 
 const COLOR = {
   CSAT: "#22c55e",
@@ -27,6 +37,7 @@ const CustomTooltip = ({
     dataKey: string;
     name: string;
     color: string;
+    type?: string;
     payload: CSATOverTimeData;
   }>;
   label?: string;
@@ -39,11 +50,13 @@ const CustomTooltip = ({
   return (
     <div className="bg-default text-inverted border-subtle rounded-lg border p-3 shadow-lg">
       <p className="text-default font-medium">{payload[0].payload.formattedDateFull}</p>
-      {payload.map((entry, index: number) => (
-        <p key={index} style={{ color: entry.color }}>
-          {t("csat")}: {entry.value.toFixed(1)}%
-        </p>
-      ))}
+      {payload
+        .filter((entry) => entry.type !== "none")
+        .map((entry, index: number) => (
+          <p key={index} style={{ color: entry.color }}>
+            {t("csat")}: {entry.value.toFixed(1)}%
+          </p>
+        ))}
     </div>
   );
 };
@@ -51,6 +64,7 @@ const CustomTooltip = ({
 export const CSATOverTimeChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const ditherId = useDitherId();
 
   const {
     data: csatData,
@@ -65,13 +79,13 @@ export const CSATOverTimeChart = () => {
     },
   });
 
-
   return (
     <ChartCard title={t("csat_over_time")} className="h-full" isPending={isPending} isError={isError}>
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={csatData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <ComposedChart data={csatData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <DitheredAreaDefs ditherId={ditherId} colors={[COLOR.CSAT]} />
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -83,6 +97,18 @@ export const CSATOverTimeChart = () => {
                 domain={[0, 100]}
               />
               <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="linear"
+                dataKey="CSAT"
+                stroke="none"
+                fill={ditherFill(ditherId, COLOR.CSAT)}
+                fillOpacity={1}
+                dot={false}
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+                animationDuration={1000}
+              />
               <Line
                 type="linear"
                 dataKey="CSAT"
@@ -93,7 +119,7 @@ export const CSATOverTimeChart = () => {
                 activeDot={{ r: 6 }}
                 animationDuration={1000}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       ) : null}

@@ -1,6 +1,15 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -8,6 +17,7 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { DitheredAreaDefs, ditherFill, useDitherId } from "../DitheredAreaFill";
 
 const COLOR = {
   AVERAGE: "#3b82f6",
@@ -44,6 +54,7 @@ const CustomTooltip = ({
     dataKey: string;
     name: string;
     color: string;
+    type?: string;
     payload: AverageEventDurationData;
   }>;
   label?: string;
@@ -55,11 +66,13 @@ const CustomTooltip = ({
   return (
     <div className="bg-default text-inverted border-subtle rounded-lg border p-3 shadow-lg">
       <p className="text-default font-medium">{label}</p>
-      {payload.map((entry, index: number) => (
-        <p key={index} style={{ color: entry.color }}>
-          {entry.name}: {formatDuration(entry.value)}
-        </p>
-      ))}
+      {payload
+        .filter((entry) => entry.type !== "none")
+        .map((entry, index: number) => (
+          <p key={index} style={{ color: entry.color }}>
+            {entry.name}: {formatDuration(entry.value)}
+          </p>
+        ))}
     </div>
   );
 };
@@ -67,6 +80,7 @@ const CustomTooltip = ({
 export const AverageEventDurationChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const ditherId = useDitherId();
 
   const { data, isSuccess, isPending, isError } = trpc.viewer.insights.averageEventDuration.useQuery(
     insightsBookingParams,
@@ -89,7 +103,8 @@ export const AverageEventDurationChart = () => {
         ) : (
           <div className="mt-4 h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <ComposedChart data={data} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+                <DitheredAreaDefs ditherId={ditherId} colors={[COLOR.AVERAGE]} />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="Date" className="text-xs" axisLine={false} tickLine={false} />
                 <YAxis
@@ -100,6 +115,18 @@ export const AverageEventDurationChart = () => {
                   tickFormatter={formatDuration}
                 />
                 <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="linear"
+                  dataKey="Average"
+                  stroke="none"
+                  fill={ditherFill(ditherId, COLOR.AVERAGE)}
+                  fillOpacity={1}
+                  dot={false}
+                  activeDot={false}
+                  tooltipType="none"
+                  legendType="none"
+                  animationDuration={1000}
+                />
                 <Line
                   type="linear"
                   dataKey="Average"
@@ -110,7 +137,7 @@ export const AverageEventDurationChart = () => {
                   activeDot={{ r: 6 }}
                   animationDuration={1000}
                 />
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         )

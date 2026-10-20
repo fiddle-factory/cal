@@ -1,6 +1,15 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -10,6 +19,7 @@ import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks
 import { useToggleableLegend } from "@calcom/web/modules/insights/hooks/useToggleableLegend";
 import { valueFormatter } from "@calcom/features/insights/lib/valueFormatter";
 import { ChartCard } from "../ChartCard";
+import { DitheredAreaDefs, ditherFill, useDitherId } from "../DitheredAreaFill";
 
 const COLOR = {
   CREATED: "#a855f7",
@@ -43,6 +53,7 @@ const CustomTooltip = ({
     dataKey: string;
     name: string;
     color: string;
+    type?: string;
     payload: EventTrendsData;
   }>;
   label?: string;
@@ -54,11 +65,13 @@ const CustomTooltip = ({
   return (
     <div className="bg-default text-inverted border-subtle rounded-lg border p-3 shadow-lg">
       <p className="text-default font-medium">{payload[0].payload.formattedDateFull}</p>
-      {payload.map((entry, index: number) => (
-        <p key={index} style={{ color: entry.color }}>
-          {entry.name}: {valueFormatter ? valueFormatter(entry.value) : entry.value}
-        </p>
-      ))}
+      {payload
+        .filter((entry) => entry.type !== "none")
+        .map((entry, index: number) => (
+          <p key={index} style={{ color: entry.color }}>
+            {entry.name}: {valueFormatter ? valueFormatter(entry.value) : entry.value}
+          </p>
+        ))}
     </div>
   );
 };
@@ -66,6 +79,7 @@ const CustomTooltip = ({
 export const EventTrendsChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const ditherId = useDitherId();
   const { enabledLegend, toggleSeries } = useToggleableLegend(legend);
 
   const {
@@ -92,7 +106,8 @@ export const EventTrendsChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <ComposedChart data={eventTrends ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <DitheredAreaDefs ditherId={ditherId} colors={legend.map((item) => item.color)} />
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -103,6 +118,21 @@ export const EventTrendsChart = () => {
                 tickFormatter={valueFormatter}
               />
               <Tooltip content={<CustomTooltip />} />
+              {enabledLegend.map((item) => (
+                <Area
+                  key={`fill-${item.label}`}
+                  type="linear"
+                  dataKey={item.label}
+                  stroke="none"
+                  fill={ditherFill(ditherId, item.color)}
+                  fillOpacity={1}
+                  dot={false}
+                  activeDot={false}
+                  tooltipType="none"
+                  legendType="none"
+                  animationDuration={1000}
+                />
+              ))}
               {enabledLegend.map((item) => (
                 <Line
                   key={item.label}
@@ -116,7 +146,7 @@ export const EventTrendsChart = () => {
                   animationDuration={1000}
                 />
               ))}
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       ) : null}
