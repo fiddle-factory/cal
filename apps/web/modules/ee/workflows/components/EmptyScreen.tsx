@@ -1,3 +1,5 @@
+import React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import cn from "@calcom/ui/classNames";
 import { EmptyScreen as ClassicEmptyScreen } from "@calcom/ui/components/empty-screen";
@@ -53,6 +55,28 @@ function WorkflowExample(props: WorkflowExampleType) {
 export default function EmptyScreen(props: { isFilteredView: boolean }) {
   const { t } = useLocale();
   const { showDialog, setShowDialog, pendingTeamId, openDialog } = useWorkflowCreation();
+  const [shimmerEnabled, setShimmerEnabled] = React.useState(true);
+  const [shimmerColor, setShimmerColor] = React.useState("#ffffff");
+  const [shimmerOpacity, setShimmerOpacity] = React.useState(0.45);
+  const [shimmerDuration, setShimmerDuration] = React.useState(2.8);
+  const [shimmerWidth, setShimmerWidth] = React.useState(35);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="WorkflowsEmptyScreen-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.shimmerEnabled === "boolean") setShimmerEnabled(p.shimmerEnabled);
+      if (typeof p.shimmerColor === "string") setShimmerColor(p.shimmerColor);
+      if (typeof p.shimmerOpacity === "number") setShimmerOpacity(p.shimmerOpacity);
+      if (typeof p.shimmerDuration === "number") setShimmerDuration(p.shimmerDuration);
+      if (typeof p.shimmerWidth === "number") setShimmerWidth(p.shimmerWidth);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   const workflowsExamples: WorkflowExampleType[] = [
     { icon: "smartphone", title: t("send_sms_reminder"), description: t("send_sms_reminder_description") },
@@ -115,8 +139,32 @@ export default function EmptyScreen(props: { isFilteredView: boolean }) {
   return (
     <>
       <div className="min-h-80 flex w-full flex-col items-center justify-center rounded-md ">
-        <div className="bg-emphasis flex h-[72px] w-[72px] items-center justify-center rounded-full">
+        <style>{`
+          @keyframes workflows-empty-icon-shimmer {
+            0% { transform: translateX(-100%); }
+            60%, 100% { transform: translateX(100%); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .workflows-empty-icon-shimmer { display: none; }
+          }
+        `}</style>
+        <div
+          data-config-id="WorkflowsEmptyScreen-controls"
+          className="bg-emphasis relative flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full">
           <Icon name="zap" className="dark:text-default inline-block h-10 w-10 stroke-[1.3px]" />
+          {shimmerEnabled && (
+            <span
+              aria-hidden="true"
+              className="workflows-empty-icon-shimmer pointer-events-none absolute inset-0"
+              style={{
+                opacity: shimmerOpacity,
+                background: `linear-gradient(105deg, transparent ${50 - shimmerWidth / 2}%, ${shimmerColor} 50%, transparent ${
+                  50 + shimmerWidth / 2
+                }%)`,
+                animation: `workflows-empty-icon-shimmer ${shimmerDuration}s ease-in-out infinite`,
+              }}
+            />
+          )}
         </div>
         <div className="max-w-[420px] text-center">
           <h2 className="font-heading mt-6 text-xl dark:text-gray-300">{t("workflows")}</h2>
