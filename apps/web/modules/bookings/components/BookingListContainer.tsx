@@ -16,7 +16,7 @@ import useMeQuery from "@calcom/trpc/react/hooks/useMeQuery";
 import { Alert } from "@calcom/ui/components/alert";
 import { Badge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
-import { ToggleGroup } from "@calcom/ui/components/form";
+import { Select } from "@calcom/ui/components/form";
 import { WipeMyCalActionButton } from "@calcom/web/components/apps/wipemycalother/wipeMyCalActionButton";
 
 import { useBookingFilters } from "~/bookings/hooks/useBookingFilters";
@@ -160,21 +160,20 @@ function BookingListInner({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        {/* Desktop: full width on first row, Mobile: full width on first row with horizontal scroll */}
-        <div className="w-full md:w-auto">
-          <div className="overflow-x-auto md:overflow-visible">
-            <ToggleGroup
-              value={currentTab}
-              onValueChange={(value) => {
-                if (!value) return;
-                const selectedTab = tabOptions.find((tab) => tab.value === value);
-                if (selectedTab?.href) {
-                  router.push(selectedTab.href);
-                }
-              }}
-              options={tabOptions}
-            />
-          </div>
+        {/* Booking status dropdown. Desktop: fixed width, Mobile: full width on first row */}
+        <div className="w-full md:w-48" data-testid="booking-status-select">
+          <Select
+            size="sm"
+            isSearchable={false}
+            aria-label={t("status")}
+            value={tabOptions.find((tab) => tab.value === currentTab) ?? tabOptions[0]}
+            onChange={(option) => {
+              if (option?.href) {
+                router.push(option.href);
+              }
+            }}
+            options={tabOptions}
+          />
         </div>
 
         {/* Desktop: second item on first row, Mobile: first item on second row */}
