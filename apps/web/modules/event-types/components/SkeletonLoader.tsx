@@ -80,22 +80,36 @@ export function EventTypesSkeletonLoader() {
 
 function SkeletonItem() {
   return (
-    <li className="group flex w-full items-center justify-between px-4 py-4 sm:px-6">
-      <div className="grow truncate text-sm">
-        <div>
-          <SkeletonText className="h-5 w-32" />
-        </div>
-        <div className="">
-          <ul className="mt-2 flex space-x-4 rtl:space-x-reverse ">
+    <li data-testid="event-type-skeleton-row">
+      <div className="group flex w-full max-w-full items-center justify-between overflow-hidden px-4 py-4 sm:px-6">
+        {/* Title, slug, description and duration badge */}
+        <div className="relative flex-1 overflow-hidden pr-4 text-sm">
+          <div className="flex items-center gap-2">
+            <SkeletonText className="h-4 w-28" />
+            <SkeletonText className="hidden h-3 w-36 sm:inline-block" />
+          </div>
+          <SkeletonText className="mt-2 h-3 w-full max-w-xs" />
+          <ul className="mt-2 flex space-x-2 rtl:space-x-reverse">
             <li className="flex items-center whitespace-nowrap">
-              <Icon name="clock" className="text-subtle mr-1.5 mt-0.5 inline h-4 w-4" />
-              <SkeletonText className="h-4 w-12" />
-            </li>
-            <li className="flex items-center whitespace-nowrap">
-              <Icon name="user" className="text-subtle mr-1.5 mt-0.5 inline h-4 w-4" />
-              <SkeletonText className="h-4 w-12" />
+              <span className="bg-subtle inline-flex h-5 items-center gap-1 rounded-md px-1.5">
+                <Icon name="clock" className="text-subtle h-3 w-3" />
+                <SkeletonText className="h-2.5 w-8" />
+              </span>
             </li>
           </ul>
+        </div>
+        {/* Toggle and action buttons */}
+        <div className="mt-4 hidden sm:mt-0 sm:flex">
+          <div className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
+            <div className="self-center rounded-md p-2">
+              <SkeletonText className="h-5 w-9 rounded-full" />
+            </div>
+            <div className="border-subtle flex overflow-hidden rounded-[10px] border">
+              <SkeletonText className="h-9 w-9 rounded-none" />
+              <SkeletonText className="border-subtle h-9 w-9 rounded-none border-l" />
+              <SkeletonText className="border-subtle h-9 w-9 rounded-none border-l" />
+            </div>
+          </div>
         </div>
       </div>
     </li>
