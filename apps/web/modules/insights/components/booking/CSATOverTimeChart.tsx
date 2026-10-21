@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -8,6 +8,7 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { DitherDefs, ditherPatternId, useDitherId } from "./DitherPattern";
 
 const COLOR = {
   CSAT: "#22c55e",
@@ -51,6 +52,7 @@ const CustomTooltip = ({
 export const CSATOverTimeChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const ditherId = useDitherId();
 
   const {
     data: csatData,
@@ -69,9 +71,10 @@ export const CSATOverTimeChart = () => {
   return (
     <ChartCard title={t("csat_over_time")} className="h-full" isPending={isPending} isError={isError}>
       {isSuccess ? (
-        <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
+        <div className="linechart relative ml-4 mt-4 h-80 sm:ml-0">
+          <DitherDefs prefix={ditherId} series={[{ key: "CSAT", color: COLOR.CSAT }]} />
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={csatData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <ComposedChart data={csatData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -83,6 +86,18 @@ export const CSATOverTimeChart = () => {
                 domain={[0, 100]}
               />
               <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="linear"
+                dataKey="CSAT"
+                stroke="none"
+                fill={`url(#${ditherPatternId(ditherId, "CSAT")})`}
+                fillOpacity={1}
+                dot={false}
+                activeDot={false}
+                tooltipType="none"
+                legendType="none"
+                animationDuration={1000}
+              />
               <Line
                 type="linear"
                 dataKey="CSAT"
@@ -93,7 +108,7 @@ export const CSATOverTimeChart = () => {
                 activeDot={{ r: 6 }}
                 animationDuration={1000}
               />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       ) : null}

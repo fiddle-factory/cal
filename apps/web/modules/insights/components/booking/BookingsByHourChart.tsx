@@ -17,11 +17,13 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { DitherDefs, ditherPatternId, useDitherId } from "./DitherPattern";
 
 type BookingsByHourData = RouterOutputs["viewer"]["insights"]["bookingsByHourStats"][number];
 
 export const BookingsByHourChartContent = ({ data }: { data: BookingsByHourData[] }) => {
   const { t } = useLocale();
+  const ditherId = useDitherId();
 
   const chartData = data.map((item) => ({
     hour: `${item.hour.toString().padStart(2, "0")}:00`,
@@ -40,7 +42,8 @@ export const BookingsByHourChartContent = ({ data }: { data: BookingsByHourData[
   }
 
   return (
-    <div className="mt-4 h-80">
+    <div className="relative mt-4 h-80">
+      <DitherDefs prefix={ditherId} series={[{ key: "count", color: "var(--cal-bg-emphasis)" }]} />
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 20, right: 0, left: -10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -49,7 +52,7 @@ export const BookingsByHourChartContent = ({ data }: { data: BookingsByHourData[
           <Tooltip cursor={false} content={<CustomTooltip />} />
           <Bar
             dataKey="count"
-            fill="var(--cal-bg-subtle)"
+            fill={`url(#${ditherPatternId(ditherId, "count")})`}
             radius={[2, 2, 0, 0]}
             activeBar={<Rectangle fill="var(--cal-bg-info)" />}
           />

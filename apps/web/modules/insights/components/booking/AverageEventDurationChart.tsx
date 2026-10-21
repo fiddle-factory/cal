@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -8,6 +8,7 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 
 import { useInsightsBookingParameters } from "@calcom/web/modules/insights/hooks/useInsightsBookingParameters";
 import { ChartCard } from "../ChartCard";
+import { DitherDefs, ditherPatternId, useDitherId } from "./DitherPattern";
 
 const COLOR = {
   AVERAGE: "#3b82f6",
@@ -67,6 +68,7 @@ const CustomTooltip = ({
 export const AverageEventDurationChart = () => {
   const { t } = useLocale();
   const insightsBookingParams = useInsightsBookingParameters();
+  const ditherId = useDitherId();
 
   const { data, isSuccess, isPending, isError } = trpc.viewer.insights.averageEventDuration.useQuery(
     insightsBookingParams,
@@ -87,9 +89,10 @@ export const AverageEventDurationChart = () => {
             <p className="m-auto text-sm font-light">{t("insights_no_data_found_for_filter")}</p>
           </div>
         ) : (
-          <div className="mt-4 h-80">
+          <div className="relative mt-4 h-80">
+            <DitherDefs prefix={ditherId} series={[{ key: "Average", color: COLOR.AVERAGE }]} />
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <ComposedChart data={data} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="Date" className="text-xs" axisLine={false} tickLine={false} />
                 <YAxis
@@ -100,6 +103,18 @@ export const AverageEventDurationChart = () => {
                   tickFormatter={formatDuration}
                 />
                 <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="linear"
+                  dataKey="Average"
+                  stroke="none"
+                  fill={`url(#${ditherPatternId(ditherId, "Average")})`}
+                  fillOpacity={1}
+                  dot={false}
+                  activeDot={false}
+                  tooltipType="none"
+                  legendType="none"
+                  animationDuration={1000}
+                />
                 <Line
                   type="linear"
                   dataKey="Average"
@@ -110,7 +125,7 @@ export const AverageEventDurationChart = () => {
                   activeDot={{ r: 6 }}
                   animationDuration={1000}
                 />
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         )

@@ -32,6 +32,7 @@ import {
   RecentFeedbackTable,
   TimezoneBadge,
 } from "@calcom/web/modules/insights/components/booking";
+import { DitherProvider } from "../components/booking/DitherPattern";
 import { InsightsOrgTeamsProvider } from "../components/context/InsightsOrgTeamsProvider";
 import { DateTargetSelector, type DateTarget } from "../components/filters/DateTargetSelector";
 import { Download } from "../components/filters/Download/Download";
@@ -100,7 +101,7 @@ function InsightsPageContent() {
         <TimezoneBadge />
       </div>
 
-      <div className="my-4 stack-y-4">
+      <DitherProvider className="my-4 stack-y-4">
         <BookingKPICards />
 
         <EventTrendsChart />
@@ -157,7 +158,7 @@ function InsightsPageContent() {
             {t("contact_support")}
           </a>
         </small>
-      </div>
+      </DitherProvider>
     </>
   );
 }
