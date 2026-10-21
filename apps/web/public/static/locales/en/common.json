@@ -2441,6 +2441,7 @@
   "from_to_date_period": "From: {{startDate}} To: {{endDate}}",
   "redirect_url_warning": "Adding a redirect will disable the success page. Make sure to mention \"Booking Confirmed\" on your custom success page.",
   "event_trends": "Event Trends",
+  "sample_data": "Sample data",
   "clear_filters": "Clear Filters",
   "clear": "Clear",
   "hold": "Hold",

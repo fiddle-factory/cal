@@ -7,12 +7,19 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Button } from "@calcom/ui/components/button";
 import { ButtonGroup } from "@calcom/ui/components/buttonGroup";
 import { Icon } from "@calcom/ui/components/icon";
+import { trpc } from "@calcom/trpc/react";
+import { useHasTeamPlan } from "@calcom/web/modules/billing/hooks/useHasPaidPlan";
+import { EventsOverviewChart } from "@calcom/web/modules/insights/components/EventsOverviewChart";
 
 import { UpgradeTip } from "~/shell/UpgradeTip";
 
 export default function UpgradeTipWrapper({ children }: { children: React.ReactNode }) {
   const { t } = useLocale();
   const session = useSession();
+  const { isPending, hasTeamPlan } = useHasTeamPlan();
+  const { data: upgradeableTeams } = trpc.viewer.teams.getUpgradeable.useQuery();
+  // Insights is locked when the user has no team plan and no unpublished team (mirrors UpgradeTip).
+  const isLocked = !isPending && !hasTeamPlan && !upgradeableTeams?.[0];
   const features = [
     {
       icon: <Icon name="users" className="h-5 w-5 text-red-500" />,
@@ -32,25 +39,32 @@ export default function UpgradeTipWrapper({ children }: { children: React.ReactN
   ];
 
   return (
-    <UpgradeTip
-      plan="team"
-      title={t("make_informed_decisions")}
-      description={t("make_informed_decisions_description")}
-      features={features}
-      background="/tips/insights"
-      buttons={
-        <div className="stack-y-2 rtl:space-x-reverse sm:space-x-2">
-          <ButtonGroup>
-            <Button color="primary" href={`${WEBAPP_URL}/settings/teams/new`}>
-              {t("create_team")}
-            </Button>
-            <Button color="minimal" href="https://go.cal.com/insights" target="_blank">
-              {t("learn_more")}
-            </Button>
-          </ButtonGroup>
+    <>
+      {isLocked && (
+        <div className="mb-4">
+          <EventsOverviewChart />
         </div>
-      }>
-      {!session.data?.user ? null : children}
-    </UpgradeTip>
+      )}
+      <UpgradeTip
+        plan="team"
+        title={t("make_informed_decisions")}
+        description={t("make_informed_decisions_description")}
+        features={features}
+        background="/tips/insights"
+        buttons={
+          <div className="stack-y-2 rtl:space-x-reverse sm:space-x-2">
+            <ButtonGroup>
+              <Button color="primary" href={`${WEBAPP_URL}/settings/teams/new`}>
+                {t("create_team")}
+              </Button>
+              <Button color="minimal" href="https://go.cal.com/insights" target="_blank">
+                {t("learn_more")}
+              </Button>
+            </ButtonGroup>
+          </div>
+        }>
+        {!session.data?.user ? null : children}
+      </UpgradeTip>
+    </>
   );
 }
