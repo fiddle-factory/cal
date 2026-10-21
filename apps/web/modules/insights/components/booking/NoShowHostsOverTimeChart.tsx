@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { trpc } from "@calcom/trpc/react";
@@ -71,7 +71,13 @@ export const NoShowHostsOverTimeChart = () => {
       {isSuccess ? (
         <div className="linechart ml-4 mt-4 h-80 sm:ml-0">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={noShowHostsData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+            <AreaChart data={noShowHostsData ?? []} margin={{ top: 30, right: 20, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="noShowHostsFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLOR.NO_SHOW_HOST} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={COLOR.NO_SHOW_HOST} stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="Month" className="text-xs" axisLine={false} tickLine={false} />
               <YAxis
@@ -82,17 +88,19 @@ export const NoShowHostsOverTimeChart = () => {
                 tickFormatter={valueFormatter}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Line
+              <Area
                 type="linear"
                 dataKey="Count"
                 name={t("no_show_hosts")}
                 stroke={COLOR.NO_SHOW_HOST}
+                fill="url(#noShowHostsFill)"
+                fillOpacity={1}
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
                 animationDuration={1000}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       ) : null}
