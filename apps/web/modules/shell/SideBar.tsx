@@ -98,8 +98,8 @@ export function SideBar({ bannersHeight, user }: SideBarProps) {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hasToggled, setHasToggled] = useState(false);
-  const [transitionDuration, setTransitionDuration] = useState(240);
-  const [transitionEasing, setTransitionEasing] = useState("cubic-bezier(0.4, 0, 0.2, 1)");
+  const [transitionDuration, setTransitionDuration] = useState(600);
+  const [transitionEasing, setTransitionEasing] = useState("linear");
 
   const toggleCollapsed = () => {
     setHasToggled(true);
