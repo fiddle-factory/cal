@@ -4,7 +4,8 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { revalidateAvailabilityList } from "app/(use-page-wrapper)/(main-nav)/availability/actions";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import posthog from "posthog-js";
 
 import { BulkEditDefaultForEventsModal } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
@@ -179,6 +180,109 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
         </>
       )}
     </>
+  );
+}
+
+type Schedule = AvailabilityListProps["availabilities"]["schedules"][number];
+
+const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+type AvailabilityStatus =
+  | { kind: "available"; until: string }
+  | { kind: "later"; from: string }
+  | { kind: "away" };
+
+// Schedule ranges store wall-clock times as UTC hours/minutes in the schedule's time zone.
+function getAvailabilityStatus(schedule: Schedule, now: Date, hour12: boolean): AvailabilityStatus {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: schedule.timeZone ?? undefined,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  const weekday = WEEKDAY_INDEX[part("weekday")];
+  const nowMinutes = Number(part("hour")) * 60 + Number(part("minute"));
+  const toMinutes = (date: Date) => new Date(date).getUTCHours() * 60 + new Date(date).getUTCMinutes();
+  const formatTime = (date: Date) =>
+    new Intl.DateTimeFormat(undefined, { timeZone: "UTC", hour: "numeric", minute: "2-digit", hour12 }).format(
+      new Date(date)
+    );
+
+  const today = schedule.availability
+    .filter((range) => range.days.includes(weekday))
+    .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime));
+
+  const current = today.find(
+    (range) => toMinutes(range.startTime) <= nowMinutes && nowMinutes < toMinutes(range.endTime)
+  );
+  if (current) return { kind: "available", until: formatTime(current.endTime) };
+
+  const next = today.find((range) => toMinutes(range.startTime) > nowMinutes);
+  if (next) return { kind: "later", from: formatTime(next.startTime) };
+
+  return { kind: "away" };
+}
+
+type AvailabilityHeroProps = {
+  heading: string;
+  subtitle: string;
+  schedules: Schedule[];
+  CTA?: ReactNode;
+};
+export function AvailabilityHero({ heading, subtitle, schedules, CTA }: AvailabilityHeroProps) {
+  const { t } = useLocale();
+  const { data: user } = useMeQuery();
+  const defaultSchedule = schedules.find((schedule) => schedule.isDefault);
+  const hour12 = user?.timeFormat ? user.timeFormat === 12 : true;
+  const [status, setStatus] = useState<AvailabilityStatus | null>(null);
+
+  // Computed after mount so server and client markup match.
+  useEffect(() => {
+    if (!defaultSchedule) return setStatus(null);
+    setStatus(getAvailabilityStatus(defaultSchedule, new Date(), hour12));
+  }, [defaultSchedule, hour12]);
+
+  return (
+    <section className="border-subtle mb-6 rounded-xl border bg-linear-to-r from-purple-50 via-purple-50 to-pink-50 px-5 py-6 sm:px-6 lg:mb-8 dark:from-purple-950/40 dark:via-purple-950/30 dark:to-pink-950/40">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="font-heading text-emphasis text-xl tracking-wide md:text-2xl">{heading}</h3>
+          <p className="text-default mt-1 text-sm" data-testid="subtitle">
+            {subtitle}
+          </p>
+          {status && (
+            <p
+              className="text-emphasis mt-3 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-sm font-semibold dark:bg-black/30"
+              data-testid="availability-status">
+              <span
+                aria-hidden
+                className={
+                  status.kind === "available"
+                    ? "h-2 w-2 rounded-full bg-green-500"
+                    : "h-2 w-2 rounded-full bg-gray-400"
+                }
+              />
+              <span>{status.kind === "available" ? t("available_now") : t("unavailable")}</span>
+              {status.kind !== "away" && (
+                <>
+                  <span aria-hidden className="text-subtle">
+                    ·
+                  </span>
+                  <span className="font-medium">
+                    {status.kind === "available"
+                      ? `${t("until")} ${status.until}`
+                      : `${t("available_from")} ${status.from}`}
+                  </span>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+        {CTA && <div className="shrink-0 [-webkit-app-region:no-drag]">{CTA}</div>}
+      </div>
+    </section>
   );
 }
 

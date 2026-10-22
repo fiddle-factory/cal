@@ -290,6 +290,8 @@
   "until": "until",
   "powered_by": "powered by",
   "unavailable": "Unavailable",
+  "available_now": "Available now",
+  "available_from": "Available from",
   "set_work_schedule": "Set your work schedule",
   "change_bookings_availability": "Change when you are available for bookings",
   "select": "Select...",

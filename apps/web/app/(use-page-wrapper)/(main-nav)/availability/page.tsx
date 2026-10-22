@@ -15,7 +15,7 @@ import { AvailabilitySliderTable } from "@calcom/web/modules/timezone-buddy/comp
 
 import { buildLegacyRequest } from "@lib/buildLegacyCtx";
 
-import { AvailabilityList, AvailabilityCTA } from "~/availability/availability-view";
+import { AvailabilityList, AvailabilityCTA, AvailabilityHero } from "~/availability/availability-view";
 
 import { ShellMainAppDir } from "../ShellMainAppDir";
 
@@ -77,10 +77,13 @@ const Page = async ({ searchParams: _searchParams }: PageProps) => {
   const canViewTeamAvailability = teamIdsWithPermission.length > 0 || !isOrgPrivate;
 
   return (
-    <ShellMainAppDir
-      heading={t("availability")}
-      subtitle={t("configure_availability")}
-      CTA={<AvailabilityCTA canViewTeamAvailability={canViewTeamAvailability} />}>
+    <ShellMainAppDir>
+      <AvailabilityHero
+        heading={t("availability")}
+        subtitle={t("configure_availability")}
+        schedules={availabilities.schedules}
+        CTA={<AvailabilityCTA canViewTeamAvailability={canViewTeamAvailability} />}
+      />
       {searchParams?.type === "team" && canViewTeamAvailability ? (
         <AvailabilitySliderTable isOrg={!!organizationId} />
       ) : (
