@@ -125,10 +125,10 @@ export const EventTrendsChart = () => {
   const { enabledLegend, toggleSeries } = useToggleableLegend(legend);
   const patternPrefix = `dither-${React.useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-  const [ditherDensity, setDitherDensity] = React.useState(6);
-  const [ditherPixelSize, setDitherPixelSize] = React.useState(2);
+  const [ditherDensity, setDitherDensity] = React.useState(8);
+  const [ditherPixelSize, setDitherPixelSize] = React.useState(4);
   const [shineEnabled, setShineEnabled] = React.useState(true);
-  const [shineSpeed, setShineSpeed] = React.useState(4);
+  const [shineSpeed, setShineSpeed] = React.useState(7);
   const [shineIntensity, setShineIntensity] = React.useState(0.6);
   const [shineColor, setShineColor] = React.useState("#ffffff");
 
