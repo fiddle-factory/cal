@@ -225,6 +225,12 @@ function getAvailabilityStatus(schedule: Schedule, now: Date, hour12: boolean): 
   return { kind: "away" };
 }
 
+// Inline so the band always renders, independent of generated gradient utilities.
+// Lavender (purple-200) → pink (pink-200); the band stays light in both themes, so hero text uses fixed dark grays.
+const HERO_GRADIENT_STYLE = {
+  backgroundImage: "linear-gradient(90deg, #e9d5ff 0%, #f3d1fb 50%, #fbcfe8 100%)",
+} as const;
+
 type AvailabilityHeroProps = {
   heading: string;
   subtitle: string;
@@ -245,16 +251,18 @@ export function AvailabilityHero({ heading, subtitle, schedules, CTA }: Availabi
   }, [defaultSchedule, hour12]);
 
   return (
-    <section className="border-subtle mb-6 rounded-xl border bg-linear-to-r from-purple-50 via-purple-50 to-pink-50 px-5 py-6 sm:px-6 lg:mb-8 dark:from-purple-950/40 dark:via-purple-950/30 dark:to-pink-950/40">
+    <section
+      className="mb-6 rounded-xl border border-purple-200 px-5 py-6 sm:px-6 lg:mb-8"
+      style={HERO_GRADIENT_STYLE}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h3 className="font-heading text-emphasis text-xl tracking-wide md:text-2xl">{heading}</h3>
-          <p className="text-default mt-1 text-sm" data-testid="subtitle">
+          <h3 className="font-heading text-xl tracking-wide text-gray-900 md:text-2xl">{heading}</h3>
+          <p className="mt-1 text-sm text-gray-700" data-testid="subtitle">
             {subtitle}
           </p>
           {status && (
             <p
-              className="text-emphasis mt-3 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-sm font-semibold dark:bg-black/30"
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1 text-sm font-semibold text-gray-900 shadow-sm"
               data-testid="availability-status">
               <span
                 aria-hidden
@@ -267,7 +275,7 @@ export function AvailabilityHero({ heading, subtitle, schedules, CTA }: Availabi
               <span>{status.kind === "available" ? t("available_now") : t("unavailable")}</span>
               {status.kind !== "away" && (
                 <>
-                  <span aria-hidden className="text-subtle">
+                  <span aria-hidden className="text-gray-500">
                     ·
                   </span>
                   <span className="font-medium">
