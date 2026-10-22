@@ -83,7 +83,7 @@ export const BookingKPICards = () => {
 
   return (
     <div className="stack-y-4">
-      <ChartCard title={t("events")} isPending={isPending} isError={isError}>
+      <ChartCard title={t("events")} hideHeader isPending={isPending} isError={isError}>
         <StatContainer>
           {eventCategories.map((item, index) => (
             <StatItem key={item.title} index={index}>
@@ -125,7 +125,7 @@ const LoadingKPICards = (props: {
 
   return (
     <div className="stack-y-4">
-      <ChartCard title={t("events")} isPending={isPending} isError={isError}>
+      <ChartCard title={t("events")} hideHeader isPending={isPending} isError={isError}>
         <StatContainer>
           {eventCategories.map((item, index) => (
             <StatItem key={item.title} index={index}>
