@@ -1,6 +1,10 @@
+import * as React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { BookingFireworks } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,10 +32,44 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [showFireworks, setShowFireworks] = React.useState(true);
+  const [burstCount, setBurstCount] = React.useState(7);
+  const [particleCount, setParticleCount] = React.useState(18);
+  const [burstDuration, setBurstDuration] = React.useState(1.4);
+  const [particleSize, setParticleSize] = React.useState(5);
+  const [fireworksOpacity, setFireworksOpacity] = React.useState(0.9);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.showFireworks === "boolean") setShowFireworks(p.showFireworks);
+      if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
+      if (typeof p.particleCount === "number") setParticleCount(p.particleCount);
+      if (typeof p.burstDuration === "number") setBurstDuration(p.burstDuration);
+      if (typeof p.particleSize === "number") setParticleSize(p.particleSize);
+      if (typeof p.fireworksOpacity === "number") setFireworksOpacity(p.fireworksOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
-      <main className="mx-auto max-w-3xl">
+    <div className="relative h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      {showFireworks && (
+        <BookingFireworks
+          key={`${burstCount}-${particleCount}-${burstDuration}-${particleSize}`}
+          burstCount={burstCount}
+          particleCount={particleCount}
+          duration={burstDuration}
+          particleSize={particleSize}
+          opacity={fireworksOpacity}
+        />
+      )}
+      <main className="relative mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
