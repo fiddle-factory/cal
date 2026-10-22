@@ -2,6 +2,8 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
 
+import { BookingConfirmationFireworks } from "./BookingConfirmationFireworks";
+
 export interface DecoyBookingSuccessCardProps {
   title: string;
   formattedDate: string;
@@ -31,6 +33,7 @@ export function DecoyBookingSuccessCard({
 
   return (
     <div className="h-screen">
+      <BookingConfirmationFireworks />
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
