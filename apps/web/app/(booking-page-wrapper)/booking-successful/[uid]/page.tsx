@@ -45,6 +45,8 @@ export default function BookingSuccessful() {
       attendeeName={attendeeName}
       attendeeEmail={attendeeEmail}
       location={booking.location || null}
+      startTimeISO={startTime ? startTime.toISOString() : null}
+      endTimeISO={endTime ? endTime.toISOString() : null}
     />
   );
 }
