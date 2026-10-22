@@ -1,6 +1,10 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
 import { Icon } from "@calcom/ui/components/icon";
+import { useState } from "react";
+
+import { AddToCalendarDialog } from "./AddToCalendarDialog";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -13,6 +17,8 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** Initial open state of the "Add to calendar" picker dialog. */
+  defaultCalendarPickerOpen?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -26,8 +32,10 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [calendarPickerOpen, setCalendarPickerOpen] = useState(defaultCalendarPickerOpen);
 
   return (
     <div className="h-screen">
@@ -103,8 +111,20 @@ export function DecoyBookingSuccessCard({
                       </>
                     )}
                   </div>
+
+                  <hr className="border-subtle mt-8" />
+                  <div className="flex justify-center pt-8">
+                    <Button
+                      color="secondary"
+                      StartIcon="calendar"
+                      onClick={() => setCalendarPickerOpen(true)}
+                      data-testid="add-to-calendar-button">
+                      {t("add_to_calendar")}
+                    </Button>
+                  </div>
                 </div>
               </div>
+              <AddToCalendarDialog open={calendarPickerOpen} onOpenChange={setCalendarPickerOpen} />
             </div>
           </div>
         </div>
