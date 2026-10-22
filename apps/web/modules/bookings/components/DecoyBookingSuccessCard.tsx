@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
@@ -61,6 +61,105 @@ function getCalendarProviders(title: string, details: string): CalendarProvider[
   ];
 }
 
+const CONFETTI_COLORS = [
+  "var(--cal-bg-visualization-1-emphasis)",
+  "var(--cal-bg-visualization-2-emphasis)",
+  "var(--cal-bg-visualization-3-emphasis)",
+  "var(--cal-bg-visualization-4-emphasis)",
+  "var(--cal-bg-visualization-5-emphasis)",
+  "var(--cal-bg-visualization-6-emphasis)",
+  "var(--cal-bg-visualization-7-emphasis)",
+];
+
+type ConfettiPiece = {
+  id: number;
+  color: string;
+  shape: "rect" | "circle";
+  angle: number;
+  velocity: number;
+  rotation: number;
+  delay: number;
+  scale: number;
+};
+
+function createConfettiPieces(count: number): ConfettiPiece[] {
+  return Array.from({ length: count }, (_, id) => ({
+    id,
+    color: CONFETTI_COLORS[id % CONFETTI_COLORS.length],
+    shape: id % 3 === 0 ? "circle" : "rect",
+    // Launch upward in a fan between ~20° and ~160°.
+    angle: (20 + Math.random() * 140) * (Math.PI / 180),
+    velocity: 0.5 + Math.random() * 0.5,
+    rotation: (Math.random() - 0.5) * 1440,
+    delay: Math.random() * 250,
+    scale: 0.7 + Math.random() * 0.6,
+  }));
+}
+
+interface ConfettiBurstProps {
+  count: number;
+  duration: number;
+  size: number;
+  spread: number;
+}
+
+function ConfettiBurst({ count, duration, size, spread }: ConfettiBurstProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pieces = useMemo(() => createConfettiPieces(count), [count]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof container.animate !== "function") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+    const height = window.innerHeight;
+    const animations = Array.from(container.children).map((node, index) => {
+      const piece = pieces[index];
+      const dx = Math.cos(piece.angle) * piece.velocity * spread;
+      const peakY = -Math.sin(piece.angle) * piece.velocity * spread * 0.6;
+      const fallY = height * (0.6 + piece.velocity * 0.4);
+      return (node as HTMLElement).animate(
+        [
+          { transform: "translate(0px, 0px) rotate(0deg)", opacity: 1 },
+          {
+            transform: `translate(${dx * 0.7}px, ${peakY}px) rotate(${piece.rotation * 0.3}deg)`,
+            opacity: 1,
+            offset: 0.25,
+            easing: "ease-in",
+          },
+          {
+            transform: `translate(${dx}px, ${fallY}px) rotate(${piece.rotation}deg)`,
+            opacity: 0,
+          },
+        ],
+        { duration, delay: piece.delay, easing: "cubic-bezier(0.2, 0.6, 0.4, 1)", fill: "both" }
+      );
+    });
+
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [pieces, duration, spread]);
+
+  return (
+    <div ref={containerRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+      {pieces.map((piece) => (
+        <span
+          key={piece.id}
+          className="absolute"
+          style={{
+            left: "50%",
+            top: "22%",
+            opacity: 0,
+            width: size * piece.scale,
+            height: piece.shape === "circle" ? size * piece.scale : size * piece.scale * 0.45,
+            borderRadius: piece.shape === "circle" ? "9999px" : "1px",
+            backgroundColor: piece.color,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export interface DecoyBookingSuccessCardProps {
   title: string;
   formattedDate: string;
@@ -91,6 +190,29 @@ export function DecoyBookingSuccessCard({
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
   const [isCalendarPickerOpen, setIsCalendarPickerOpen] = useState(defaultCalendarPickerOpen);
+  const [confettiEnabled, setConfettiEnabled] = useState(true);
+  const [confettiCount, setConfettiCount] = useState(80);
+  const [confettiDuration, setConfettiDuration] = useState(2800);
+  const [confettiSize, setConfettiSize] = useState(10);
+  const [confettiSpread, setConfettiSpread] = useState(420);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiDuration === "number") setConfettiDuration(p.confettiDuration);
+      if (typeof p.confettiSize === "number") setConfettiSize(p.confettiSize);
+      if (typeof p.confettiSpread === "number") setConfettiSpread(p.confettiSpread);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const calendarProviders = getCalendarProviders(
     title,
     [formattedDate, formattedTime && `${formattedTime}${endTime ? ` - ${endTime}` : ""}`, formattedTimeZone]
@@ -100,6 +222,14 @@ export function DecoyBookingSuccessCard({
 
   return (
     <div className="h-screen">
+      {confettiEnabled && (
+        <ConfettiBurst
+          count={confettiCount}
+          duration={confettiDuration}
+          size={confettiSize}
+          spread={confettiSpread}
+        />
+      )}
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
