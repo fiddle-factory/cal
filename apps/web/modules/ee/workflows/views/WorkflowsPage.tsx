@@ -56,7 +56,7 @@ function WorkflowsPage({ filteredList }: PageProps) {
     <Shell withoutMain>
       <LicenseRequired>
         <ShellMain
-          heading={t("workflows")}
+          heading={t("team_workflows")}
           subtitle={t("workflows_to_automate_notifications")}
           title={t("workflows")}
           description={t("workflows_to_automate_notifications")}
