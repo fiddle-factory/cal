@@ -1,5 +1,6 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
 import { Icon } from "@calcom/ui/components/icon";
 
 export interface DecoyBookingSuccessCardProps {
@@ -13,9 +14,62 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** ISO 8601 start time, used to prefill the Google Calendar link */
+  startTimeIso?: string | null;
+  /** ISO 8601 end time, used to prefill the Google Calendar link */
+  endTimeIso?: string | null;
 }
 
+const toGoogleCalendarDate = (iso: string) => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+};
+
+const buildGoogleCalendarUrl = ({
+  title,
+  startTimeIso,
+  endTimeIso,
+  hostName,
+  hostEmail,
+  attendeeName,
+  attendeeEmail,
+  location,
+}: Pick<
+  DecoyBookingSuccessCardProps,
+  | "title"
+  | "startTimeIso"
+  | "endTimeIso"
+  | "hostName"
+  | "hostEmail"
+  | "attendeeName"
+  | "attendeeEmail"
+  | "location"
+>) => {
+  const params = new URLSearchParams({ action: "TEMPLATE", text: title });
+
+  const start = startTimeIso ? toGoogleCalendarDate(startTimeIso) : null;
+  const end = endTimeIso ? toGoogleCalendarDate(endTimeIso) : null;
+  if (start && end) params.set("dates", `${start}/${end}`);
+
+  const formatPerson = (name: string | null, email: string | null) =>
+    [name, email ? `<${email}>` : null].filter(Boolean).join(" ");
+  const people = [formatPerson(hostName, hostEmail), formatPerson(attendeeName, attendeeEmail)].filter(
+    Boolean
+  );
+  if (people.length) params.set("details", `Attendees:\n${people.join("\n")}`);
+
+  const guests = [hostEmail, attendeeEmail].filter(Boolean).join(",");
+  if (guests) params.set("add", guests);
+
+  if (location) params.set("location", location);
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+};
+
 export function DecoyBookingSuccessCard({
+  startTimeIso,
+  endTimeIso,
   title,
   formattedDate,
   formattedTime,
@@ -102,6 +156,26 @@ export function DecoyBookingSuccessCard({
                         <div className="col-span-2 mt-3">{t("web_conferencing_details_to_follow")}</div>
                       </>
                     )}
+                  </div>
+
+                  <div className="border-subtle mt-8 flex justify-center border-t pt-8">
+                    <Button
+                      color="secondary"
+                      StartIcon="calendar"
+                      href={buildGoogleCalendarUrl({
+                        title,
+                        startTimeIso,
+                        endTimeIso,
+                        hostName,
+                        hostEmail,
+                        attendeeName,
+                        attendeeEmail,
+                        location,
+                      })}
+                      target="_blank"
+                      rel="noopener noreferrer">
+                      {t("add_to_google_calendar")}
+                    </Button>
                   </div>
                 </div>
               </div>
