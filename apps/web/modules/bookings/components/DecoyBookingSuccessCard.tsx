@@ -1,6 +1,10 @@
+import * as React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { BookingFireworks, FIREWORKS_TOKEN_COLORS } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,10 +32,42 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [showFireworks, setShowFireworks] = React.useState(true);
+  const [fireworksDuration, setFireworksDuration] = React.useState(4);
+  const [burstCount, setBurstCount] = React.useState(8);
+  const [particleCount, setParticleCount] = React.useState(60);
+  const [particleSize, setParticleSize] = React.useState(2.5);
+  const [fireworksColor, setFireworksColor] = React.useState(FIREWORKS_TOKEN_COLORS[0]);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.showFireworks === "boolean") setShowFireworks(p.showFireworks);
+      if (typeof p.fireworksDuration === "number") setFireworksDuration(p.fireworksDuration);
+      if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
+      if (typeof p.particleCount === "number") setParticleCount(p.particleCount);
+      if (typeof p.particleSize === "number") setParticleSize(p.particleSize);
+      if (typeof p.fireworksColor === "string") setFireworksColor(p.fireworksColor);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
-      <main className="mx-auto max-w-3xl">
+    <div className="relative h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      <BookingFireworks
+        enabled={showFireworks}
+        duration={fireworksDuration}
+        burstCount={burstCount}
+        particleCount={particleCount}
+        particleSize={particleSize}
+        primaryColor={fireworksColor}
+      />
+      <main className="relative z-10 mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
