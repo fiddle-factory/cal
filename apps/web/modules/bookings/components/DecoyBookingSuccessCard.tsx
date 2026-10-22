@@ -1,6 +1,10 @@
+import * as React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { BookingFireworks } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,9 +32,39 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [showFireworks, setShowFireworks] = React.useState(true);
+  const [burstCount, setBurstCount] = React.useState(7);
+  const [particleCount, setParticleCount] = React.useState(60);
+  const [durationSeconds, setDurationSeconds] = React.useState(3.5);
+  const [speed, setSpeed] = React.useState(1);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.showFireworks === "boolean") setShowFireworks(p.showFireworks);
+      if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
+      if (typeof p.particleCount === "number") setParticleCount(p.particleCount);
+      if (typeof p.durationSeconds === "number") setDurationSeconds(p.durationSeconds);
+      if (typeof p.speed === "number") setSpeed(p.speed);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      {showFireworks && (
+        <BookingFireworks
+          burstCount={burstCount}
+          particleCount={particleCount}
+          durationSeconds={durationSeconds}
+          speed={speed}
+        />
+      )}
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
