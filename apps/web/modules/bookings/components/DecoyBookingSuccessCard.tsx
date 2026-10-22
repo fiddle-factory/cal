@@ -302,8 +302,8 @@ export function DecoyBookingSuccessCard({
   defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
-  const [confettiCount, setConfettiCount] = React.useState(120);
-  const [confettiSpeed, setConfettiSpeed] = React.useState(1);
+  const [confettiCount, setConfettiCount] = React.useState(400);
+  const [confettiSpeed, setConfettiSpeed] = React.useState(1.95);
   const [confettiSize, setConfettiSize] = React.useState(10);
   const [confettiColorA, setConfettiColorA] = React.useState(CONFETTI_DEFAULT_COLORS.colorA);
   const [confettiColorB, setConfettiColorB] = React.useState(CONFETTI_DEFAULT_COLORS.colorB);
