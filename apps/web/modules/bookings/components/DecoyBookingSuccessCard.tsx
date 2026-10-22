@@ -1,7 +1,35 @@
+import React, { useState } from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
-import { Icon } from "@calcom/ui/components/icon";
+
+const successCheckAnimationCss = `
+@keyframes cal-success-badge-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(var(--cal-success-overshoot, 1.15)); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes cal-success-tick-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.cal-success-badge {
+  animation: cal-success-badge-pop var(--cal-success-pop-duration, 450ms) cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+.cal-success-tick path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: cal-success-tick-draw var(--cal-success-draw-duration, 400ms) ease-out
+    var(--cal-success-draw-delay, 250ms) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cal-success-badge,
+  .cal-success-tick path {
+    animation: none;
+  }
+}
+`;
 
 export interface DecoyBookingSuccessCardProps {
   uid?: string | null;
@@ -108,6 +136,26 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [popDuration, setPopDuration] = useState(450);
+  const [popOvershoot, setPopOvershoot] = useState(1.15);
+  const [drawDuration, setDrawDuration] = useState(400);
+  const [drawDelay, setDrawDelay] = useState(250);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.popDuration === "number") setPopDuration(p.popDuration);
+      if (typeof p.popOvershoot === "number") setPopOvershoot(p.popOvershoot);
+      if (typeof p.drawDuration === "number") setDrawDuration(p.drawDuration);
+      if (typeof p.drawDelay === "number") setDrawDelay(p.drawDelay);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   const start = startTimeISO ? new Date(startTimeISO) : null;
   const end = endTimeISO ? new Date(endTimeISO) : null;
@@ -144,8 +192,30 @@ export function DecoyBookingSuccessCard({
                 aria-modal="true"
                 aria-labelledby="modal-headline">
                 <div>
-                  <div className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
-                    <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <style>{successCheckAnimationCss}</style>
+                  <div
+                    // Remount on tuning so the entrance replays with the new timing
+                    key={`${popDuration}-${popOvershoot}-${drawDuration}-${drawDelay}`}
+                    className="cal-success-badge bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full"
+                    style={
+                      {
+                        "--cal-success-pop-duration": `${popDuration}ms`,
+                        "--cal-success-overshoot": popOvershoot,
+                        "--cal-success-draw-duration": `${drawDuration}ms`,
+                        "--cal-success-draw-delay": `${drawDelay}ms`,
+                      } as React.CSSProperties
+                    }>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="cal-success-tick h-5 w-5 text-green-600 dark:text-green-400"
+                      aria-hidden="true">
+                      <path d="M20 6 9 17l-5-5" pathLength={1} />
+                    </svg>
                   </div>
                 </div>
                 <div className="mb-8 mt-6 text-center last:mb-0">
