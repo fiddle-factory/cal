@@ -1,9 +1,15 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
 import { Icon } from "@calcom/ui/components/icon";
 
 export interface DecoyBookingSuccessCardProps {
+  uid?: string | null;
   title: string;
+  /** ISO 8601 start time, used for calendar actions */
+  startTimeISO?: string | null;
+  /** ISO 8601 end time, used for calendar actions */
+  endTimeISO?: string | null;
   formattedDate: string;
   formattedTime: string;
   endTime: string;
@@ -15,8 +21,82 @@ export interface DecoyBookingSuccessCardProps {
   location: string | null;
 }
 
+const toUtcStamp = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+
+const escapeIcsText = (value: string) =>
+  value.replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+
+// RFC 5545: content lines should not exceed 75 octets; continuation lines start with a space
+const foldIcsLine = (line: string) => {
+  const chunks: string[] = [];
+  let rest = line;
+  while (rest.length > 75) {
+    chunks.push(rest.slice(0, 75));
+    rest = ` ${rest.slice(75)}`;
+  }
+  chunks.push(rest);
+  return chunks.join("\r\n");
+};
+
+interface CalendarEventData {
+  uid: string;
+  title: string;
+  start: Date;
+  end: Date;
+  description: string;
+  location: string;
+}
+
+const buildGoogleCalendarUrl = (event: CalendarEventData) => {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates: `${toUtcStamp(event.start)}/${toUtcStamp(event.end)}`,
+    details: event.description,
+  });
+  if (event.location) params.set("location", event.location);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+};
+
+const buildIcs = (event: CalendarEventData) => {
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Cal.com//Booking Confirmation//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${event.uid}`,
+    `DTSTAMP:${toUtcStamp(new Date())}`,
+    `DTSTART:${toUtcStamp(event.start)}`,
+    `DTEND:${toUtcStamp(event.end)}`,
+    `SUMMARY:${escapeIcsText(event.title)}`,
+    `DESCRIPTION:${escapeIcsText(event.description)}`,
+    `LOCATION:${escapeIcsText(event.location)}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ];
+  return `${lines.map(foldIcsLine).join("\r\n")}\r\n`;
+};
+
+const downloadIcs = (event: CalendarEventData) => {
+  const blob = new Blob([buildIcs(event)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  const safeName = event.title.replace(/[^a-z0-9-_ ]/gi, "").trim().replace(/\s+/g, "-") || "invite";
+  link.download = `${safeName}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+};
+
 export function DecoyBookingSuccessCard({
+  uid,
   title,
+  startTimeISO,
+  endTimeISO,
   formattedDate,
   formattedTime,
   endTime,
@@ -28,6 +108,29 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+
+  const start = startTimeISO ? new Date(startTimeISO) : null;
+  const end = endTimeISO ? new Date(endTimeISO) : null;
+  const hasValidTimes =
+    !!start && !!end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime());
+
+  const calendarEvent: CalendarEventData | null =
+    hasValidTimes && start && end
+      ? {
+          uid: `${uid || `${start.getTime()}-${title}`.replace(/\s+/g, "-")}@cal.com`,
+          title,
+          start,
+          end,
+          description: [
+            title,
+            hostName ? `${t("Host")}: ${hostName}${hostEmail ? ` <${hostEmail}>` : ""}` : null,
+            attendeeName ? `${attendeeName}${attendeeEmail ? ` <${attendeeEmail}>` : ""}` : null,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+          location: location || "",
+        }
+      : null;
 
   return (
     <div className="h-screen">
@@ -103,6 +206,27 @@ export function DecoyBookingSuccessCard({
                       </>
                     )}
                   </div>
+
+                  {calendarEvent && (
+                    <div className="border-subtle mt-8 flex flex-col gap-2 border-t pt-8 sm:flex-row sm:justify-center">
+                      <Button
+                        color="secondary"
+                        StartIcon="calendar"
+                        href={buildGoogleCalendarUrl(calendarEvent)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="justify-center">
+                        {t("add_to_google_calendar")}
+                      </Button>
+                      <Button
+                        color="secondary"
+                        StartIcon="download"
+                        onClick={() => downloadIcs(calendarEvent)}
+                        className="justify-center">
+                        {t("download_ics_invite")}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -35,7 +35,10 @@ export default function BookingSuccessful() {
 
   return (
     <DecoyBookingSuccessCard
+      uid={uid}
       title={booking.title || "Booking"}
+      startTimeISO={startTime ? startTime.toISOString() : null}
+      endTimeISO={endTime ? endTime.toISOString() : null}
       formattedDate={formattedDate}
       formattedTime={formattedTime}
       endTime={formattedEndTime}

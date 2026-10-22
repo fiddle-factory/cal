@@ -428,6 +428,8 @@
   "when": "When",
   "where": "Where",
   "add_to_calendar": "Add to calendar",
+  "add_to_google_calendar": "Add to Google Calendar",
+  "download_ics_invite": "Download invite (.ics)",
   "add_to_calendar_description": "Select where to add events when you're booked.",
   "add_events_to": "Add events to",
   "add_another_calendar": "Add another calendar",
