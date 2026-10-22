@@ -80,7 +80,7 @@ function BookingConfetti({ count, speed, size, colors }: BookingConfettiProps) {
 
   return (
     <div
-      className="cal-confetti pointer-events-none fixed inset-0 z-50 overflow-hidden"
+      className="cal-confetti pointer-events-none fixed inset-0 z-40 overflow-hidden"
       aria-hidden="true"
       style={{ perspective: "800px" }}>
       <style>{CONFETTI_KEYFRAMES}</style>
@@ -234,6 +234,7 @@ function AddToCalendarDialog({
         </Button>
       </DialogTrigger>
       <DialogContent
+        enableOverflow
         title={t("add_to_calendar")}
         description={t("add_this_event_to_your_preferred_calendar")}>
         <ul className="flex flex-col gap-2" data-testid="calendar-provider-list">
@@ -334,7 +335,8 @@ export function DecoyBookingSuccessCard({
   // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="min-h-screen">
+      {/* z-40 keeps the confetti above the card but below the z-50 dialog overlay and content */}
       <BookingConfetti
         key={`${confettiCount}-${confettiSpeed}-${confettiSize}-${confettiColors.join("")}`}
         count={confettiCount}
@@ -345,7 +347,7 @@ export function DecoyBookingSuccessCard({
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
-            <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
+            <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0">
               <div
                 className="bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
                 role="dialog"
