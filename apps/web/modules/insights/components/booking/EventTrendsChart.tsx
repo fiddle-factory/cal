@@ -23,7 +23,9 @@ import { ChartCard } from "../ChartCard";
 
 const COLOR = {
   CREATED: "#a855f7",
-  COMPLETED: "#22c55e",
+  // Design-system error red (--cal-text-error, light theme). Hex is required:
+  // ChartCard appends an alpha suffix to legend colors.
+  COMPLETED: "#811d1d",
   RESCHEDULED: "#3b82f6",
   CANCELLED: "#ef4444",
   NO_SHOW_HOST: "#64748b",
