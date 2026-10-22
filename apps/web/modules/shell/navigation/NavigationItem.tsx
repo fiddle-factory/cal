@@ -92,6 +92,8 @@ export const NavigationItem: React.FC<{
   const shouldShowChildren = isExpanded || hasActiveChild || isCurrent({ pathname, isChild, item });
   const shouldShowChevron = hasChildren && !hasActiveChild;
   const isParentNavigationItem = hasChildren && !isChild;
+  // Soft lavender highlight for the active Availability item
+  const isLavenderActive = current && !isChild && !hasChildren && item.name === "availability";
 
   return (
     <Fragment>
@@ -190,18 +192,23 @@ export const NavigationItem: React.FC<{
             aria-label={t(item.name)}
             target={item.target}
             className={classNames(
-              "todesktop:py-[7px] text-default group flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition",
-              item.child
-                ? `aria-[aria-current='page']:bg-transparent!`
-                : `[&[aria-current='page']]:bg-emphasis`,
-              isChild
-                ? `[&[aria-current='page']]:text-emphasis [&[aria-current='page']]:bg-emphasis hidden h-8 pl-16 lg:flex lg:pl-11 ${
-                    props.index === 0 ? "mt-0" : "mt-1  hover:mt-1 [&[aria-current='page']]:mt-1"
-                  }`
-                : "[&[aria-current='page']]:text-emphasis mt-0.5 text-sm",
-              isLocaleReady
-                ? "hover:bg-subtle todesktop:[&[aria-current='page']]:bg-emphasis todesktop:hover:bg-transparent hover:text-emphasis"
-                : ""
+              "todesktop:py-[7px] group flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition",
+              isLavenderActive
+                ? "mt-0.5 bg-purple-50 text-sm text-purple-800 hover:bg-purple-100 hover:text-purple-900"
+                : classNames(
+                    "text-default",
+                    item.child
+                      ? `aria-[aria-current='page']:bg-transparent!`
+                      : `[&[aria-current='page']]:bg-emphasis`,
+                    isChild
+                      ? `[&[aria-current='page']]:text-emphasis [&[aria-current='page']]:bg-emphasis hidden h-8 pl-16 lg:flex lg:pl-11 ${
+                          props.index === 0 ? "mt-0" : "mt-1  hover:mt-1 [&[aria-current='page']]:mt-1"
+                        }`
+                      : "[&[aria-current='page']]:text-emphasis mt-0.5 text-sm",
+                    isLocaleReady
+                      ? "hover:bg-subtle todesktop:[&[aria-current='page']]:bg-emphasis todesktop:hover:bg-transparent hover:text-emphasis"
+                      : ""
+                  )
             )}
             aria-current={current ? "page" : undefined}>
             {item.icon && (

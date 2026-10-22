@@ -48,14 +48,18 @@ export function ScheduleListItem({
   type AvailabilityItem = (typeof schedule.availability)[number];
 
   return (
-    <li key={schedule.id}>
+    <li key={schedule.id} className="relative">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-4 left-0 w-1 rounded-r-full bg-purple-200 rtl:left-auto rtl:right-0 rtl:rounded-l-full rtl:rounded-r-none"
+      />
       <div className="hover:bg-cal-muted flex items-center justify-between px-3 py-5 transition sm:px-4">
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
             <div className="space-x-2 rtl:space-x-reverse">
               <span className="text-emphasis truncate font-medium">{schedule.name}</span>
               {schedule.isDefault && (
-                <Badge variant="gray" className="text-xs">
+                <Badge variant="purple" className="text-xs">
                   {t("default")}
                 </Badge>
               )}
