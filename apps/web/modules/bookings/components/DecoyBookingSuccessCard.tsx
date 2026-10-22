@@ -1,6 +1,10 @@
+import React, { useState } from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { FireworksCelebration } from "./FireworksCelebration";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,9 +32,41 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [fireworksEnabled, setFireworksEnabled] = useState(true);
+  const [burstCount, setBurstCount] = useState(6);
+  const [particleCount, setParticleCount] = useState(48);
+  const [duration, setDuration] = useState(2400);
+  const [gravity, setGravity] = useState(0.06);
+  const [intensity, setIntensity] = useState(0.9);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.fireworksEnabled === "boolean") setFireworksEnabled(p.fireworksEnabled);
+      if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
+      if (typeof p.particleCount === "number") setParticleCount(p.particleCount);
+      if (typeof p.duration === "number") setDuration(p.duration);
+      if (typeof p.gravity === "number") setGravity(p.gravity);
+      if (typeof p.intensity === "number") setIntensity(p.intensity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      <FireworksCelebration
+        enabled={fireworksEnabled}
+        burstCount={burstCount}
+        particleCount={particleCount}
+        duration={duration}
+        gravity={gravity}
+        intensity={intensity}
+      />
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
