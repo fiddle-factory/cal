@@ -140,8 +140,9 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
         <>
           <div className="border-subtle bg-default overflow-hidden rounded-md border">
             <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
-              {availabilities.schedules.map((schedule) => (
+              {availabilities.schedules.map((schedule, index) => (
                 <ScheduleListItem
+                  accentIndex={index}
                   redirectUrl={`/availability/${schedule.id}`}
                   displayOptions={{
                     hour12: user?.timeFormat ? user.timeFormat === 12 : undefined,

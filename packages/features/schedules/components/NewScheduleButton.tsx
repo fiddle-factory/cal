@@ -61,7 +61,13 @@ export function NewScheduleButton({
   return (
     <Dialog name={name} clearQueryParamsOnClose={["copy-schedule-id"]}>
       <DialogTrigger asChild>
-        <Button variant="fab" data-testid={name} StartIcon="plus" size="sm">
+        <Button
+          variant="fab"
+          data-testid={name}
+          StartIcon="plus"
+          size="sm"
+          className="border-purple-700 bg-purple-700 text-white not-disabled:hover:bg-purple-800">
+
           {t("new")}
         </Button>
       </DialogTrigger>
