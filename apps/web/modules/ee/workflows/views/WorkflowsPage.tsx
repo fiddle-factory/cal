@@ -15,7 +15,9 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { useRouterQuery } from "@calcom/lib/hooks/useRouterQuery";
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
+import { Alert } from "@calcom/ui/components/alert";
 import { Avatar } from "@calcom/ui/components/avatar";
+import { Button } from "@calcom/ui/components/button";
 import { AnimatedPopover } from "@calcom/ui/components/popover";
 import Shell, { ShellMain } from "@calcom/web/modules/shell/Shell";
 import EmptyScreen from "@calcom/web/modules/ee/workflows/components/EmptyScreen";
@@ -30,9 +32,15 @@ import { CreateButtonWithTeamsList } from "~/ee/teams/components/createButton/Cr
 
 type PageProps = {
   filteredList?: Awaited<ReturnType<typeof WorkflowRepository.getFilteredList>>;
+  /** Forces the loading skeleton, regardless of query state. */
+  isLoading?: boolean;
+  /** Error message to display instead of the list, e.g. when fetching workflows failed. */
+  errorMessage?: string | null;
+  /** Called when the user clicks retry in the error state. Defaults to refetching the list. */
+  onRetry?: () => void;
 };
 
-function WorkflowsPage({ filteredList }: PageProps) {
+function WorkflowsPage({ filteredList, isLoading, errorMessage, onRetry }: PageProps) {
   const { t } = useLocale();
   const session = useSession();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- router is kept for future use
@@ -41,16 +49,25 @@ function WorkflowsPage({ filteredList }: PageProps) {
   const filters = getTeamsFiltersFromQuery(routerQuery);
   const { showDialog, setShowDialog, pendingTeamId, openDialog } = useWorkflowCreation();
 
-  const { data, isPending: _isPending } = trpc.viewer.workflows.filteredList.useQuery(
+  const shouldFetch = !filteredList && !isLoading && !errorMessage;
+  const {
+    data,
+    isPending: _isPending,
+    error: queryError,
+    refetch,
+    isFetching,
+  } = trpc.viewer.workflows.filteredList.useQuery(
     {
       filters,
     },
     {
-      enabled: !filteredList,
+      enabled: shouldFetch,
     }
   );
   const filteredWorkflows = filteredList ?? data;
-  const isPending = filteredList ? false : _isPending;
+  const isPending = isLoading ? true : filteredList ? false : _isPending;
+  const error = errorMessage ?? (shouldFetch ? queryError?.message : undefined);
+  const handleRetry = onRetry ?? (() => void refetch());
 
   return (
     <Shell withoutMain>
@@ -75,7 +92,22 @@ function WorkflowsPage({ filteredList }: PageProps) {
             ) : null
           }>
           <>
-            {filteredWorkflows?.totalCount ? (
+            {error ? (
+              <Alert
+                severity="error"
+                title={t("something_went_wrong")}
+                message={error}
+                actions={
+                  <Button
+                    color="secondary"
+                    StartIcon="refresh-cw"
+                    loading={!errorMessage && isFetching}
+                    onClick={handleRetry}>
+                    {t("try_again")}
+                  </Button>
+                }
+              />
+            ) : filteredWorkflows?.totalCount && !isPending ? (
               <div className="mb-2 flex">
                 <TeamsFilter />
                 <div className="mb-4 ml-auto">
@@ -92,13 +124,15 @@ function WorkflowsPage({ filteredList }: PageProps) {
                 </div>
               </div>
             ) : null}
-            <FilterResults
-              queryRes={{ isPending, data: filteredWorkflows }}
-              emptyScreen={<EmptyScreen isFilteredView={false} />}
-              noResultsScreen={<EmptyScreen isFilteredView={true} />}
-              SkeletonLoader={SkeletonLoader}>
-              <WorkflowList workflows={filteredWorkflows?.filtered} />
-            </FilterResults>
+            {error ? null : (
+              <FilterResults
+                queryRes={{ isPending, data: filteredWorkflows }}
+                emptyScreen={<EmptyScreen isFilteredView={false} />}
+                noResultsScreen={<EmptyScreen isFilteredView={true} />}
+                SkeletonLoader={SkeletonLoader}>
+                <WorkflowList workflows={filteredWorkflows?.filtered} />
+              </FilterResults>
+            )}
           </>
         </ShellMain>
         <WorkflowCreationDialog open={showDialog} onOpenChange={setShowDialog} teamId={pendingTeamId} />
