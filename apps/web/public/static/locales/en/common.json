@@ -428,6 +428,7 @@
   "when": "When",
   "where": "Where",
   "add_to_calendar": "Add to calendar",
+  "choose_a_calendar_for_this_event": "Choose a calendar for this event",
   "add_to_calendar_description": "Select where to add events when you're booked.",
   "add_events_to": "Add events to",
   "add_another_calendar": "Add another calendar",

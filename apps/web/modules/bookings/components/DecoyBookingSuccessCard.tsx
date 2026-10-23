@@ -1,6 +1,11 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
 import { Icon } from "@calcom/ui/components/icon";
+import { useState } from "react";
+
+import type { AddToCalendarLinks } from "./AddToCalendarDialog";
+import { AddToCalendarDialog } from "./AddToCalendarDialog";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -13,6 +18,8 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  calendarLinks?: AddToCalendarLinks | null;
+  defaultCalendarPickerOpen?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -26,8 +33,14 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  calendarLinks,
+  defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [isCalendarPickerOpen, setIsCalendarPickerOpen] = useState(defaultCalendarPickerOpen);
+  const hasCalendarLinks =
+    !!calendarLinks &&
+    Object.values(calendarLinks).some((link) => typeof link === "string" && link.length > 0);
 
   return (
     <div className="h-screen">
@@ -103,6 +116,27 @@ export function DecoyBookingSuccessCard({
                       </>
                     )}
                   </div>
+
+                  {hasCalendarLinks && calendarLinks && (
+                    <>
+                      <hr className="border-subtle mt-8" />
+                      <div className="flex justify-center pt-8">
+                        <Button
+                          color="secondary"
+                          StartIcon="calendar"
+                          data-testid="add-to-calendar-button"
+                          onClick={() => setIsCalendarPickerOpen(true)}>
+                          {t("add_to_calendar")}
+                        </Button>
+                      </div>
+                      <AddToCalendarDialog
+                        open={isCalendarPickerOpen}
+                        onOpenChange={setIsCalendarPickerOpen}
+                        links={calendarLinks}
+                        eventTitle={title}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </div>
