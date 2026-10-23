@@ -123,7 +123,7 @@ export function DecoyBookingSuccessCard({
                     )}
                   </div>
 
-                  {hasCalendarLinks && calendarLinks && (
+                  {hasCalendarLinks && (
                     <>
                       <hr className="border-subtle mt-8" />
                       <div className="flex justify-center pt-8">
@@ -135,17 +135,17 @@ export function DecoyBookingSuccessCard({
                           {t("add_to_calendar")}
                         </Button>
                       </div>
-                      <AddToCalendarDialog
-                        open={isCalendarPickerOpen}
-                        onOpenChange={setIsCalendarPickerOpen}
-                        links={calendarLinks}
-                        eventTitle={title}
-                        isLoading={isCalendarOptionsLoading}
-                        hasError={hasCalendarOptionsError}
-                        onRetry={onRetryCalendarOptions}
-                      />
                     </>
                   )}
+                  <AddToCalendarDialog
+                    open={isCalendarPickerOpen}
+                    onOpenChange={setIsCalendarPickerOpen}
+                    links={calendarLinks ?? {}}
+                    eventTitle={title}
+                    isLoading={isCalendarOptionsLoading}
+                    hasError={hasCalendarOptionsError}
+                    onRetry={onRetryCalendarOptions}
+                  />
                 </div>
               </div>
             </div>

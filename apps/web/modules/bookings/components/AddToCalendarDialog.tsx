@@ -2,6 +2,7 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Alert } from "@calcom/ui/components/alert";
 import { Button } from "@calcom/ui/components/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@calcom/ui/components/dialog";
+import { EmptyScreen } from "@calcom/ui/components/empty-screen";
 import { Icon } from "@calcom/ui/components/icon";
 import { SkeletonText } from "@calcom/ui/components/skeleton";
 import type { ReactNode } from "react";
@@ -16,6 +17,7 @@ export interface AddToCalendarLinks {
 interface AddToCalendarDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Calendar links to offer. When none are set, an empty state is shown in place of the options. */
   links: AddToCalendarLinks;
   eventTitle: string;
   /** Shows skeleton rows in place of the calendar options while they load. */
@@ -143,6 +145,13 @@ export function AddToCalendarDialog({
               </li>
             ))}
           </ul>
+        ) : options.length === 0 ? (
+          <EmptyScreen
+            Icon="calendar"
+            headline={t("no_calendar_options_available")}
+            description={t("no_calendar_options_available_description")}
+            className="lg:p-7"
+          />
         ) : (
           <ul className="flex flex-col gap-2" data-testid="add-to-calendar-options">
             {options.map((option) => (
