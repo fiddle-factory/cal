@@ -46,7 +46,7 @@ export function DecoyBookingSuccessCard({
                   </div>
                 </div>
                 <div className="mb-8 mt-6 text-center last:mb-0">
-                  <h3 className="text-emphasis text-2xl font-semibold leading-6" id="modal-headline">
+                  <h3 className="text-emphasis text-5xl font-semibold leading-6" id="modal-headline">
                     {t("meeting_is_scheduled")}
                   </h3>
 
