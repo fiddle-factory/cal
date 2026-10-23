@@ -1826,6 +1826,7 @@
   "download_responses_description": "Download all responses to your form in CSV format.",
   "view_responses": "View Responses",
   "download": "Download",
+  "download_ics_file": "Download .ics file",
   "downloading": "Downloading",
   "download_recording": "Download Recording",
   "transcription_enabled": "Transcriptions are enabled now",

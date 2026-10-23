@@ -1,6 +1,30 @@
+import { useState } from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
-import { Icon } from "@calcom/ui/components/icon";
+import { Button } from "@calcom/ui/components/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogTrigger,
+} from "@calcom/ui/components/dialog";
+import { Icon, type IconName } from "@calcom/ui/components/icon";
+
+type CalendarOption = {
+  id: "google" | "apple" | "outlook" | "ics";
+  icon: IconName;
+  label?: string;
+  labelKey?: string;
+};
+
+const CALENDAR_OPTIONS: CalendarOption[] = [
+  { id: "google", icon: "calendar", label: "Google Calendar" },
+  { id: "apple", icon: "calendar-days", label: "Apple Calendar" },
+  { id: "outlook", icon: "calendar-range", label: "Outlook" },
+  { id: "ics", icon: "download", labelKey: "download_ics_file" },
+];
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -13,6 +37,7 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  defaultCalendarPickerOpen?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -26,8 +51,10 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [isCalendarPickerOpen, setIsCalendarPickerOpen] = useState(defaultCalendarPickerOpen);
 
   return (
     <div className="h-screen">
@@ -102,6 +129,33 @@ export function DecoyBookingSuccessCard({
                         <div className="col-span-2 mt-3">{t("web_conferencing_details_to_follow")}</div>
                       </>
                     )}
+                  </div>
+
+                  <div className="border-subtle mt-8 flex justify-center border-t pt-8">
+                    <Dialog open={isCalendarPickerOpen} onOpenChange={setIsCalendarPickerOpen}>
+                      <DialogTrigger asChild>
+                        <Button color="secondary" StartIcon="calendar" data-testid="add-to-calendar-button">
+                          {t("add_to_calendar")}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent title={t("add_to_calendar")} description={title}>
+                        <div className="flex flex-col gap-2" data-testid="calendar-picker-options">
+                          {CALENDAR_OPTIONS.map((option) => (
+                            <DialogClose
+                              key={option.id}
+                              color="secondary"
+                              StartIcon={option.icon}
+                              className="w-full justify-start"
+                              data-testid={`add-to-calendar-${option.id}`}>
+                              {option.labelKey ? t(option.labelKey) : option.label}
+                            </DialogClose>
+                          ))}
+                        </div>
+                        <DialogFooter>
+                          <DialogClose />
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </div>
               </div>
