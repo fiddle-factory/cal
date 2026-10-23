@@ -110,7 +110,7 @@ export function UserDropdown({ small }: UserDropdownProps) {
           {!small && (
             <span className="flex grow items-center gap-2">
               <span className="w-24 shrink-0 text-sm leading-none">
-                <span className="text-emphasis block truncate py-0.5 font-medium leading-normal">
+                <span className="text-orange-600 block truncate py-0.5 font-medium leading-normal">
                   {isPending ? "Loading..." : user?.name ?? "Nameless User"}
                 </span>
               </span>
