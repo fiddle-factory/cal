@@ -32,8 +32,8 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
-  const [fireworksSpeed, setFireworksSpeed] = React.useState(1);
-  const [fireworksBursts, setFireworksBursts] = React.useState(6);
+  const [fireworksSpeed, setFireworksSpeed] = React.useState(2);
+  const [fireworksBursts, setFireworksBursts] = React.useState(16);
   const [fireworksParticles, setFireworksParticles] = React.useState(48);
   const [fireworksColor1, setFireworksColor1] = React.useState("#50c39f");
   const [fireworksColor2, setFireworksColor2] = React.useState("#8197f8");
