@@ -2,6 +2,7 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Button } from "@calcom/ui/components/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@calcom/ui/components/dialog";
 import { Icon } from "@calcom/ui/components/icon";
+import { SkeletonText } from "@calcom/ui/components/skeleton";
 import type { ReactNode } from "react";
 
 export interface AddToCalendarLinks {
@@ -16,6 +17,8 @@ interface AddToCalendarDialogProps {
   onOpenChange: (open: boolean) => void;
   links: AddToCalendarLinks;
   eventTitle: string;
+  /** Shows skeleton rows in place of the calendar options while they load. */
+  isLoading?: boolean;
 }
 
 const iconClassName = "h-4 w-4 shrink-0";
@@ -61,13 +64,26 @@ type CalendarOption = {
   download?: string;
 };
 
-export function AddToCalendarDialog({ open, onOpenChange, links, eventTitle }: AddToCalendarDialogProps) {
+const LOADING_ROW_COUNT = 5;
+
+export function AddToCalendarDialog({
+  open,
+  onOpenChange,
+  links,
+  eventTitle,
+  isLoading = false,
+}: AddToCalendarDialogProps) {
   const { t } = useLocale();
   const icsFileName = `${eventTitle}.ics`;
 
   const options: CalendarOption[] = [];
   if (links.googleCalendar) {
-    options.push({ id: "google", label: "Google Calendar", href: links.googleCalendar, icon: <GoogleIcon /> });
+    options.push({
+      id: "google",
+      label: "Google Calendar",
+      href: links.googleCalendar,
+      icon: <GoogleIcon />,
+    });
   }
   if (links.microsoftOutlook) {
     options.push({ id: "outlook", label: "Outlook", href: links.microsoftOutlook, icon: <OutlookIcon /> });
@@ -95,23 +111,40 @@ export function AddToCalendarDialog({ open, onOpenChange, links, eventTitle }: A
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title={t("add_to_calendar")} description={t("choose_a_calendar_for_this_event")}>
-        <ul className="flex flex-col gap-2" data-testid="add-to-calendar-options">
-          {options.map((option) => (
-            <li key={option.id}>
-              <Button
-                color="secondary"
-                href={option.href}
-                target={option.download ? undefined : "_blank"}
-                rel={option.download ? undefined : "noopener noreferrer"}
-                download={option.download}
-                CustomStartIcon={option.icon}
-                className="w-full justify-start gap-3 px-4 py-5"
-                data-testid={`add-to-calendar-${option.id}`}>
-                {option.label}
-              </Button>
-            </li>
-          ))}
-        </ul>
+        {isLoading ? (
+          <ul
+            className="flex flex-col gap-2"
+            data-testid="add-to-calendar-options-loading"
+            aria-busy="true"
+            aria-label={t("loading")}>
+            {Array.from({ length: LOADING_ROW_COUNT }).map((_, index) => (
+              <li
+                key={index}
+                className="border-subtle flex h-10 w-full items-center gap-3 rounded-[10px] border px-4">
+                <SkeletonText className="h-4 w-4 shrink-0" />
+                <SkeletonText className={index % 2 === 0 ? "h-4 w-36" : "h-4 w-24"} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul className="flex flex-col gap-2" data-testid="add-to-calendar-options">
+            {options.map((option) => (
+              <li key={option.id}>
+                <Button
+                  color="secondary"
+                  href={option.href}
+                  target={option.download ? undefined : "_blank"}
+                  rel={option.download ? undefined : "noopener noreferrer"}
+                  download={option.download}
+                  CustomStartIcon={option.icon}
+                  className="w-full justify-start gap-3 px-4 py-5"
+                  data-testid={`add-to-calendar-${option.id}`}>
+                  {option.label}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
         <DialogFooter noSticky>
           <DialogClose />
         </DialogFooter>

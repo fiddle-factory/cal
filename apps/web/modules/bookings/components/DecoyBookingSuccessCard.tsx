@@ -20,6 +20,7 @@ export interface DecoyBookingSuccessCardProps {
   location: string | null;
   calendarLinks?: AddToCalendarLinks | null;
   defaultCalendarPickerOpen?: boolean;
+  isCalendarOptionsLoading?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -35,6 +36,7 @@ export function DecoyBookingSuccessCard({
   location,
   calendarLinks,
   defaultCalendarPickerOpen = false,
+  isCalendarOptionsLoading = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
   const [isCalendarPickerOpen, setIsCalendarPickerOpen] = useState(defaultCalendarPickerOpen);
@@ -134,6 +136,7 @@ export function DecoyBookingSuccessCard({
                         onOpenChange={setIsCalendarPickerOpen}
                         links={calendarLinks}
                         eventTitle={title}
+                        isLoading={isCalendarOptionsLoading}
                       />
                     </>
                   )}
