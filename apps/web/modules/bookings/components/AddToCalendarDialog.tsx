@@ -1,4 +1,5 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
+import { Alert } from "@calcom/ui/components/alert";
 import { Button } from "@calcom/ui/components/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@calcom/ui/components/dialog";
 import { Icon } from "@calcom/ui/components/icon";
@@ -19,6 +20,10 @@ interface AddToCalendarDialogProps {
   eventTitle: string;
   /** Shows skeleton rows in place of the calendar options while they load. */
   isLoading?: boolean;
+  /** Shows an error alert in place of the calendar options when they fail to load. */
+  hasError?: boolean;
+  /** Called when the user clicks "Try again" in the error state. */
+  onRetry?: () => void;
 }
 
 const iconClassName = "h-4 w-4 shrink-0";
@@ -72,6 +77,8 @@ export function AddToCalendarDialog({
   links,
   eventTitle,
   isLoading = false,
+  hasError = false,
+  onRetry,
 }: AddToCalendarDialogProps) {
   const { t } = useLocale();
   const icsFileName = `${eventTitle}.ics`;
@@ -111,7 +118,17 @@ export function AddToCalendarDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title={t("add_to_calendar")} description={t("choose_a_calendar_for_this_event")}>
-        {isLoading ? (
+        {hasError ? (
+          <Alert
+            severity="error"
+            message={t("calendar_options_failed_to_load")}
+            actions={
+              <Button color="secondary" size="sm" data-testid="add-to-calendar-retry" onClick={onRetry}>
+                {t("try_again")}
+              </Button>
+            }
+          />
+        ) : isLoading ? (
           <ul
             className="flex flex-col gap-2"
             data-testid="add-to-calendar-options-loading"
