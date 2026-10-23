@@ -15,6 +15,7 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { useRouterQuery } from "@calcom/lib/hooks/useRouterQuery";
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
+import { Alert } from "@calcom/ui/components/alert";
 import { Avatar } from "@calcom/ui/components/avatar";
 import { AnimatedPopover } from "@calcom/ui/components/popover";
 import Shell, { ShellMain } from "@calcom/web/modules/shell/Shell";
@@ -30,9 +31,13 @@ import { CreateButtonWithTeamsList } from "~/ee/teams/components/createButton/Cr
 
 type PageProps = {
   filteredList?: Awaited<ReturnType<typeof WorkflowRepository.getFilteredList>>;
+  /** Forces the loading skeleton, regardless of data availability. */
+  isLoading?: boolean;
+  /** Error message to display instead of the workflow list. */
+  errorMessage?: string;
 };
 
-function WorkflowsPage({ filteredList }: PageProps) {
+function WorkflowsPage({ filteredList, isLoading, errorMessage }: PageProps) {
   const { t } = useLocale();
   const session = useSession();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- router is kept for future use
@@ -41,16 +46,21 @@ function WorkflowsPage({ filteredList }: PageProps) {
   const filters = getTeamsFiltersFromQuery(routerQuery);
   const { showDialog, setShowDialog, pendingTeamId, openDialog } = useWorkflowCreation();
 
-  const { data, isPending: _isPending } = trpc.viewer.workflows.filteredList.useQuery(
+  const {
+    data,
+    isPending: _isPending,
+    error,
+  } = trpc.viewer.workflows.filteredList.useQuery(
     {
       filters,
     },
     {
-      enabled: !filteredList,
+      enabled: !filteredList && !isLoading && !errorMessage,
     }
   );
   const filteredWorkflows = filteredList ?? data;
-  const isPending = filteredList ? false : _isPending;
+  const isPending = isLoading ?? (filteredList ? false : _isPending);
+  const displayedError = errorMessage ?? (filteredList ? undefined : error?.message);
 
   return (
     <Shell withoutMain>
@@ -75,7 +85,7 @@ function WorkflowsPage({ filteredList }: PageProps) {
             ) : null
           }>
           <>
-            {filteredWorkflows?.totalCount ? (
+            {!isPending && !displayedError && filteredWorkflows?.totalCount ? (
               <div className="mb-2 flex">
                 <TeamsFilter />
                 <div className="mb-4 ml-auto">
@@ -92,13 +102,17 @@ function WorkflowsPage({ filteredList }: PageProps) {
                 </div>
               </div>
             ) : null}
-            <FilterResults
-              queryRes={{ isPending, data: filteredWorkflows }}
-              emptyScreen={<EmptyScreen isFilteredView={false} />}
-              noResultsScreen={<EmptyScreen isFilteredView={true} />}
-              SkeletonLoader={SkeletonLoader}>
-              <WorkflowList workflows={filteredWorkflows?.filtered} />
-            </FilterResults>
+            {displayedError && !isPending ? (
+              <Alert severity="error" title={t("something_went_wrong")} message={displayedError} />
+            ) : (
+              <FilterResults
+                queryRes={{ isPending, data: filteredWorkflows }}
+                emptyScreen={<EmptyScreen isFilteredView={false} />}
+                noResultsScreen={<EmptyScreen isFilteredView={true} />}
+                SkeletonLoader={SkeletonLoader}>
+                <WorkflowList workflows={filteredWorkflows?.filtered} />
+              </FilterResults>
+            )}
           </>
         </ShellMain>
         <WorkflowCreationDialog open={showDialog} onOpenChange={setShowDialog} teamId={pendingTeamId} />
