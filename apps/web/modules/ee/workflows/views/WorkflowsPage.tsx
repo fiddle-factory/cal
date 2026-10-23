@@ -60,7 +60,9 @@ function WorkflowsPage({ filteredList, isLoading, errorMessage }: PageProps) {
   );
   const filteredWorkflows = filteredList ?? data;
   const isPending = isLoading ?? (filteredList ? false : _isPending);
-  const displayedError = errorMessage ?? (filteredList ? undefined : error?.message);
+  // Show a friendly, translated message instead of the raw request error.
+  const displayedError =
+    errorMessage ?? (filteredList || !error ? undefined : t("workflows_load_error_description"));
 
   return (
     <Shell withoutMain>
@@ -103,7 +105,7 @@ function WorkflowsPage({ filteredList, isLoading, errorMessage }: PageProps) {
               </div>
             ) : null}
             {displayedError && !isPending ? (
-              <Alert severity="error" title={t("something_went_wrong")} message={displayedError} />
+              <Alert severity="error" title={t("we_hit_a_small_snag_loading_your_workflows")} message={displayedError} />
             ) : (
               <FilterResults
                 queryRes={{ isPending, data: filteredWorkflows }}

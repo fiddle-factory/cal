@@ -4218,5 +4218,7 @@
   "audit_logs_permission_check_error": "An error occurred while checking permissions.",
   "account_already_exists_please_login": "An account with this email already exists. Please log in to accept the invitation.",
   "unverified_email_oauth_error": "Please verify your email address before signing in with Google or SAML. Sign in with your password to resend the verification email.",
+  "we_hit_a_small_snag_loading_your_workflows": "We hit a small snag loading your workflows",
+  "workflows_load_error_description": "Don't worry, your workflows are safe. Refresh the page to try again, or check back in a few minutes. If this keeps happening, our support team is happy to help.",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Add your new strings above here ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }
