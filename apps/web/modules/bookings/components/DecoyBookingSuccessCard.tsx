@@ -1,6 +1,9 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+import React from "react";
+
+import { BookingConfetti } from "./BookingConfetti";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,9 +31,42 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  // Confetti defaults use the design system visualization emphasis colors.
+  const [confettiAmount, setConfettiAmount] = React.useState(160);
+  const [confettiSpeed, setConfettiSpeed] = React.useState(1);
+  const [confettiLoop, setConfettiLoop] = React.useState(false);
+  const [confettiColor1, setConfettiColor1] = React.useState("#ec4899");
+  const [confettiColor2, setConfettiColor2] = React.useState("#6634ef");
+  const [confettiColor3, setConfettiColor3] = React.useState("#19a974");
+  const [confettiColor4, setConfettiColor4] = React.useState("#e7b008");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiAmount === "number") setConfettiAmount(p.confettiAmount);
+      if (typeof p.confettiSpeed === "number") setConfettiSpeed(p.confettiSpeed);
+      if (typeof p.confettiLoop === "boolean") setConfettiLoop(p.confettiLoop);
+      if (typeof p.confettiColor1 === "string") setConfettiColor1(p.confettiColor1);
+      if (typeof p.confettiColor2 === "string") setConfettiColor2(p.confettiColor2);
+      if (typeof p.confettiColor3 === "string") setConfettiColor3(p.confettiColor3);
+      if (typeof p.confettiColor4 === "string") setConfettiColor4(p.confettiColor4);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="relative h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      <BookingConfetti
+        amount={confettiAmount}
+        speed={confettiSpeed}
+        loop={confettiLoop}
+        colors={[confettiColor1, confettiColor2, confettiColor3, confettiColor4]}
+      />
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
