@@ -1,6 +1,18 @@
+import { useMemo, useState } from "react";
+
+import { getCalendarLinks } from "@calcom/features/bookings/lib/getCalendarLinks";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
+import { Dialog, DialogClose, DialogContent, DialogFooter } from "@calcom/ui/components/dialog";
 import { Icon } from "@calcom/ui/components/icon";
+
+const CALENDAR_PICKER_LABELS: Record<string, string> = {
+  googleCalendar: "Google Calendar",
+  microsoftOutlook: "Outlook.com",
+  microsoftOffice: "Microsoft 365 / Office",
+  ics: "Apple Calendar / Other (.ics)",
+};
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -13,6 +25,12 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** ISO start time, used to build "Add to calendar" links */
+  startTimeISO?: string | null;
+  /** ISO end time, used to build "Add to calendar" links */
+  endTimeISO?: string | null;
+  /** Opens the calendar picker on first render */
+  defaultCalendarPickerOpen?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -26,8 +44,38 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  startTimeISO,
+  endTimeISO,
+  defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [isCalendarPickerOpen, setIsCalendarPickerOpen] = useState(defaultCalendarPickerOpen);
+
+  const calendarLinks = useMemo(() => {
+    if (!startTimeISO || !endTimeISO) return [];
+    const start = new Date(startTimeISO);
+    const end = new Date(endTimeISO);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return [];
+    return getCalendarLinks({
+      booking: {
+        startTime: start,
+        endTime: end,
+        location,
+        title,
+        responses: { name: attendeeName ?? "" },
+        metadata: null,
+      },
+      eventType: {
+        recurringEvent: null,
+        eventName: title,
+        isDynamic: false,
+        length: Math.round((end.getTime() - start.getTime()) / 60000),
+        users: [{ name: hostName }],
+        title,
+      },
+      t,
+    }).filter((calendarLink) => !!calendarLink.link);
+  }, [startTimeISO, endTimeISO, location, title, attendeeName, hostName, t]);
 
   return (
     <div className="h-screen">
@@ -104,11 +152,52 @@ export function DecoyBookingSuccessCard({
                     )}
                   </div>
                 </div>
+                {calendarLinks.length > 0 && (
+                  <>
+                    <hr className="border-subtle" />
+                    <div className="flex justify-center pt-8">
+                      <Button
+                        color="secondary"
+                        StartIcon="calendar"
+                        data-testid="add-to-calendar-button"
+                        onClick={() => setIsCalendarPickerOpen(true)}>
+                        {t("add_to_calendar")}
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       </main>
+      <Dialog open={isCalendarPickerOpen} onOpenChange={setIsCalendarPickerOpen}>
+        <DialogContent
+          title={t("add_to_calendar")}
+          description={t("choose_a_calendar_to_add_this_event_to")}
+          data-testid="calendar-picker-dialog">
+          <div className="flex flex-col gap-2">
+            {calendarLinks.map((calendarLink) => (
+              <Button
+                key={calendarLink.id}
+                href={calendarLink.link}
+                color="secondary"
+                StartIcon={calendarLink.id === "ics" ? "download" : "calendar-days"}
+                className="w-full justify-start"
+                data-testid={`calendar-picker-${calendarLink.id}`}
+                {...(calendarLink.id === "ics"
+                  ? { download: `${title}.ics` }
+                  : { target: "_blank", rel: "noopener noreferrer" })}
+                onClick={() => setIsCalendarPickerOpen(false)}>
+                {CALENDAR_PICKER_LABELS[calendarLink.id] ?? calendarLink.label}
+              </Button>
+            ))}
+          </div>
+          <DialogFooter>
+            <DialogClose />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
