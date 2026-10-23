@@ -11,6 +11,8 @@ export interface AddToCalendarLinks {
   googleCalendar?: string | null;
   microsoftOutlook?: string | null;
   microsoftOffice?: string | null;
+  /** Apple Calendar (iCal) link. Falls back to `ics` when not set. */
+  appleCalendar?: string | null;
   ics?: string | null;
 }
 
@@ -100,14 +102,17 @@ export function AddToCalendarDialog({
   if (links.microsoftOffice) {
     options.push({ id: "office", label: "Office 365", href: links.microsoftOffice, icon: <OfficeIcon /> });
   }
-  if (links.ics) {
+  const appleCalendarLink = links.appleCalendar || links.ics;
+  if (appleCalendarLink) {
     options.push({
       id: "apple",
       label: "Apple Calendar (iCal)",
-      href: links.ics,
+      href: appleCalendarLink,
       icon: <Icon name="calendar" className={iconClassName} />,
       download: icsFileName,
     });
+  }
+  if (links.ics) {
     options.push({
       id: "ics",
       label: `${t("other")} (.ics)`,
