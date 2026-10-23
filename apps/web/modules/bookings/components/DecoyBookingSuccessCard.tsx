@@ -1,6 +1,10 @@
+import React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { BookingFireworks } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,9 +32,41 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [fireworksSpeed, setFireworksSpeed] = React.useState(1);
+  const [fireworksBursts, setFireworksBursts] = React.useState(6);
+  const [fireworksParticles, setFireworksParticles] = React.useState(48);
+  const [fireworksColor1, setFireworksColor1] = React.useState("#50c39f");
+  const [fireworksColor2, setFireworksColor2] = React.useState("#8197f8");
+  const [fireworksColor3, setFireworksColor3] = React.useState("#fb923c");
+  const [fireworksColor4, setFireworksColor4] = React.useState("#f87272");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.fireworksSpeed === "number") setFireworksSpeed(p.fireworksSpeed);
+      if (typeof p.fireworksBursts === "number") setFireworksBursts(p.fireworksBursts);
+      if (typeof p.fireworksParticles === "number") setFireworksParticles(p.fireworksParticles);
+      if (typeof p.fireworksColor1 === "string") setFireworksColor1(p.fireworksColor1);
+      if (typeof p.fireworksColor2 === "string") setFireworksColor2(p.fireworksColor2);
+      if (typeof p.fireworksColor3 === "string") setFireworksColor3(p.fireworksColor3);
+      if (typeof p.fireworksColor4 === "string") setFireworksColor4(p.fireworksColor4);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="relative h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      <BookingFireworks
+        speed={fireworksSpeed}
+        burstCount={fireworksBursts}
+        particlesPerBurst={fireworksParticles}
+        colors={[fireworksColor1, fireworksColor2, fireworksColor3, fireworksColor4]}
+      />
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
