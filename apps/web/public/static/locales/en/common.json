@@ -433,6 +433,8 @@
   "preparing_calendar_options": "Preparing calendar options…",
   "unable_to_load_calendar_options": "Unable to load calendar options",
   "check_your_connection_and_try_again": "Check your connection and try again.",
+  "no_calendar_options_available": "No calendar options available",
+  "no_calendar_options_available_description": "There are no calendar options available for this booking. Check your confirmation email for the event details.",
   "add_events_to": "Add events to",
   "add_another_calendar": "Add another calendar",
   "other": "Other",

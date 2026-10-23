@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@calcom/ui/components/dialog";
+import { EmptyScreen } from "@calcom/ui/components/empty-screen";
 import { Icon } from "@calcom/ui/components/icon";
 import { SkeletonContainer } from "@calcom/ui/components/skeleton";
 import type { ReactNode } from "react";
@@ -20,7 +21,7 @@ export interface DecoyBookingCalendarLinks {
   office?: string;
 }
 
-export type DecoyBookingCalendarPickerStatus = "ready" | "loading" | "error";
+export type DecoyBookingCalendarPickerStatus = "ready" | "loading" | "error" | "empty";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -37,7 +38,7 @@ export interface DecoyBookingSuccessCardProps {
   calendarLinks?: DecoyBookingCalendarLinks;
   /** Opens the calendar picker on first render. */
   defaultCalendarPickerOpen?: boolean;
-  /** Whether the calendar options/links are ready, still being prepared, or failed to load. */
+  /** Whether the calendar options/links are ready, still being prepared, failed to load, or none are available. */
   calendarPickerStatus?: DecoyBookingCalendarPickerStatus;
   /** Called when the user retries after the calendar options failed to load. */
   onRetryCalendarLinks?: () => void;
@@ -149,6 +150,14 @@ function AddToCalendarDialog({
                 {t("try_again")}
               </Button>
             }
+          />
+        )}
+        {status === "empty" && (
+          <EmptyScreen
+            Icon="calendar"
+            headline={t("no_calendar_options_available")}
+            description={t("no_calendar_options_available_description")}
+            className="lg:p-7"
           />
         )}
         {status === "ready" && (
