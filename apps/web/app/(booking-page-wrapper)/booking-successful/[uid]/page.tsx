@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 
 import dayjs from "@calcom/dayjs";
-import { DecoyBookingSuccessCard } from "~/bookings/components/DecoyBookingSuccessCard";
+import { buildCalendarLinks, DecoyBookingSuccessCard } from "~/bookings/components/DecoyBookingSuccessCard";
 import { useDecoyBooking } from "@calcom/features/bookings/Booker/components/hooks/useDecoyBooking";
 
 export default function BookingSuccessful() {
@@ -32,6 +32,15 @@ export default function BookingSuccessful() {
   const hostEmail = null; // Email not stored for spam decoy bookings
   const attendeeName = booking.booker?.name || null;
   const attendeeEmail = booking.booker?.email || null;
+  const calendarLinks =
+    booking.startTime && booking.endTime
+      ? buildCalendarLinks({
+          title: booking.title || "Booking",
+          startTime: booking.startTime,
+          endTime: booking.endTime,
+          location: booking.location || null,
+        })
+      : [];
 
   return (
     <DecoyBookingSuccessCard
@@ -45,6 +54,7 @@ export default function BookingSuccessful() {
       attendeeName={attendeeName}
       attendeeEmail={attendeeEmail}
       location={booking.location || null}
+      calendarLinks={calendarLinks}
     />
   );
 }

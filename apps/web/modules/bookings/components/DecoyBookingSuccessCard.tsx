@@ -1,6 +1,76 @@
+import { useState } from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
+import { Dialog, DialogClose, DialogContent, DialogFooter } from "@calcom/ui/components/dialog";
+import type { IconName } from "@calcom/ui/components/icon";
 import { Icon } from "@calcom/ui/components/icon";
+
+export interface CalendarProviderLink {
+  id: "googleCalendar" | "microsoftOutlook" | "ics";
+  label: string;
+  link: string;
+}
+
+const CALENDAR_PROVIDER_ICONS: Record<CalendarProviderLink["id"], IconName> = {
+  googleCalendar: "calendar",
+  microsoftOutlook: "calendar-days",
+  ics: "download",
+};
+
+const toCalendarTimestamp = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+
+export function buildCalendarLinks({
+  title,
+  startTime,
+  endTime,
+  location,
+}: {
+  title: string;
+  startTime: Date | string;
+  endTime: Date | string;
+  location: string | null;
+}): CalendarProviderLink[] {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const encodedTitle = encodeURIComponent(title);
+  const encodedLocation = location ? encodeURIComponent(location) : "";
+
+  const googleCalendarLink = `https://calendar.google.com/calendar/r/eventedit?dates=${toCalendarTimestamp(
+    start
+  )}/${toCalendarTimestamp(end)}&text=${encodedTitle}${encodedLocation ? `&location=${encodedLocation}` : ""}`;
+
+  const outlookLink = `https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=${encodeURIComponent(
+    start.toISOString()
+  )}&enddt=${encodeURIComponent(end.toISOString())}&subject=${encodedTitle}${
+    encodedLocation ? `&location=${encodedLocation}` : ""
+  }`;
+
+  const icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Cal.com//Booking//EN",
+    "BEGIN:VEVENT",
+    `DTSTAMP:${toCalendarTimestamp(new Date())}`,
+    `DTSTART:${toCalendarTimestamp(start)}`,
+    `DTEND:${toCalendarTimestamp(end)}`,
+    `SUMMARY:${title}`,
+    ...(location ? [`LOCATION:${location}`] : []),
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+
+  return [
+    { id: "googleCalendar", label: "Google Calendar", link: googleCalendarLink },
+    { id: "microsoftOutlook", label: "Outlook", link: outlookLink },
+    {
+      id: "ics",
+      label: "Apple Calendar (.ics)",
+      link: `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`,
+    },
+  ];
+}
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -13,6 +83,8 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  calendarLinks?: CalendarProviderLink[];
+  defaultCalendarPickerOpen?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -26,8 +98,11 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  calendarLinks = [],
+  defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [isCalendarPickerOpen, setIsCalendarPickerOpen] = useState(defaultCalendarPickerOpen);
 
   return (
     <div className="h-screen">
@@ -103,12 +178,52 @@ export function DecoyBookingSuccessCard({
                       </>
                     )}
                   </div>
+
+                  {calendarLinks.length > 0 && (
+                    <div className="border-subtle mt-8 flex justify-center border-t pt-8">
+                      <Button
+                        color="secondary"
+                        StartIcon="calendar"
+                        data-testid="add-to-calendar-button"
+                        onClick={() => setIsCalendarPickerOpen(true)}>
+                        {t("add_to_calendar")}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </main>
+
+      <Dialog open={isCalendarPickerOpen} onOpenChange={setIsCalendarPickerOpen}>
+        <DialogContent
+          type="creation"
+          title={t("add_to_calendar")}
+          description={t("choose_calendar_for_this_event")}
+          data-testid="calendar-picker-dialog">
+          <div className="flex flex-col gap-2">
+            {calendarLinks.map((calendarLink) => (
+              <Button
+                key={calendarLink.id}
+                color="secondary"
+                className="w-full"
+                StartIcon={CALENDAR_PROVIDER_ICONS[calendarLink.id]}
+                href={calendarLink.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                {...(calendarLink.id === "ics" ? { download: `${title}.ics` } : {})}
+                data-testid={`add-to-calendar-${calendarLink.id}`}>
+                {calendarLink.label}
+              </Button>
+            ))}
+          </div>
+          <DialogFooter>
+            <DialogClose />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
