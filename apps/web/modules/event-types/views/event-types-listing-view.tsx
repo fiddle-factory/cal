@@ -12,7 +12,10 @@ import { useOrgBranding } from "@calcom/features/ee/organizations/context/provid
 import { EventTypeEmbedButton, EventTypeEmbedDialog } from "@calcom/web/modules/embed/components/EventTypeEmbed";
 import { EventTypeDescription } from "@calcom/web/modules/event-types/components";
 import { DuplicateDialog } from "@calcom/web/modules/event-types/components/DuplicateDialog";
-import { InfiniteSkeletonLoader } from "@calcom/web/modules/event-types/components/SkeletonLoader";
+import {
+  EventTypesSkeletonLoader,
+  InfiniteSkeletonLoader,
+} from "@calcom/web/modules/event-types/components/SkeletonLoader";
 import { APP_NAME, WEBSITE_URL } from "@calcom/lib/constants";
 import { extractHostTimezone } from "@calcom/lib/hashedLinksUtils";
 import { filterActiveLinks } from "@calcom/lib/hashedLinksUtils";
@@ -30,6 +33,7 @@ import { SchedulingType } from "@calcom/prisma/enums";
 import type { RouterOutputs } from "@calcom/trpc/react";
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
+import { Alert } from "@calcom/ui/components/alert";
 import { ArrowButton } from "@calcom/ui/components/arrow-button";
 import { UserAvatarGroup } from "@calcom/ui/components/avatar";
 import { Badge } from "@calcom/ui/components/badge";
@@ -134,7 +138,9 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
         }}
         placeholder={t("search")}
       />
-      {!!activeEventTypeGroup && (
+      {query.isError ? (
+        <EventTypesErrorState message={query.error?.message} onRetry={() => query.refetch()} />
+      ) : !!activeEventTypeGroup && (
         <InfiniteEventTypeList
           pages={query?.data?.pages}
           group={activeEventTypeGroup}
@@ -879,6 +885,24 @@ const CreateFirstEventTypeView = ({ slug, searchTerm }: { slug: string; searchTe
   );
 };
 
+const EventTypesErrorState = ({ message, onRetry }: { message?: string; onRetry?: () => void }) => {
+  const { t } = useLocale();
+  return (
+    <Alert
+      severity="error"
+      title={t("error_loading_event_types")}
+      message={message || t("something_went_wrong")}
+      actions={
+        onRetry ? (
+          <Button color="secondary" StartIcon="rotate-cw" onClick={onRetry}>
+            {t("retry")}
+          </Button>
+        ) : undefined
+      }
+    />
+  );
+};
+
 const CTA = ({ profileOptions }: { profileOptions: ProfileOption[] }) => {
   const { t } = useLocale();
 
@@ -972,9 +996,15 @@ type Props = {
     id: number;
     completedOnboarding?: boolean;
   } | null;
+  /** Renders the event types skeleton instead of the list. */
+  isPending?: boolean;
+  /** Renders an error alert instead of the list. */
+  error?: { message?: string } | null;
+  /** Shows a retry action in the error alert. */
+  onRetry?: () => void;
 };
 
-export const EventTypesCTA = ({ userEventGroupsData }: Omit<Props, "user">) => {
+export const EventTypesCTA = ({ userEventGroupsData }: Pick<Props, "userEventGroupsData">) => {
   const profileOptions =
     userEventGroupsData.profiles
       ?.filter((profile) => !profile.readOnly)
@@ -1018,7 +1048,7 @@ export const EventTypesCTA = ({ userEventGroupsData }: Omit<Props, "user">) => {
   return <CTA profileOptions={profileOptions} />;
 };
 
-const EventTypesPage = ({ userEventGroupsData, user }: Props) => {
+const EventTypesPage = ({ userEventGroupsData, user, isPending, error, onRetry }: Props) => {
   const [_showProfileBanner, setShowProfileBanner] = useState(false);
   const orgBranding = useOrgBranding();
   const router = useRouter();
@@ -1040,6 +1070,10 @@ const EventTypesPage = ({ userEventGroupsData, user }: Props) => {
       !!orgBranding && !document.cookie.includes("calcom-profile-banner=1") && !user?.completedOnboarding
     );
   }, [orgBranding, user]);
+
+  if (isPending) return <EventTypesSkeletonLoader />;
+
+  if (error) return <EventTypesErrorState message={error.message} onRetry={onRetry} />;
 
   return (
     <InfiniteScrollMain
