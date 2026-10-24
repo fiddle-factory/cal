@@ -10,7 +10,7 @@ import posthog from "posthog-js";
 import { BulkEditDefaultForEventsModal } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
 import type { BulkUpdatParams } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
 import { NewScheduleButton } from "@calcom/features/schedules/components/NewScheduleButton";
-import { ScheduleListItem } from "@calcom/features/schedules/components/ScheduleListItem";
+import { ScheduleTableRow } from "@calcom/features/schedules/components/ScheduleTableRow";
 import { useCompatSearchParams } from "@calcom/lib/hooks/useCompatSearchParams";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { HttpError } from "@calcom/lib/http-error";
@@ -19,6 +19,7 @@ import { trpc } from "@calcom/trpc/react";
 import useMeQuery from "@calcom/trpc/react/hooks/useMeQuery";
 import { EmptyScreen } from "@calcom/ui/components/empty-screen";
 import { ToggleGroup } from "@calcom/ui/components/form";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@calcom/ui/components/table/TableNew";
 import { showToast } from "@calcom/ui/components/toast";
 
 type AvailabilityListProps = {
@@ -122,7 +123,7 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
 
   // Adds smooth delete button - item fades and old item slides into place
 
-  const [animationParentRef] = useAutoAnimate<HTMLUListElement>();
+  const [animationParentRef] = useAutoAnimate<HTMLTableSectionElement>();
 
   return (
     <>
@@ -138,25 +139,41 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
         </div>
       ) : (
         <>
-          <div className="border-subtle bg-default overflow-hidden rounded-md border">
-            <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
-              {availabilities.schedules.map((schedule) => (
-                <ScheduleListItem
-                  redirectUrl={`/availability/${schedule.id}`}
-                  displayOptions={{
-                    hour12: user?.timeFormat ? user.timeFormat === 12 : undefined,
-                    timeZone: user?.timeZone,
-                    weekStart: user?.weekStart || "Sunday",
-                  }}
-                  key={schedule.id}
-                  schedule={schedule}
-                  isDeletable={availabilities.schedules.length !== 1}
-                  updateDefault={updateMutation.mutate}
-                  deleteFunction={deleteMutation.mutate}
-                  duplicateFunction={duplicateMutation.mutate}
-                />
-              ))}
-            </ul>
+          <div className="border-subtle bg-default overflow-x-auto rounded-md border">
+            <Table className="border-0">
+              <TableHeader>
+                <TableRow className="border-subtle bg-cal-muted hover:bg-cal-muted">
+                  <TableHead className="text-subtle h-10 px-3 text-xs font-medium sm:px-4">{t("name")}</TableHead>
+                  <TableHead className="text-subtle h-10 px-3 text-xs font-medium sm:px-4">
+                    {t("availability")}
+                  </TableHead>
+                  <TableHead className="text-subtle h-10 px-3 text-xs font-medium sm:px-4">
+                    {t("timezone")}
+                  </TableHead>
+                  <TableHead className="h-10 px-3 sm:px-4">
+                    <span className="sr-only">{t("options")}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody data-testid="schedules" ref={animationParentRef}>
+                {availabilities.schedules.map((schedule) => (
+                  <ScheduleTableRow
+                    redirectUrl={`/availability/${schedule.id}`}
+                    displayOptions={{
+                      hour12: user?.timeFormat ? user.timeFormat === 12 : undefined,
+                      timeZone: user?.timeZone,
+                      weekStart: user?.weekStart || "Sunday",
+                    }}
+                    key={schedule.id}
+                    schedule={schedule}
+                    isDeletable={availabilities.schedules.length !== 1}
+                    updateDefault={updateMutation.mutate}
+                    deleteFunction={deleteMutation.mutate}
+                    duplicateFunction={duplicateMutation.mutate}
+                  />
+                ))}
+              </TableBody>
+            </Table>
           </div>
           <div className="text-default mb-16 mt-4 block text-center text-sm">
             {t("temporarily_out_of_office")}{" "}
