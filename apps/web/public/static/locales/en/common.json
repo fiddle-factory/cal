@@ -1298,6 +1298,7 @@
   "availability_updated_successfully": "{{scheduleName}} schedule updated successfully",
   "bulk_updated_schedule_successfully": "Bulk updated selected event types with default schedule",
   "schedule_deleted_successfully": "Schedule deleted successfully",
+  "schedule": "Schedule",
   "default_schedule_name": "Working Hours",
   "new_schedule_heading": "Create an availability schedule",
   "no_schedules_created_yet": "You haven't created any availability schedules yet. Create one to get started.",

@@ -10,7 +10,7 @@ import posthog from "posthog-js";
 import { BulkEditDefaultForEventsModal } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
 import type { BulkUpdatParams } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
 import { NewScheduleButton } from "@calcom/features/schedules/components/NewScheduleButton";
-import { ScheduleListItem } from "@calcom/features/schedules/components/ScheduleListItem";
+import { ScheduleTableRow } from "@calcom/features/schedules/components/ScheduleListItem";
 import { useCompatSearchParams } from "@calcom/lib/hooks/useCompatSearchParams";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { HttpError } from "@calcom/lib/http-error";
@@ -19,6 +19,13 @@ import { trpc } from "@calcom/trpc/react";
 import useMeQuery from "@calcom/trpc/react/hooks/useMeQuery";
 import { EmptyScreen } from "@calcom/ui/components/empty-screen";
 import { ToggleGroup } from "@calcom/ui/components/form";
+import {
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableNew,
+  TableRow,
+} from "@calcom/ui/components/table";
 import { showToast } from "@calcom/ui/components/toast";
 
 type AvailabilityListProps = {
@@ -122,7 +129,7 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
 
   // Adds smooth delete button - item fades and old item slides into place
 
-  const [animationParentRef] = useAutoAnimate<HTMLUListElement>();
+  const [animationParentRef] = useAutoAnimate<HTMLTableSectionElement>();
 
   return (
     <>
@@ -139,9 +146,22 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
       ) : (
         <>
           <div className="border-subtle bg-default overflow-hidden rounded-md border">
-            <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
+            <TableNew className="border-0">
+              <TableHeader className="bg-cal-muted">
+                <TableRow className="border-subtle hover:bg-transparent">
+                  <TableHead className="text-default h-10 px-3 sm:px-4">{t("name")}</TableHead>
+                  <TableHead className="text-default h-10 px-3 sm:px-4">{t("schedule")}</TableHead>
+                  <TableHead className="text-default hidden h-10 px-3 sm:px-4 md:table-cell">
+                    {t("timezone")}
+                  </TableHead>
+                  <TableHead className="h-10 w-px px-3 sm:px-4">
+                    <span className="sr-only">{t("options")}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody data-testid="schedules" ref={animationParentRef}>
               {availabilities.schedules.map((schedule) => (
-                <ScheduleListItem
+                <ScheduleTableRow
                   redirectUrl={`/availability/${schedule.id}`}
                   displayOptions={{
                     hour12: user?.timeFormat ? user.timeFormat === 12 : undefined,
@@ -156,7 +176,8 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
                   duplicateFunction={duplicateMutation.mutate}
                 />
               ))}
-            </ul>
+              </TableBody>
+            </TableNew>
           </div>
           <div className="text-default mb-16 mt-4 block text-center text-sm">
             {t("temporarily_out_of_office")}{" "}
