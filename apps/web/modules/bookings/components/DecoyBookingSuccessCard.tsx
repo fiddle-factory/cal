@@ -1,6 +1,10 @@
+import * as React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { ConfirmationFireworks } from "./ConfirmationFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,10 +32,40 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [showFireworks, setShowFireworks] = React.useState(true);
+  const [fireworkBursts, setFireworkBursts] = React.useState(5);
+  const [fireworkParticles, setFireworkParticles] = React.useState(36);
+  const [fireworkDuration, setFireworkDuration] = React.useState(2400);
+  const [fireworkOpacity, setFireworkOpacity] = React.useState(0.85);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.showFireworks === "boolean") setShowFireworks(p.showFireworks);
+      if (typeof p.fireworkBursts === "number") setFireworkBursts(p.fireworkBursts);
+      if (typeof p.fireworkParticles === "number") setFireworkParticles(p.fireworkParticles);
+      if (typeof p.fireworkDuration === "number") setFireworkDuration(p.fireworkDuration);
+      if (typeof p.fireworkOpacity === "number") setFireworkOpacity(p.fireworkOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
-      <main className="mx-auto max-w-3xl">
+    <div className="relative h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      {showFireworks && (
+        <ConfirmationFireworks
+          bursts={fireworkBursts}
+          particlesPerBurst={fireworkParticles}
+          durationMs={fireworkDuration}
+          opacity={fireworkOpacity}
+        />
+      )}
+      <main className="relative z-10 mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
