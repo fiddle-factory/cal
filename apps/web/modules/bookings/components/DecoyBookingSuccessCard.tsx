@@ -1,6 +1,9 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+import React from "react";
+
+import { ConfettiBurst } from "./ConfettiBurst";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,9 +31,41 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const successIconRef = React.useRef<HTMLDivElement>(null);
+  const [confettiEnabled, setConfettiEnabled] = React.useState(true);
+  const [confettiCount, setConfettiCount] = React.useState(90);
+  const [confettiDuration, setConfettiDuration] = React.useState(2600);
+  const [confettiSpread, setConfettiSpread] = React.useState(80);
+  const [confettiOpacity, setConfettiOpacity] = React.useState(0.9);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiDuration === "number") setConfettiDuration(p.confettiDuration);
+      if (typeof p.confettiSpread === "number") setConfettiSpread(p.confettiSpread);
+      if (typeof p.confettiOpacity === "number") setConfettiOpacity(p.confettiOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      {confettiEnabled && (
+        <ConfettiBurst
+          originRef={successIconRef}
+          particleCount={confettiCount}
+          durationMs={confettiDuration}
+          spread={confettiSpread}
+          opacity={confettiOpacity}
+        />
+      )}
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
@@ -41,7 +76,9 @@ export function DecoyBookingSuccessCard({
                 aria-modal="true"
                 aria-labelledby="modal-headline">
                 <div>
-                  <div className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+                  <div
+                    ref={successIconRef}
+                    className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
                     <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
