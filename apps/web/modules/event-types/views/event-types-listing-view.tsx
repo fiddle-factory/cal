@@ -55,6 +55,7 @@ import { Skeleton } from "@calcom/ui/components/skeleton";
 import { showToast } from "@calcom/ui/components/toast";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 import { CreateButton } from "@calcom/web/modules/ee/teams/components/createButton/CreateButton";
+import { KBarTrigger } from "@calcom/web/modules/shell/Kbar";
 import {
   CreateEventTypeDialog,
   type ProfileOption,
@@ -122,18 +123,21 @@ const InfiniteTeamsTab: FC<InfiniteTeamsTabProps> = (props) => {
 
   return (
     <div>
-      <TextField
-        className="max-w-64"
-        addOnLeading={<Icon name="search" className="text-subtle h-4 w-4" />}
-        containerClassName="max-w-64 focus:ring-offset-0! mb-4"
-        type="search"
-        value={searchTerm}
-        autoComplete="false"
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-        }}
-        placeholder={t("search")}
-      />
+      <div className="mb-4 flex items-center gap-2">
+        <TextField
+          className="max-w-64"
+          addOnLeading={<Icon name="search" className="text-subtle h-4 w-4" />}
+          containerClassName="max-w-64 focus:ring-offset-0!"
+          type="search"
+          value={searchTerm}
+          autoComplete="false"
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+          }}
+          placeholder={t("search")}
+        />
+        <KBarTrigger />
+      </div>
       {!!activeEventTypeGroup && (
         <InfiniteEventTypeList
           pages={query?.data?.pages}
