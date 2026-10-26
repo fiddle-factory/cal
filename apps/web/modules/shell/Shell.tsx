@@ -42,15 +42,15 @@ const Layout = (props: LayoutProps) => {
       <div className="flex min-h-screen flex-col">
         {banners && !props.isPlatformUser && <BannerContainer banners={banners} />}
 
-        <div className="flex flex-1" data-testid="dashboard-shell">
+        <div className="bg-primary-default flex flex-1 px-1" data-testid="dashboard-shell">
+          <div className="flex w-1 flex-1 flex-col">
+            <MainContainer {...props} />
+          </div>
           {props.SidebarContainer ? (
             cloneElement(props.SidebarContainer, { bannersHeight })
           ) : (
             <SideBarContainer isPlatformUser={props.isPlatformUser} bannersHeight={bannersHeight} />
           )}
-          <div className="flex w-0 flex-1 flex-col">
-            <MainContainer {...props} />
-          </div>
         </div>
       </div>
     </>
