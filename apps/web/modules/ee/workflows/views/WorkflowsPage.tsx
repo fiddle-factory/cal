@@ -16,6 +16,8 @@ import { useRouterQuery } from "@calcom/lib/hooks/useRouterQuery";
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
 import { Avatar } from "@calcom/ui/components/avatar";
+import { Button } from "@calcom/ui/components/button";
+import { EmptyScreen as UIEmptyScreen } from "@calcom/ui/components/empty-screen";
 import { AnimatedPopover } from "@calcom/ui/components/popover";
 import Shell, { ShellMain } from "@calcom/web/modules/shell/Shell";
 import EmptyScreen from "@calcom/web/modules/ee/workflows/components/EmptyScreen";
@@ -30,9 +32,31 @@ import { CreateButtonWithTeamsList } from "~/ee/teams/components/createButton/Cr
 
 type PageProps = {
   filteredList?: Awaited<ReturnType<typeof WorkflowRepository.getFilteredList>>;
+  /** Forces the skeleton loading state. */
+  isLoading?: boolean;
+  /** Forces the error state; a string is shown as the error description. */
+  error?: boolean | string;
+  /** Called when the Retry button in the error state is clicked. Defaults to refetching. */
+  onRetry?: () => void;
 };
 
-function WorkflowsPage({ filteredList }: PageProps) {
+function WorkflowsError({ description, onRetry }: { description?: string; onRetry: () => void }) {
+  const { t } = useLocale();
+  return (
+    <UIEmptyScreen
+      Icon="triangle-alert"
+      headline={t("error_loading_workflows")}
+      description={description || t("error_loading_workflows_description")}
+      buttonRaw={
+        <Button color="secondary" StartIcon="refresh-cw" onClick={onRetry}>
+          {t("retry")}
+        </Button>
+      }
+    />
+  );
+}
+
+function WorkflowsPage({ filteredList, isLoading, error, onRetry }: PageProps) {
   const { t } = useLocale();
   const session = useSession();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- router is kept for future use
@@ -41,16 +65,28 @@ function WorkflowsPage({ filteredList }: PageProps) {
   const filters = getTeamsFiltersFromQuery(routerQuery);
   const { showDialog, setShowDialog, pendingTeamId, openDialog } = useWorkflowCreation();
 
-  const { data, isPending: _isPending } = trpc.viewer.workflows.filteredList.useQuery(
+  const forcedState = isLoading || !!error;
+  const {
+    data,
+    isPending: _isPending,
+    isError: queryIsError,
+    refetch,
+  } = trpc.viewer.workflows.filteredList.useQuery(
     {
       filters,
     },
     {
-      enabled: !filteredList,
+      enabled: !filteredList && !forcedState,
     }
   );
-  const filteredWorkflows = filteredList ?? data;
-  const isPending = filteredList ? false : _isPending;
+  const hasError = !!error || (!filteredList && !isLoading && queryIsError);
+  const filteredWorkflows = hasError || isLoading ? undefined : filteredList ?? data;
+  const isPending = isLoading ? true : filteredList ? false : _isPending;
+  const errorDescription = typeof error === "string" ? error : undefined;
+  const handleRetry = () => {
+    if (onRetry) return onRetry();
+    void refetch();
+  };
 
   return (
     <Shell withoutMain>
@@ -92,13 +128,17 @@ function WorkflowsPage({ filteredList }: PageProps) {
                 </div>
               </div>
             ) : null}
-            <FilterResults
-              queryRes={{ isPending, data: filteredWorkflows }}
-              emptyScreen={<EmptyScreen isFilteredView={false} />}
-              noResultsScreen={<EmptyScreen isFilteredView={true} />}
-              SkeletonLoader={SkeletonLoader}>
-              <WorkflowList workflows={filteredWorkflows?.filtered} />
-            </FilterResults>
+            {hasError ? (
+              <WorkflowsError description={errorDescription} onRetry={handleRetry} />
+            ) : (
+              <FilterResults
+                queryRes={{ isPending, data: filteredWorkflows }}
+                emptyScreen={<EmptyScreen isFilteredView={false} />}
+                noResultsScreen={<EmptyScreen isFilteredView={true} />}
+                SkeletonLoader={SkeletonLoader}>
+                <WorkflowList workflows={filteredWorkflows?.filtered} />
+              </FilterResults>
+            )}
           </>
         </ShellMain>
         <WorkflowCreationDialog open={showDialog} onOpenChange={setShowDialog} teamId={pendingTeamId} />
