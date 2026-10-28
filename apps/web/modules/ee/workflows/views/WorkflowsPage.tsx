@@ -30,9 +30,10 @@ import { CreateButtonWithTeamsList } from "~/ee/teams/components/createButton/Cr
 
 type PageProps = {
   filteredList?: Awaited<ReturnType<typeof WorkflowRepository.getFilteredList>>;
+  isLoading?: boolean;
 };
 
-function WorkflowsPage({ filteredList }: PageProps) {
+function WorkflowsPage({ filteredList, isLoading = false }: PageProps) {
   const { t } = useLocale();
   const session = useSession();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- router is kept for future use
@@ -46,11 +47,11 @@ function WorkflowsPage({ filteredList }: PageProps) {
       filters,
     },
     {
-      enabled: !filteredList,
+      enabled: !filteredList && !isLoading,
     }
   );
-  const filteredWorkflows = filteredList ?? data;
-  const isPending = filteredList ? false : _isPending;
+  const filteredWorkflows = isLoading ? undefined : filteredList ?? data;
+  const isPending = isLoading || (filteredList ? false : _isPending);
 
   return (
     <Shell withoutMain>
