@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 import LicenseRequired from "~/ee/common/components/LicenseRequired";
 import type { WorkflowRepository } from "@calcom/features/ee/workflows/repositories/WorkflowRepository";
@@ -15,7 +15,9 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { useRouterQuery } from "@calcom/lib/hooks/useRouterQuery";
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
+import { Alert } from "@calcom/ui/components/alert";
 import { Avatar } from "@calcom/ui/components/avatar";
+import { Button } from "@calcom/ui/components/button";
 import { AnimatedPopover } from "@calcom/ui/components/popover";
 import Shell, { ShellMain } from "@calcom/web/modules/shell/Shell";
 import EmptyScreen from "@calcom/web/modules/ee/workflows/components/EmptyScreen";
@@ -30,10 +32,35 @@ import { CreateButtonWithTeamsList } from "~/ee/teams/components/createButton/Cr
 
 type PageProps = {
   filteredList?: Awaited<ReturnType<typeof WorkflowRepository.getFilteredList>>;
+  /** Forces the skeleton loading state. */
+  isLoading?: boolean;
+  /** Shows the error state with a retry action. */
+  error?: { message?: string } | null;
+  /** Called when the user presses Retry in the error state. Defaults to refetching. */
+  onRetry?: () => void;
 };
 
-function WorkflowsPage({ filteredList }: PageProps) {
+const DEFAULT_PAGE_BACKGROUND_COLOR = "#ffffff";
+
+function WorkflowsPage({ filteredList, isLoading, error: errorProp, onRetry }: PageProps) {
   const { t } = useLocale();
+  const [headingText, setHeadingText] = useState<string>(() => t("workflows"));
+  const [pageBackgroundColor, setPageBackgroundColor] = useState<string>(DEFAULT_PAGE_BACKGROUND_COLOR);
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.headingText === "string") setHeadingText(p.headingText);
+      if (typeof p.pageBackgroundColor === "string") setPageBackgroundColor(p.pageBackgroundColor);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+  const backgroundColor =
+    pageBackgroundColor.toLowerCase() === DEFAULT_PAGE_BACKGROUND_COLOR ? undefined : pageBackgroundColor;
   const session = useSession();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- router is kept for future use
   const router = useRouter();
@@ -41,7 +68,12 @@ function WorkflowsPage({ filteredList }: PageProps) {
   const filters = getTeamsFiltersFromQuery(routerQuery);
   const { showDialog, setShowDialog, pendingTeamId, openDialog } = useWorkflowCreation();
 
-  const { data, isPending: _isPending } = trpc.viewer.workflows.filteredList.useQuery(
+  const {
+    data,
+    isPending: _isPending,
+    error: queryError,
+    refetch,
+  } = trpc.viewer.workflows.filteredList.useQuery(
     {
       filters,
     },
@@ -50,13 +82,16 @@ function WorkflowsPage({ filteredList }: PageProps) {
     }
   );
   const filteredWorkflows = filteredList ?? data;
-  const isPending = filteredList ? false : _isPending;
+  const isPending = isLoading ?? (filteredList ? false : _isPending);
+  const error = isLoading ? null : errorProp ?? (filteredList ? null : queryError);
+  const handleRetry = onRetry ?? (() => void refetch());
 
   return (
-    <Shell withoutMain>
+    <Shell withoutMain backgroundColor={backgroundColor}>
       <LicenseRequired>
         <ShellMain
-          heading={t("workflows")}
+          backgroundColor={backgroundColor}
+          heading={headingText}
           subtitle={t("workflows_to_automate_notifications")}
           title={t("workflows")}
           description={t("workflows_to_automate_notifications")}
@@ -75,7 +110,7 @@ function WorkflowsPage({ filteredList }: PageProps) {
             ) : null
           }>
           <>
-            {filteredWorkflows?.totalCount ? (
+            {!error && !isPending && filteredWorkflows?.totalCount ? (
               <div className="mb-2 flex">
                 <TeamsFilter />
                 <div className="mb-4 ml-auto">
@@ -92,13 +127,26 @@ function WorkflowsPage({ filteredList }: PageProps) {
                 </div>
               </div>
             ) : null}
-            <FilterResults
-              queryRes={{ isPending, data: filteredWorkflows }}
-              emptyScreen={<EmptyScreen isFilteredView={false} />}
-              noResultsScreen={<EmptyScreen isFilteredView={true} />}
-              SkeletonLoader={SkeletonLoader}>
-              <WorkflowList workflows={filteredWorkflows?.filtered} />
-            </FilterResults>
+            {error ? (
+              <Alert
+                severity="error"
+                title={t("something_went_wrong")}
+                message={error.message || t("error_loading_workflows")}
+                actions={
+                  <Button color="secondary" size="sm" StartIcon="rotate-cw" onClick={handleRetry}>
+                    {t("retry")}
+                  </Button>
+                }
+              />
+            ) : (
+              <FilterResults
+                queryRes={{ isPending, data: filteredWorkflows }}
+                emptyScreen={<EmptyScreen isFilteredView={false} />}
+                noResultsScreen={<EmptyScreen isFilteredView={true} />}
+                SkeletonLoader={SkeletonLoader}>
+                <WorkflowList workflows={filteredWorkflows?.filtered} />
+              </FilterResults>
+            )}
           </>
         </ShellMain>
         <WorkflowCreationDialog open={showDialog} onOpenChange={setShowDialog} teamId={pendingTeamId} />

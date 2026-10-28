@@ -645,6 +645,7 @@
   "session_timeout_changed": "Your session configuration has been updated successfully.",
   "session_timeout_change_error": "Error updating session configuration",
   "something_went_wrong": "Something went wrong.",
+  "error_loading_workflows": "We couldn't load your workflows. Please try again.",
   "something_doesnt_look_right": "Something doesn't look right?",
   "please_try_again": "Please try again.",
   "super_secure_new_password": "Your super secure new password",

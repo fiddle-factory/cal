@@ -85,6 +85,8 @@ export type LayoutProps = {
   afterHeading?: ReactNode;
   smallHeading?: boolean;
   isPlatformUser?: boolean;
+  // Optional override for the page background (main area and sticky heading)
+  backgroundColor?: string;
 };
 
 const KBarWrapper = ({ children, withKBar = false }: { withKBar: boolean; children: React.ReactNode }) =>
@@ -132,7 +134,8 @@ export function ShellMain(props: LayoutProps) {
           className={classNames(
             "bg-default sticky top-0 z-10 mb-0 flex items-center md:mb-6 md:mt-0",
             props.smallHeading ? "lg:mb-7" : "lg:mb-8"
-          )}>
+          )}
+          style={props.backgroundColor ? { backgroundColor: props.backgroundColor } : undefined}>
           {!!props.backPath && (
             <Button
               variant="icon"
@@ -202,7 +205,9 @@ function MainContainer({
   ...props
 }: LayoutProps) {
   return (
-    <main className="bg-default relative z-0 flex-1 pb-8 focus:outline-none">
+    <main
+      className="bg-default relative z-0 flex-1 pb-8 focus:outline-none"
+      style={props.backgroundColor ? { backgroundColor: props.backgroundColor } : undefined}>
       {/* show top navigation for md and smaller (tablet and phones) */}
       {TopNavContainerProp}
       <div className="max-w-full p-2 sm:py-4 lg:px-6">
