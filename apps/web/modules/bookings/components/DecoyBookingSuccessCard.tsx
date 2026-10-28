@@ -1,6 +1,10 @@
+import React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { ConfettiBurst } from "./ConfettiBurst";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,9 +32,43 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  // Confetti tunables — defaults use the app palette: brand, success green, info blue, attention orange
+  const [confettiEnabled, setConfettiEnabled] = React.useState(true);
+  const [confettiCount, setConfettiCount] = React.useState(140);
+  const [confettiSpeed, setConfettiSpeed] = React.useState(1);
+  const [confettiColor1, setConfettiColor1] = React.useState("#111827");
+  const [confettiColor2, setConfettiColor2] = React.useState("#16a34a");
+  const [confettiColor3, setConfettiColor3] = React.useState("#3b82f6");
+  const [confettiColor4, setConfettiColor4] = React.useState("#f97316");
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiSpeed === "number") setConfettiSpeed(p.confettiSpeed);
+      if (typeof p.confettiColor1 === "string") setConfettiColor1(p.confettiColor1);
+      if (typeof p.confettiColor2 === "string") setConfettiColor2(p.confettiColor2);
+      if (typeof p.confettiColor3 === "string") setConfettiColor3(p.confettiColor3);
+      if (typeof p.confettiColor4 === "string") setConfettiColor4(p.confettiColor4);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="relative h-screen">
+      <ConfettiBurst
+        enabled={confettiEnabled}
+        count={confettiCount}
+        speed={confettiSpeed}
+        colors={[confettiColor1, confettiColor2, confettiColor3, confettiColor4]}
+        originY={0.12}
+      />
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
