@@ -4202,6 +4202,7 @@
     "source": "Source"
   },
   "error_loading_booking_logs": "Error loading booking logs",
+  "error_loading_workflows": "Error loading workflows",
   "no_audit_logs_found": "No audit logs found",
   "hide_details": "Hide details",
   "show_details": "Show details",

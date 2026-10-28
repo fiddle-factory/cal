@@ -16,6 +16,7 @@ import { useRouterQuery } from "@calcom/lib/hooks/useRouterQuery";
 import { trpc } from "@calcom/trpc/react";
 import classNames from "@calcom/ui/classNames";
 import { Avatar } from "@calcom/ui/components/avatar";
+import { EmptyScreen as UIEmptyScreen } from "@calcom/ui/components/empty-screen";
 import { AnimatedPopover } from "@calcom/ui/components/popover";
 import Shell, { ShellMain } from "@calcom/web/modules/shell/Shell";
 import EmptyScreen from "@calcom/web/modules/ee/workflows/components/EmptyScreen";
@@ -31,9 +32,11 @@ import { CreateButtonWithTeamsList } from "~/ee/teams/components/createButton/Cr
 type PageProps = {
   filteredList?: Awaited<ReturnType<typeof WorkflowRepository.getFilteredList>>;
   isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 };
 
-function WorkflowsPage({ filteredList, isLoading = false }: PageProps) {
+function WorkflowsPage({ filteredList, isLoading = false, error, onRetry }: PageProps) {
   const { t } = useLocale();
   const session = useSession();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- router is kept for future use
@@ -47,10 +50,10 @@ function WorkflowsPage({ filteredList, isLoading = false }: PageProps) {
       filters,
     },
     {
-      enabled: !filteredList && !isLoading,
+      enabled: !filteredList && !isLoading && !error,
     }
   );
-  const filteredWorkflows = isLoading ? undefined : filteredList ?? data;
+  const filteredWorkflows = isLoading ? undefined : (filteredList ?? data);
   const isPending = isLoading || (filteredList ? false : _isPending);
 
   return (
@@ -75,32 +78,42 @@ function WorkflowsPage({ filteredList, isLoading = false }: PageProps) {
               />
             ) : null
           }>
-          <>
-            {filteredWorkflows?.totalCount ? (
-              <div className="mb-2 flex">
-                <TeamsFilter />
-                <div className="mb-4 ml-auto">
-                  <CreateButtonWithTeamsList
-                    subtitle={t("new_workflow_subtitle").toUpperCase()}
-                    createFunction={openDialog}
-                    onlyShowWithTeams={true}
-                    includeOrg={true}
-                    withPermission={{
-                      permission: "workflow.create",
-                      fallbackRoles: ["ADMIN", "OWNER"],
-                    }}
-                  />
+          {error ? (
+            <UIEmptyScreen
+              Icon="triangle-alert"
+              headline={t("error_loading_workflows")}
+              description={error}
+              buttonText={onRetry ? t("retry") : undefined}
+              buttonOnClick={onRetry ? () => onRetry() : undefined}
+            />
+          ) : (
+            <>
+              {filteredWorkflows?.totalCount ? (
+                <div className="mb-2 flex">
+                  <TeamsFilter />
+                  <div className="mb-4 ml-auto">
+                    <CreateButtonWithTeamsList
+                      subtitle={t("new_workflow_subtitle").toUpperCase()}
+                      createFunction={openDialog}
+                      onlyShowWithTeams={true}
+                      includeOrg={true}
+                      withPermission={{
+                        permission: "workflow.create",
+                        fallbackRoles: ["ADMIN", "OWNER"],
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            <FilterResults
-              queryRes={{ isPending, data: filteredWorkflows }}
-              emptyScreen={<EmptyScreen isFilteredView={false} />}
-              noResultsScreen={<EmptyScreen isFilteredView={true} />}
-              SkeletonLoader={SkeletonLoader}>
-              <WorkflowList workflows={filteredWorkflows?.filtered} />
-            </FilterResults>
-          </>
+              ) : null}
+              <FilterResults
+                queryRes={{ isPending, data: filteredWorkflows }}
+                emptyScreen={<EmptyScreen isFilteredView={false} />}
+                noResultsScreen={<EmptyScreen isFilteredView={true} />}
+                SkeletonLoader={SkeletonLoader}>
+                <WorkflowList workflows={filteredWorkflows?.filtered} />
+              </FilterResults>
+            </>
+          )}
         </ShellMain>
         <WorkflowCreationDialog open={showDialog} onOpenChange={setShowDialog} teamId={pendingTeamId} />
       </LicenseRequired>
