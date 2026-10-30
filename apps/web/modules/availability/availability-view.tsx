@@ -2,7 +2,6 @@
 
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { revalidateAvailabilityList } from "app/(use-page-wrapper)/(main-nav)/availability/actions";
-import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useCallback, useState } from "react";
 import posthog from "posthog-js";
@@ -17,9 +16,11 @@ import { HttpError } from "@calcom/lib/http-error";
 import type { RouterOutputs } from "@calcom/trpc/react";
 import { trpc } from "@calcom/trpc/react";
 import useMeQuery from "@calcom/trpc/react/hooks/useMeQuery";
+import { Button } from "@calcom/ui/components/button";
 import { EmptyScreen } from "@calcom/ui/components/empty-screen";
 import { ToggleGroup } from "@calcom/ui/components/form";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@calcom/ui/components/table/TableNew";
+import { Icon } from "@calcom/ui/components/icon";
 import { showToast } from "@calcom/ui/components/toast";
 
 type AvailabilityListProps = {
@@ -147,9 +148,6 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
                   <TableHead className="text-subtle h-10 px-3 text-xs font-medium sm:px-4">
                     {t("availability")}
                   </TableHead>
-                  <TableHead className="text-subtle h-10 px-3 text-xs font-medium sm:px-4">
-                    {t("timezone")}
-                  </TableHead>
                   <TableHead className="h-10 px-3 sm:px-4">
                     <span className="sr-only">{t("options")}</span>
                   </TableHead>
@@ -175,11 +173,23 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
               </TableBody>
             </Table>
           </div>
-          <div className="text-default mb-16 mt-4 block text-center text-sm">
-            {t("temporarily_out_of_office")}{" "}
-            <Link href="settings/my-account/out-of-office" className="underline">
+          <div className="border-subtle bg-default mb-16 mt-6 flex flex-col gap-4 rounded-md border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="bg-subtle text-emphasis flex h-9 w-9 shrink-0 items-center justify-center rounded-md">
+                <Icon name="calendar-x-2" className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-emphasis text-sm font-semibold">{t("temporarily_out_of_office")}</p>
+                <p className="text-subtle mt-0.5 text-sm">{t("out_of_office_description")}</p>
+              </div>
+            </div>
+            <Button
+              href="/settings/my-account/out-of-office"
+              color="secondary"
+              StartIcon="plus"
+              className="self-start sm:self-auto">
               {t("add_a_redirect")}
-            </Link>
+            </Button>
           </div>
           {bulkUpdateModal && (
             <BulkEditDefaultForEventsModal

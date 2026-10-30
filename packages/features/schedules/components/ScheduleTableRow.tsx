@@ -5,9 +5,11 @@ import { useState } from "react";
 
 import { availabilityAsString } from "@calcom/lib/availability";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
-import { sortAvailabilityStrings } from "@calcom/lib/weekstart";
+import { nameOfDay } from "@calcom/lib/weekday";
+import { sortAvailabilityStrings, weekStartNum } from "@calcom/lib/weekstart";
 import type { RouterOutputs } from "@calcom/trpc/react";
 import { Dialog } from "@calcom/features/components/controlled-dialog";
+import classNames from "@calcom/ui/classNames";
 import { Badge } from "@calcom/ui/components/badge";
 import { Button } from "@calcom/ui/components/button";
 import {
@@ -63,94 +65,163 @@ export function ScheduleTableRow({
 
   const timeZone = schedule.timeZone ?? displayOptions?.timeZone;
 
+  const weekStartIndex = weekStartNum(displayOptions?.weekStart);
+  const orderedDays = Array.from({ length: 7 }, (_, index) => (index + weekStartIndex) % 7);
+  const formatTime = (date: Date) =>
+    new Intl.DateTimeFormat(i18n.language, {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: displayOptions?.hour12,
+    }).format(new Date(new Date(date).toISOString().slice(0, -1)));
+  const rangesForDay = (day: number) =>
+    schedule.availability
+      .filter((availability: AvailabilityItem) => availability.days.includes(day))
+      .map(
+        (availability: AvailabilityItem) =>
+          `${formatTime(availability.startTime)} - ${formatTime(availability.endTime)}`
+      );
+
   return (
-    <TableRow className="border-subtle">
-      <TableCell className="px-3 py-4 sm:px-4">
-        <Link href={redirectUrl} className="flex items-center gap-2 text-sm" title={schedule.name}>
-          <span className="text-emphasis truncate font-medium">{schedule.name}</span>
-          {schedule.isDefault && (
-            <Badge variant="gray" className="text-xs">
-              {t("default")}
-            </Badge>
+    <TableRow className="border-subtle group">
+      <TableCell className="px-3 py-4 align-top sm:px-4">
+        <Link href={redirectUrl} className="block min-w-0 text-sm" title={schedule.name}>
+          <span className="flex items-center gap-2">
+            <span className="text-emphasis truncate font-semibold group-hover:underline">
+              {schedule.name}
+            </span>
+            {schedule.isDefault && (
+              <Badge variant="blue" startIcon="star" className="shrink-0 text-xs">
+                {t("default")}
+              </Badge>
+            )}
+          </span>
+          {timeZone && (
+            <span className="text-subtle mt-1.5 flex items-center gap-1 text-xs">
+              <Icon name="globe" className="h-3 w-3 shrink-0" />
+              <span className="truncate">{timeZone}</span>
+            </span>
           )}
         </Link>
       </TableCell>
-      <TableCell className="text-subtle px-3 py-4 sm:px-4">
+      <TableCell className="px-3 py-4 align-top sm:px-4">
         <Link href={redirectUrl} className="block text-sm">
-          {availabilityStrings.map((availabilityString: string) => (
-            <span key={availabilityString} className="block">
-              {availabilityString}
-            </span>
-          ))}
+          <span className="flex items-center gap-1" aria-hidden="true">
+            {orderedDays.map((day) => {
+              const ranges = rangesForDay(day);
+              const isActive = ranges.length > 0;
+              return (
+                <span
+                  key={day}
+                  title={`${nameOfDay(i18n.language, day, "long")}: ${
+                    isActive ? ranges.join(", ") : t("unavailable")
+                  }`}
+                  className={classNames(
+                    "flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-semibold",
+                    isActive ? "bg-inverted text-inverted" : "bg-cal-muted text-muted"
+                  )}>
+                  {new Intl.DateTimeFormat(i18n.language, { weekday: "narrow" }).format(
+                    new Date(1970, 0, day + 4)
+                  )}
+                </span>
+              );
+            })}
+          </span>
+          <span className="text-subtle mt-2 block text-xs">
+            {availabilityStrings.length > 0
+              ? availabilityStrings.map((availabilityString: string) => (
+                  <span key={availabilityString} className="block">
+                    {availabilityString}
+                  </span>
+                ))
+              : t("unavailable")}
+          </span>
         </Link>
       </TableCell>
-      <TableCell className="text-subtle px-3 py-4 sm:px-4">
-        {timeZone && (
-          <Link href={redirectUrl} className="flex items-center gap-1 text-sm">
-            <Icon name="globe" className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{timeZone}</span>
-          </Link>
-        )}
-      </TableCell>
-      <TableCell className="w-px px-3 py-4 text-right sm:px-4">
-        <Dropdown>
-          <DropdownMenuTrigger asChild>
+      <TableCell className="w-px px-3 py-4 text-right align-top sm:px-4">
+        <div className="flex items-center justify-end gap-2">
+          {!schedule.isDefault && (
             <Button
-              data-testid="schedule-more"
               type="button"
-              variant="icon"
-              color="secondary"
-              StartIcon="ellipsis"
-            />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {!schedule.isDefault && (
+              color="minimal"
+              size="sm"
+              StartIcon="star"
+              className="hidden whitespace-nowrap lg:inline-flex"
+              onClick={() => {
+                updateDefault({
+                  scheduleId: schedule.id,
+                  isDefault: true,
+                });
+              }}>
+              {t("set_as_default")}
+            </Button>
+          )}
+          <Button
+            href={redirectUrl}
+            color="secondary"
+            size="sm"
+            StartIcon="pencil"
+            className="hidden sm:inline-flex">
+            {t("edit")}
+          </Button>
+          <Dropdown>
+            <DropdownMenuTrigger asChild>
+              <Button
+                data-testid="schedule-more"
+                type="button"
+                variant="icon"
+                color="secondary"
+                StartIcon="ellipsis"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {!schedule.isDefault && (
+                <DropdownMenuItem className="min-w-40 focus:ring-muted">
+                  <DropdownItem
+                    type="button"
+                    StartIcon="star"
+                    onClick={() => {
+                      updateDefault({
+                        scheduleId: schedule.id,
+                        isDefault: true,
+                      });
+                    }}>
+                    {t("set_as_default")}
+                  </DropdownItem>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem className="outline-none">
+                <DropdownItem
+                  type="button"
+                  data-testid={`schedule-duplicate${schedule.id}`}
+                  StartIcon="copy"
+                  onClick={() => {
+                    duplicateFunction({
+                      scheduleId: schedule.id,
+                    });
+                  }}>
+                  {t("duplicate")}
+                </DropdownItem>
+              </DropdownMenuItem>
               <DropdownMenuItem className="min-w-40 focus:ring-muted">
                 <DropdownItem
                   type="button"
-                  StartIcon="star"
+                  color="destructive"
+                  StartIcon="trash"
+                  data-testid="delete-schedule"
+                  className="rounded-t-none"
                   onClick={() => {
-                    updateDefault({
-                      scheduleId: schedule.id,
-                      isDefault: true,
-                    });
+                    if (!isDeletable) {
+                      showToast(t("requires_at_least_one_schedule"), "error");
+                    } else {
+                      setIsDeleteDialogOpen(true);
+                    }
                   }}>
-                  {t("set_as_default")}
+                  {t("delete")}
                 </DropdownItem>
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem className="outline-none">
-              <DropdownItem
-                type="button"
-                data-testid={`schedule-duplicate${schedule.id}`}
-                StartIcon="copy"
-                onClick={() => {
-                  duplicateFunction({
-                    scheduleId: schedule.id,
-                  });
-                }}>
-                {t("duplicate")}
-              </DropdownItem>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="min-w-40 focus:ring-muted">
-              <DropdownItem
-                type="button"
-                color="destructive"
-                StartIcon="trash"
-                data-testid="delete-schedule"
-                className="rounded-t-none"
-                onClick={() => {
-                  if (!isDeletable) {
-                    showToast(t("requires_at_least_one_schedule"), "error");
-                  } else {
-                    setIsDeleteDialogOpen(true);
-                  }
-                }}>
-                {t("delete")}
-              </DropdownItem>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </Dropdown>
+            </DropdownMenuContent>
+          </Dropdown>
+        </div>
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <ConfirmationDialogContent
             variety="danger"
