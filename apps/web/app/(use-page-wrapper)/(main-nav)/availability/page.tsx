@@ -78,7 +78,7 @@ const Page = async ({ searchParams: _searchParams }: PageProps) => {
 
   return (
     <ShellMainAppDir
-      heading={t("availability")}
+      heading={t("availability_page_heading")}
       subtitle={t("configure_availability")}
       CTA={<AvailabilityCTA canViewTeamAvailability={canViewTeamAvailability} />}>
       {searchParams?.type === "team" && canViewTeamAvailability ? (
