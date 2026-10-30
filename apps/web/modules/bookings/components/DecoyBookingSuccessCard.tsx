@@ -1,6 +1,10 @@
+import React, { useState } from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { ConfettiBurst } from "./ConfettiBurst";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,6 +32,28 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [confettiEnabled, setConfettiEnabled] = useState(true);
+  const [confettiCount, setConfettiCount] = useState(60);
+  const [confettiDuration, setConfettiDuration] = useState(1800);
+  const [confettiSpread, setConfettiSpread] = useState(260);
+  const [confettiSize, setConfettiSize] = useState(8);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiDuration === "number") setConfettiDuration(p.confettiDuration);
+      if (typeof p.confettiSpread === "number") setConfettiSpread(p.confettiSpread);
+      if (typeof p.confettiSize === "number") setConfettiSize(p.confettiSize);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
     <div className="h-screen">
@@ -37,10 +63,18 @@ export function DecoyBookingSuccessCard({
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
               <div
                 className="bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
+                data-config-id="DecoyBookingSuccessCard-controls"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
-                <div>
+                <div className="relative">
+                  <ConfettiBurst
+                    enabled={confettiEnabled}
+                    count={confettiCount}
+                    duration={confettiDuration}
+                    spread={confettiSpread}
+                    size={confettiSize}
+                  />
                   <div className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
                     <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
