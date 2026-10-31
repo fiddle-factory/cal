@@ -3,11 +3,14 @@
 import { useParams } from "next/navigation";
 
 import dayjs from "@calcom/dayjs";
-import { DecoyBookingSuccessCard } from "~/bookings/components/DecoyBookingSuccessCard";
 import { useDecoyBooking } from "@calcom/features/bookings/Booker/components/hooks/useDecoyBooking";
+import { getCalendarLinks } from "@calcom/features/bookings/lib/getCalendarLinks";
+import { useLocale } from "@calcom/lib/hooks/useLocale";
+import { DecoyBookingSuccessCard } from "~/bookings/components/DecoyBookingSuccessCard";
 
 export default function BookingSuccessful() {
   const params = useParams();
+  const { t } = useLocale();
 
   const uid = params?.uid as string;
   const bookingData = useDecoyBooking(uid);
@@ -32,10 +35,34 @@ export default function BookingSuccessful() {
   const hostEmail = null; // Email not stored for spam decoy bookings
   const attendeeName = booking.booker?.name || null;
   const attendeeEmail = booking.booker?.email || null;
+  const title = booking.title || "Booking";
+
+  const calendarLinks =
+    startTime && endTime
+      ? getCalendarLinks({
+          booking: {
+            startTime: startTime.toDate(),
+            endTime: endTime.toDate(),
+            location: booking.location || null,
+            title,
+            responses: { name: attendeeName ?? "" },
+            metadata: null,
+          },
+          eventType: {
+            recurringEvent: null,
+            eventName: title,
+            isDynamic: false,
+            length: endTime.diff(startTime, "minutes"),
+            users: [{ name: hostName }],
+            title,
+          },
+          t,
+        })
+      : undefined;
 
   return (
     <DecoyBookingSuccessCard
-      title={booking.title || "Booking"}
+      title={title}
       formattedDate={formattedDate}
       formattedTime={formattedTime}
       endTime={formattedEndTime}
@@ -45,6 +72,7 @@ export default function BookingSuccessful() {
       attendeeName={attendeeName}
       attendeeEmail={attendeeEmail}
       location={booking.location || null}
+      calendarLinks={calendarLinks}
     />
   );
 }

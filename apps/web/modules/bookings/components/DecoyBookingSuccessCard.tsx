@@ -2,6 +2,8 @@ import React from "react";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
+import { Dialog, DialogClose, DialogContent, DialogFooter } from "@calcom/ui/components/dialog";
 import { Icon } from "@calcom/ui/components/icon";
 
 // Design-system tokens used for the confetti pieces (resolve per light/dark theme).
@@ -89,6 +91,66 @@ function ConfettiBurst({ count, duration, spread }: { count: number; duration: n
   );
 }
 
+/** Same shape as the entries returned by `getCalendarLinks` (@calcom/features/bookings/lib/getCalendarLinks). */
+export interface BookingCalendarLink {
+  id: string;
+  label: string;
+  link: string;
+}
+
+const CALENDAR_PICKER_LABELS: Record<string, string> = {
+  googleCalendar: "Google Calendar",
+  microsoftOutlook: "Outlook.com",
+  microsoftOffice: "Microsoft 365 / Outlook",
+  ics: "Apple Calendar / iCal / Other",
+};
+
+function AddToCalendarDialog({
+  open,
+  onOpenChange,
+  calendarLinks,
+  title,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  calendarLinks: BookingCalendarLink[];
+  title: string;
+}) {
+  const { t } = useLocale();
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent title={t("add_to_calendar")} description={t("choose_calendar_to_add_event")}>
+        <ul className="flex flex-col gap-2" data-testid="add-to-calendar-options">
+          {calendarLinks
+            .filter((calendarLink) => !!calendarLink.link)
+            .map((calendarLink) => {
+              const isIcs = calendarLink.id === "ics";
+              return (
+                <li key={calendarLink.id}>
+                  <a
+                    href={calendarLink.link}
+                    {...(isIcs
+                      ? { download: `${title}.ics` }
+                      : { target: "_blank", rel: "noopener noreferrer" })}
+                    className="border-subtle text-emphasis hover:bg-subtle focus-visible:ring-brand-default flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2">
+                    <span className="bg-cal-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-md">
+                      <Icon name="calendar" className="text-default h-4 w-4" />
+                    </span>
+                    <span className="grow">{CALENDAR_PICKER_LABELS[calendarLink.id] ?? calendarLink.label}</span>
+                    <Icon name={isIcs ? "download" : "external-link"} className="text-subtle h-4 w-4" />
+                  </a>
+                </li>
+              );
+            })}
+        </ul>
+        <DialogFooter noSticky>
+          <DialogClose />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export interface DecoyBookingSuccessCardProps {
   title: string;
   formattedDate: string;
@@ -100,6 +162,10 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** Links for the "Add to calendar" picker. The button is hidden when no links are provided. */
+  calendarLinks?: BookingCalendarLink[];
+  /** Opens the calendar picker on first render. */
+  defaultCalendarPickerOpen?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -113,8 +179,12 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  calendarLinks,
+  defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [isCalendarPickerOpen, setIsCalendarPickerOpen] = React.useState(defaultCalendarPickerOpen);
+  const hasCalendarLinks = !!calendarLinks?.some((calendarLink) => !!calendarLink.link);
   const [confettiEnabled, setConfettiEnabled] = React.useState(true);
   const [confettiCount, setConfettiCount] = React.useState(80);
   const [confettiDuration, setConfettiDuration] = React.useState(3);
@@ -218,8 +288,28 @@ export function DecoyBookingSuccessCard({
                       </>
                     )}
                   </div>
+
+                  {hasCalendarLinks && (
+                    <div className="border-subtle mt-8 flex justify-center border-t pt-8">
+                      <Button
+                        color="secondary"
+                        StartIcon="calendar"
+                        data-testid="add-to-calendar-button"
+                        onClick={() => setIsCalendarPickerOpen(true)}>
+                        {t("add_to_calendar")}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
+              {hasCalendarLinks && calendarLinks && (
+                <AddToCalendarDialog
+                  open={isCalendarPickerOpen}
+                  onOpenChange={setIsCalendarPickerOpen}
+                  calendarLinks={calendarLinks}
+                  title={title}
+                />
+              )}
             </div>
           </div>
         </div>
