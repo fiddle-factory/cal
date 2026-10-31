@@ -1,3 +1,5 @@
+import React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
@@ -28,15 +30,48 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [pulseSpeed, setPulseSpeed] = React.useState(2.4);
+  const [pulseEnabled, setPulseEnabled] = React.useState(true);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.pulseSpeed === "number") setPulseSpeed(p.pulseSpeed);
+      if (typeof p.pulseEnabled === "boolean") setPulseEnabled(p.pulseEnabled);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
     <div className="h-screen">
+      <style>{`
+        @keyframes decoy-booking-border-pulse {
+          0%, 100% { border-color: var(--cal-border-booker); }
+          50% { border-color: var(--cal-border-emphasis); }
+        }
+        .decoy-booking-border-pulse {
+          animation-name: decoy-booking-border-pulse;
+          animation-timing-function: ease-in-out;
+          animation-iteration-count: infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .decoy-booking-border-pulse { animation: none; }
+        }
+      `}</style>
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
               <div
-                className="bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
+                className={`bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle${
+                  pulseEnabled ? " decoy-booking-border-pulse" : ""
+                }`}
+                style={pulseEnabled ? { animationDuration: `${pulseSpeed}s` } : undefined}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
