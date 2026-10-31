@@ -1,6 +1,93 @@
+import React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+// Design-system tokens used for the confetti pieces (resolve per light/dark theme).
+const CONFETTI_COLORS = [
+  "var(--cal-bg-semantic-success-emphasis)",
+  "var(--cal-bg-semantic-info-emphasis)",
+  "var(--cal-bg-semantic-attention-emphasis)",
+  "var(--cal-bg-semantic-error-emphasis)",
+  "var(--cal-bg-brand)",
+  "var(--cal-bg-info)",
+];
+
+const CONFETTI_KEYFRAMES = `
+@keyframes cal-confetti-fall {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+  8% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate3d(var(--confetti-drift), var(--confetti-fall), 0) rotate(var(--confetti-spin)); opacity: 0; }
+}
+@keyframes cal-confetti-flutter {
+  0%, 100% { transform: rotateX(0deg) scaleY(1); }
+  50% { transform: rotateX(70deg) scaleY(0.6); }
+}
+`;
+
+// Deterministic pseudo-random generator so pieces are stable across renders.
+function seededRandom(seed: number) {
+  let value = seed;
+  return () => {
+    value = (value * 9301 + 49297) % 233280;
+    return value / 233280;
+  };
+}
+
+function ConfettiBurst({ count, duration, spread }: { count: number; duration: number; spread: number }) {
+  const pieces = React.useMemo(() => {
+    const random = seededRandom(42);
+    return Array.from({ length: count }, (_, i) => {
+      const width = 6 + random() * 6;
+      return {
+        id: i,
+        left: 50 + (random() - 0.5) * spread,
+        drift: (random() - 0.5) * 220,
+        spin: (random() > 0.5 ? 1 : -1) * (360 + random() * 540),
+        delay: random() * duration * 0.35,
+        fallDuration: duration * (0.65 + random() * 0.35),
+        flutter: 0.4 + random() * 0.5,
+        width,
+        height: random() > 0.3 ? width * 0.45 : width,
+        round: random() > 0.75,
+        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      };
+    });
+  }, [count, duration, spread]);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden motion-reduce:hidden" aria-hidden="true">
+      <style>{CONFETTI_KEYFRAMES}</style>
+      {pieces.map((piece) => (
+        <span
+          key={piece.id}
+          className="absolute -top-4 block"
+          style={
+            {
+              left: `${piece.left}%`,
+              "--confetti-drift": `${piece.drift}px`,
+              "--confetti-fall": "calc(100vh + 2rem)",
+              "--confetti-spin": `${piece.spin}deg`,
+              animation: `cal-confetti-fall ${piece.fallDuration}s cubic-bezier(0.25, 0.6, 0.45, 1) ${piece.delay}s both`,
+            } as React.CSSProperties
+          }>
+          <span
+            className="block"
+            style={{
+              width: piece.width,
+              height: piece.height,
+              backgroundColor: piece.color,
+              borderRadius: piece.round ? "9999px" : "1px",
+              animation: `cal-confetti-flutter ${piece.flutter}s ease-in-out ${piece.delay}s infinite`,
+            }}
+          />
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,6 +115,26 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [confettiEnabled, setConfettiEnabled] = React.useState(true);
+  const [confettiCount, setConfettiCount] = React.useState(80);
+  const [confettiDuration, setConfettiDuration] = React.useState(3);
+  const [confettiSpread, setConfettiSpread] = React.useState(90);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiDuration === "number") setConfettiDuration(p.confettiDuration);
+      if (typeof p.confettiSpread === "number") setConfettiSpread(p.confettiSpread);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
     <div className="h-screen">
@@ -36,10 +143,18 @@ export function DecoyBookingSuccessCard({
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
               <div
-                className="bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
+                className="bg-default dark:bg-cal-muted border-booker border-booker-width relative inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                {confettiEnabled && (
+                  <ConfettiBurst
+                    key={`${confettiCount}-${confettiDuration}-${confettiSpread}`}
+                    count={confettiCount}
+                    duration={confettiDuration}
+                    spread={confettiSpread}
+                  />
+                )}
                 <div>
                   <div className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
                     <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
