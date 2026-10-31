@@ -1,6 +1,9 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+import React, { useRef, useState } from "react";
+
+import { BookingFireworks } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,14 +31,52 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [fireworksEnabled, setFireworksEnabled] = useState(true);
+  const [burstCount, setBurstCount] = useState(9);
+  const [particlesPerBurst, setParticlesPerBurst] = useState(60);
+  const [durationSeconds, setDurationSeconds] = useState(4);
+  const [gravity, setGravity] = useState(0.05);
+  const [particleSize, setParticleSize] = useState(2);
+  const [fireworksOpacity, setFireworksOpacity] = useState(0.9);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.fireworksEnabled === "boolean") setFireworksEnabled(p.fireworksEnabled);
+      if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
+      if (typeof p.particlesPerBurst === "number") setParticlesPerBurst(p.particlesPerBurst);
+      if (typeof p.durationSeconds === "number") setDurationSeconds(p.durationSeconds);
+      if (typeof p.gravity === "number") setGravity(p.gravity);
+      if (typeof p.particleSize === "number") setParticleSize(p.particleSize);
+      if (typeof p.fireworksOpacity === "number") setFireworksOpacity(p.fireworksOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
-      <main className="mx-auto max-w-3xl">
+    <div className="relative h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      <BookingFireworks
+        targetRef={cardRef}
+        enabled={fireworksEnabled}
+        burstCount={burstCount}
+        particlesPerBurst={particlesPerBurst}
+        durationSeconds={durationSeconds}
+        gravity={gravity}
+        particleSize={particleSize}
+        opacity={fireworksOpacity}
+      />
+      <main className="relative z-10 mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
               <div
+                ref={cardRef}
                 className="bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
                 role="dialog"
                 aria-modal="true"
