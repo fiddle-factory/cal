@@ -77,7 +77,7 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>((props, ref) => {
               <Icon
                 name="circle-check"
                 data-testid="circle-check"
-                className={classNames("h4 w-4", iconClassName)}
+                className={classNames("h-4 w-4", iconClassName)}
                 aria-hidden="true"
               />
             )}
