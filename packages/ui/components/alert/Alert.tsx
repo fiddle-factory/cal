@@ -13,6 +13,7 @@ export const alertStyles = cva("rounded-[10px] p-3", {
       info: "bg-semantic-info-subtle text-semantic-info",
       warning: "bg-semantic-attention-subtle text-semantic-attention",
       error: "bg-semantic-error-subtle text-semantic-error",
+      success: "bg-semantic-success-subtle text-semantic-success",
     },
   },
   defaultVariants: {
@@ -26,7 +27,7 @@ export interface AlertProps {
   actions?: ReactNode;
   className?: string;
   iconClassName?: string;
-  severity: "warning" | "error" | "info" | "neutral";
+  severity: "warning" | "error" | "info" | "neutral" | "success";
   CustomIcon?: IconName;
   customIconColor?: string;
 }
@@ -68,6 +69,14 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>((props, ref) => {
               <Icon
                 name="info"
                 data-testid="info"
+                className={classNames("h4 w-4", iconClassName)}
+                aria-hidden="true"
+              />
+            )}
+            {severity === "success" && (
+              <Icon
+                name="circle-check"
+                data-testid="circle-check"
                 className={classNames("h4 w-4", iconClassName)}
                 aria-hidden="true"
               />
