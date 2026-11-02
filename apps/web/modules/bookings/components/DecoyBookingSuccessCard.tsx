@@ -1,6 +1,123 @@
+"use client";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+// Design-system palette (Tailwind tokens used across @calcom/ui badges and semantic states)
+const CONFETTI_PALETTE = [
+  "#3b82f6", // blue-500 (info)
+  "#f59e0b", // amber-500 (attention)
+  "#ec4899", // pink-500
+  "#8b5cf6", // violet-500
+  "#22c55e", // green-500 (success)
+];
+
+interface ConfettiBurstProps {
+  accentColor: string;
+  count: number;
+  spread: number;
+  duration: number;
+  size: number;
+  enabled: boolean;
+}
+
+// Deterministic pseudo-random so the burst is stable between renders
+function seeded(index: number, salt: number) {
+  const x = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function ConfettiBurst({ accentColor, count, spread, duration, size, enabled }: ConfettiBurstProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: Math.max(0, Math.round(count)) }, (_, i) => {
+        const angle = (i / Math.max(1, count)) * Math.PI * 2 + seeded(i, 1) * 0.6;
+        const distance = 0.45 + seeded(i, 2) * 0.55;
+        const colors = [accentColor, ...CONFETTI_PALETTE];
+        return {
+          angle,
+          distance,
+          color: colors[i % colors.length],
+          rotation: (seeded(i, 3) - 0.5) * 720,
+          aspect: seeded(i, 4) > 0.5 ? 0.45 : 1,
+          round: seeded(i, 5) > 0.7,
+          delay: seeded(i, 6) * 120,
+          scale: 0.7 + seeded(i, 7) * 0.6,
+        };
+      }),
+    [count, accentColor]
+  );
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !enabled) return;
+    const reduceMotion =
+      typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    const animations: Animation[] = [];
+    const nodes = Array.from(container.children) as HTMLElement[];
+    nodes.forEach((node, i) => {
+      const piece = pieces[i];
+      if (!piece || typeof node.animate !== "function") return;
+      const dx = Math.cos(piece.angle) * spread * piece.distance;
+      const dy = Math.sin(piece.angle) * spread * piece.distance;
+      animations.push(
+        node.animate(
+          [
+            { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(0.3)", opacity: 0 },
+            {
+              transform: `translate(-50%, -50%) translate(${dx * 0.85}px, ${dy * 0.85}px) rotate(${
+                piece.rotation * 0.6
+              }deg) scale(${piece.scale})`,
+              opacity: 1,
+              offset: 0.35,
+            },
+            {
+              transform: `translate(-50%, -50%) translate(${dx}px, ${dy + spread * 0.35}px) rotate(${
+                piece.rotation
+              }deg) scale(${piece.scale * 0.8})`,
+              opacity: 0,
+            },
+          ],
+          {
+            duration,
+            delay: piece.delay,
+            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+            fill: "both",
+          }
+        )
+      );
+    });
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [pieces, spread, duration, enabled]);
+
+  if (!enabled) return null;
+
+  return (
+    <div ref={containerRef} className="pointer-events-none absolute inset-0" aria-hidden="true">
+      {pieces.map((piece, i) => (
+        <span
+          key={i}
+          className="absolute left-1/2 top-1/2 block"
+          style={{
+            width: size * piece.aspect,
+            height: size,
+            backgroundColor: piece.color,
+            borderRadius: piece.round ? "9999px" : "2px",
+            opacity: 0,
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,6 +145,30 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [confettiColor, setConfettiColor] = useState("#16a34a");
+  const [confettiCount, setConfettiCount] = useState(36);
+  const [confettiSpread, setConfettiSpread] = useState(110);
+  const [confettiDuration, setConfettiDuration] = useState(1600);
+  const [confettiSize, setConfettiSize] = useState(8);
+  const [confettiEnabled, setConfettiEnabled] = useState(true);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiColor === "string") setConfettiColor(p.confettiColor);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiSpread === "number") setConfettiSpread(p.confettiSpread);
+      if (typeof p.confettiDuration === "number") setConfettiDuration(p.confettiDuration);
+      if (typeof p.confettiSize === "number") setConfettiSize(p.confettiSize);
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
     <div className="h-screen">
@@ -40,8 +181,16 @@ export function DecoyBookingSuccessCard({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
-                <div>
-                  <div className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+                <div className="relative" data-config-id="DecoyBookingSuccessCard-controls">
+                  <ConfettiBurst
+                    accentColor={confettiColor}
+                    count={confettiCount}
+                    spread={confettiSpread}
+                    duration={confettiDuration}
+                    size={confettiSize}
+                    enabled={confettiEnabled}
+                  />
+                  <div className="bg-cal-success relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
                     <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
