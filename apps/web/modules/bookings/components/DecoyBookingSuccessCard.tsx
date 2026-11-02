@@ -1,6 +1,155 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
+// Design-system visualization / semantic tokens used as the confetti palette
+const CONFETTI_COLORS = [
+  "var(--cal-bg-visualization-1-emphasis, hsla(330, 81%, 60%, 1))",
+  "var(--cal-bg-visualization-2-emphasis, hsla(256, 85%, 57%, 1))",
+  "var(--cal-bg-visualization-3-emphasis, hsla(235, 100%, 63%, 1))",
+  "var(--cal-bg-semantic-success-emphasis, hsla(158, 74%, 38%, 1))",
+  "var(--cal-bg-visualization-5-emphasis, hsla(45, 93%, 47%, 1))",
+  "var(--cal-bg-visualization-6-emphasis, hsla(25, 95%, 53%, 1))",
+  "var(--cal-bg-visualization-7-emphasis, hsla(0, 84%, 60%, 1))",
+];
+
+interface ConfettiPiece {
+  color: string;
+  angle: number;
+  velocity: number;
+  drift: number;
+  rotation: number;
+  delay: number;
+  shape: "rect" | "circle" | "strip";
+  sizeFactor: number;
+}
+
+function createPieces(count: number): ConfettiPiece[] {
+  return Array.from({ length: count }, (_, i) => {
+    const shapeRoll = Math.random();
+    return {
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      // mostly upward, fanned left/right
+      angle: -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.9,
+      velocity: 0.55 + Math.random() * 0.45,
+      drift: (Math.random() - 0.5) * 0.6,
+      rotation: (Math.random() - 0.5) * 1440,
+      delay: Math.random() * 0.12,
+      shape: shapeRoll < 0.5 ? "rect" : shapeRoll < 0.75 ? "strip" : "circle",
+      sizeFactor: 0.7 + Math.random() * 0.6,
+    };
+  });
+}
+
+function ConfettiBurst() {
+  const [confettiEnabled, setConfettiEnabled] = useState(true);
+  const [confettiCount, setConfettiCount] = useState(90);
+  const [confettiDuration, setConfettiDuration] = useState(3.2);
+  const [confettiSpread, setConfettiSpread] = useState(420);
+  const [confettiSize, setConfettiSize] = useState(9);
+  const [confettiOriginY, setConfettiOriginY] = useState(22);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiDuration === "number") setConfettiDuration(p.confettiDuration);
+      if (typeof p.confettiSpread === "number") setConfettiSpread(p.confettiSpread);
+      if (typeof p.confettiSize === "number") setConfettiSize(p.confettiSize);
+      if (typeof p.confettiOriginY === "number") setConfettiOriginY(p.confettiOriginY);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const pieces = useMemo(() => createPieces(Math.round(confettiCount)), [confettiCount]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !confettiEnabled) return;
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+
+    const fallDistance = Math.max(window.innerHeight, 600);
+    const durationMs = confettiDuration * 1000;
+    const nodes = Array.from(container.children) as HTMLElement[];
+    const animations = nodes.map((node, i) => {
+      const piece = pieces[i];
+      if (!piece) return null;
+      const burstX = Math.cos(piece.angle) * confettiSpread * piece.velocity;
+      const burstY = Math.sin(piece.angle) * confettiSpread * 0.75 * piece.velocity;
+      const endX = burstX * 1.25 + piece.drift * confettiSpread;
+      return node.animate(
+        [
+          { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(0.3)", opacity: 1 },
+          {
+            transform: `translate(-50%, -50%) translate(${burstX}px, ${burstY}px) rotate(${piece.rotation * 0.3}deg) scale(1)`,
+            opacity: 1,
+            offset: 0.22,
+            easing: "cubic-bezier(0.33, 0, 0.67, 1)",
+          },
+          {
+            transform: `translate(-50%, -50%) translate(${(burstX + endX) / 2}px, ${fallDistance * 0.4}px) rotate(${piece.rotation * 0.7}deg) scale(1)`,
+            opacity: 1,
+            offset: 0.7,
+          },
+          {
+            transform: `translate(-50%, -50%) translate(${endX}px, ${fallDistance}px) rotate(${piece.rotation}deg) scale(0.9)`,
+            opacity: 0,
+          },
+        ],
+        {
+          duration: durationMs,
+          delay: piece.delay * 1000,
+          easing: "cubic-bezier(0.15, 0.6, 0.45, 1)",
+          fill: "both",
+        }
+      );
+    });
+
+    return () => {
+      animations.forEach((a) => a?.cancel());
+    };
+  }, [pieces, confettiEnabled, confettiDuration, confettiSpread, confettiSize, confettiOriginY]);
+
+  if (!confettiEnabled) return null;
+
+  return (
+    <div
+      ref={containerRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
+      data-testid="booking-confetti">
+      {pieces.map((piece, i) => {
+        const base = confettiSize * piece.sizeFactor;
+        const width = piece.shape === "strip" ? base * 0.45 : base;
+        const height = piece.shape === "strip" ? base * 1.8 : piece.shape === "rect" ? base * 0.6 : base;
+        return (
+          <span
+            key={i}
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: `${confettiOriginY}%`,
+              width,
+              height,
+              backgroundColor: piece.color,
+              borderRadius: piece.shape === "circle" ? "9999px" : "2px",
+              opacity: 0,
+              willChange: "transform, opacity",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -31,6 +180,7 @@ export function DecoyBookingSuccessCard({
 
   return (
     <div className="h-screen">
+      <ConfettiBurst />
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
