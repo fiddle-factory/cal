@@ -1,6 +1,114 @@
+import * as React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+const FIREWORK_COLORS = [
+  "var(--cal-bg-semantic-success-emphasis)",
+  "var(--cal-bg-visualization-1-emphasis)",
+  "var(--cal-bg-visualization-2-emphasis)",
+  "var(--cal-bg-visualization-3-emphasis)",
+  "var(--cal-bg-visualization-5-emphasis)",
+  "var(--cal-bg-visualization-6-emphasis)",
+];
+
+// Burst origins relative to the checkmark center, as fractions of the spread, plus start delay in seconds.
+const FIREWORK_BURSTS = [
+  { x: 0, y: 0, delay: 0, scale: 1.25 },
+  { x: -1.9, y: -0.15, delay: 0.3, scale: 0.8 },
+  { x: 1.9, y: 0.1, delay: 0.55, scale: 0.85 },
+  { x: -1.1, y: 0.35, delay: 0.85, scale: 0.6 },
+  { x: 1.2, y: -0.3, delay: 1.05, scale: 0.6 },
+];
+
+const FIREWORKS_CSS = `
+@keyframes cal-firework-particle {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  10% { opacity: 1; }
+  70% { opacity: 1; transform: translate(calc(-50% + var(--fw-dx)), calc(-50% + var(--fw-dy))) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--fw-dx)), calc(-50% + var(--fw-dy) + 8px)) scale(0.3); }
+}
+@keyframes cal-firework-flash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  25% { opacity: 0.55; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+.cal-firework-particle, .cal-firework-flash {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 9999px;
+  opacity: 0;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+.cal-firework-particle { animation-name: cal-firework-particle; }
+.cal-firework-flash { animation-name: cal-firework-flash; }
+@media (prefers-reduced-motion: reduce) {
+  .cal-firework-particle, .cal-firework-flash { animation: none; opacity: 0; }
+}
+`;
+
+interface BookingFireworksProps {
+  duration: number;
+  spread: number;
+  particleSize: number;
+  particleCount: number;
+}
+
+function BookingFireworks({ duration, spread, particleSize, particleCount }: BookingFireworksProps) {
+  const count = Math.max(3, Math.round(particleCount));
+  return (
+    <div className="pointer-events-none absolute left-1/2 top-6 z-0 h-0 w-0" aria-hidden="true">
+      <style>{FIREWORKS_CSS}</style>
+      {FIREWORK_BURSTS.map((burst, burstIndex) => {
+        const radius = spread * burst.scale;
+        return (
+          <div
+            key={burstIndex}
+            className="absolute"
+            style={{ left: burst.x * spread, top: burst.y * spread }}>
+            <span
+              className="cal-firework-flash"
+              style={{
+                width: radius * 1.4,
+                height: radius * 1.4,
+                background: `radial-gradient(circle, ${
+                  FIREWORK_COLORS[burstIndex % FIREWORK_COLORS.length]
+                } 0%, transparent 70%)`,
+                animationDuration: `${duration * 0.6}s`,
+                animationDelay: `${burst.delay}s`,
+              }}
+            />
+            {Array.from({ length: count }).map((_, i) => {
+              const angle = (i / count) * Math.PI * 2 + burstIndex * 0.4;
+              const distance = radius * (i % 2 === 0 ? 1 : 0.75);
+              const size = particleSize * (i % 3 === 0 ? 1 : 0.75);
+              return (
+                <span
+                  key={i}
+                  className="cal-firework-particle"
+                  style={
+                    {
+                      width: size,
+                      height: size,
+                      backgroundColor: FIREWORK_COLORS[(i + burstIndex) % FIREWORK_COLORS.length],
+                      "--fw-dx": `${Math.cos(angle) * distance}px`,
+                      "--fw-dy": `${Math.sin(angle) * distance}px`,
+                      animationDuration: `${duration}s`,
+                      animationDelay: `${burst.delay}s`,
+                    } as React.CSSProperties
+                  }
+                />
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,6 +136,30 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [showFireworks, setShowFireworks] = React.useState(true);
+  const [duration, setDuration] = React.useState(1.1);
+  const [spread, setSpread] = React.useState(44);
+  const [particleSize, setParticleSize] = React.useState(5);
+  const [particleCount, setParticleCount] = React.useState(12);
+  const [replayKey, setReplayKey] = React.useState(0);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.showFireworks === "boolean") setShowFireworks(p.showFireworks);
+      if (typeof p.duration === "number") setDuration(p.duration);
+      if (typeof p.spread === "number") setSpread(p.spread);
+      if (typeof p.particleSize === "number") setParticleSize(p.particleSize);
+      if (typeof p.particleCount === "number") setParticleCount(p.particleCount);
+      setReplayKey((k) => k + 1);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
     <div className="h-screen">
@@ -40,8 +172,17 @@ export function DecoyBookingSuccessCard({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
-                <div>
-                  <div className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+                <div className="relative" data-config-id="DecoyBookingSuccessCard-controls">
+                  {showFireworks && (
+                    <BookingFireworks
+                      key={replayKey}
+                      duration={duration}
+                      spread={spread}
+                      particleSize={particleSize}
+                      particleCount={particleCount}
+                    />
+                  )}
+                  <div className="bg-cal-success relative z-10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
                     <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
