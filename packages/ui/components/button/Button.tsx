@@ -249,8 +249,33 @@ export const Button = forwardRef<HTMLAnchorElement | HTMLButtonElement, ButtonPr
       }
     : props.onClick;
 
+  // Orange glow shown only on the destructive variant
+  const [glowColor, setGlowColor] = React.useState("#f97316");
+  const [glowIntensity, setGlowIntensity] = React.useState(12);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Button-button-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.glowColor === "string") setGlowColor(p.glowColor);
+      if (typeof p.glowIntensity === "number") setGlowIntensity(p.glowIntensity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const buttonContent = (
     <>
+      {color === "destructive" && glowIntensity > 0 && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-[inherit] transition-shadow duration-200"
+          style={{ boxShadow: `0 0 ${glowIntensity}px ${glowIntensity / 4}px ${glowColor}` }}
+        />
+      )}
       {CustomStartIcon ||
         (StartIcon && (
           <>
