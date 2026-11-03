@@ -162,7 +162,7 @@ export function DecoyBookingSuccessCard({
                           StartIcon="calendar"
                           data-testid="add-to-calendar-button"
                           onClick={() => setCalendarPickerOpen(true)}>
-                          {t("add_to_calendar")}
+                          {t("yay_calendar")}
                         </Button>
                       </div>
                       <AddToCalendarDialog
