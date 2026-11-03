@@ -1,6 +1,10 @@
+import React from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { BookingFireworks } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,10 +32,45 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [fireworksEnabled, setFireworksEnabled] = React.useState(true);
+  const [burstCount, setBurstCount] = React.useState(8);
+  const [particleCount, setParticleCount] = React.useState(60);
+  const [speed, setSpeed] = React.useState(1);
+  const [durationMs, setDurationMs] = React.useState(4000);
+  const [fireworksOpacity, setFireworksOpacity] = React.useState(0.9);
+  const [loop, setLoop] = React.useState(false);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.fireworksEnabled === "boolean") setFireworksEnabled(p.fireworksEnabled);
+      if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
+      if (typeof p.particleCount === "number") setParticleCount(p.particleCount);
+      if (typeof p.speed === "number") setSpeed(p.speed);
+      if (typeof p.durationMs === "number") setDurationMs(p.durationMs);
+      if (typeof p.fireworksOpacity === "number") setFireworksOpacity(p.fireworksOpacity);
+      if (typeof p.loop === "boolean") setLoop(p.loop);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
-      <main className="mx-auto max-w-3xl">
+    <div className="relative h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      <BookingFireworks
+        enabled={fireworksEnabled}
+        burstCount={burstCount}
+        particleCount={particleCount}
+        speed={speed}
+        durationMs={durationMs}
+        opacity={fireworksOpacity}
+        loop={loop}
+      />
+      <main className="relative mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
