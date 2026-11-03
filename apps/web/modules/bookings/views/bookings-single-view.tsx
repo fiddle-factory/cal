@@ -42,7 +42,10 @@ import { getIs24hClockFromLocalStorage, isBrowserLocale24h } from "@calcom/lib/t
 import { getTimeShiftFlags, getFirstShiftFlags } from "@calcom/lib/timeShift";
 import { CURRENT_TIMEZONE } from "@calcom/lib/timezoneConstants";
 import { localStorage } from "@calcom/lib/webstorage";
+import type { AssignmentReasonEnum } from "@calcom/prisma/enums";
 import { BookingStatus, SchedulingType } from "@calcom/prisma/enums";
+
+import assignmentReasonBadgeTitleMap from "@calcom/web/lib/booking/assignmentReasonBadgeTitleMap";
 import { bookingMetadataSchema } from "@calcom/prisma/zod-utils";
 import { trpc } from "@calcom/trpc/react";
 import { Alert } from "@calcom/ui/components/alert";
@@ -313,6 +316,7 @@ export default function Success(props: PageProps) {
       if (props.profile.name !== null) {
         return t(`user_needs_to_confirm_or_reject_booking${titleSuffix}`, {
           user: props.profile.name,
+          interpolation: { escapeValue: false },
         });
       }
       return t(`needs_to_be_confirmed_or_rejected${titleSuffix}`);
@@ -642,21 +646,29 @@ export default function Success(props: PageProps) {
                                   )}
                                 </div>
                               )}
-                              {bookingInfo?.attendees.map((attendee) => (
-                                <div key={attendee.name + attendee.email} className="mb-3 last:mb-0">
-                                  {attendee.name && (
-                                    <p data-testid={`attendee-name-${attendee.name}`}>{attendee.name}</p>
-                                  )}
-                                  {attendee.phoneNumber && (
-                                    <p data-testid={`attendee-phone-${attendee.phoneNumber}`}>
-                                      {attendee.phoneNumber}
-                                    </p>
-                                  )}
-                                  {!isSmsCalEmail(attendee.email) && (
-                                    <p data-testid={`attendee-email-${attendee.email}`}>{attendee.email}</p>
-                                  )}
-                                </div>
-                              ))}
+                              {bookingInfo?.attendees.map((attendee) => {
+                                const isTeamMemberOrHost =
+                                  eventType.hosts?.some((host) => host.user.email === attendee.email) ||
+                                  eventType.users?.some((user) => user.email === attendee.email);
+                                const shouldHideEmail =
+                                  bookingInfo.eventType?.hideOrganizerEmail && isTeamMemberOrHost;
+
+                                return (
+                                  <div key={attendee.name + attendee.email} className="mb-3 last:mb-0">
+                                    {attendee.name && (
+                                      <p data-testid={`attendee-name-${attendee.name}`}>{attendee.name}</p>
+                                    )}
+                                    {attendee.phoneNumber && (
+                                      <p data-testid={`attendee-phone-${attendee.phoneNumber}`}>
+                                        {attendee.phoneNumber}
+                                      </p>
+                                    )}
+                                    {!isSmsCalEmail(attendee.email) && !shouldHideEmail && (
+                                      <p data-testid={`attendee-email-${attendee.email}`}>{attendee.email}</p>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </>
                         )}
@@ -754,6 +766,28 @@ export default function Success(props: PageProps) {
                             </div>
                           </>
                         )}
+                        {canViewHiddenData &&
+                          bookingInfo.assignmentReason &&
+                          bookingInfo.assignmentReason.length > 0 &&
+                          bookingInfo.assignmentReason[0].reasonEnum && (
+                            <>
+                              <div className="mt-9 font-medium">{t("assignment_reason")}</div>
+                              <div className="col-span-2 mb-2 mt-9">
+                                <Badge variant="gray" className="mb-2">
+                                  {t(
+                                    assignmentReasonBadgeTitleMap(
+                                      bookingInfo.assignmentReason[0].reasonEnum as AssignmentReasonEnum
+                                    )
+                                  )}
+                                </Badge>
+                                {bookingInfo.assignmentReason[0].reasonString && (
+                                  <p className="text-muted break-words text-sm">
+                                    {bookingInfo.assignmentReason[0].reasonString}
+                                  </p>
+                                )}
+                              </div>
+                            </>
+                          )}
                       </div>
                       <div className="text-bookingdark dark:border-darkgray-200 mt-8 text-left dark:text-gray-300">
                         {eventType.bookingFields.map((field) => {
@@ -775,6 +809,7 @@ export default function Success(props: PageProps) {
 
                           return (
                             <Fragment key={field.name}>
+                              {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized via markdownToSafeHTML */}
                               <div
                                 className="text-emphasis mt-4 font-medium"
                                 dangerouslySetInnerHTML={{
