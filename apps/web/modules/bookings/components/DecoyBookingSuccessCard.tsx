@@ -1,6 +1,9 @@
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+import React from "react";
+
+import { ConfettiCelebration } from "./ConfettiCelebration";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,9 +31,40 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [confettiEnabled, setConfettiEnabled] = React.useState(true);
+  const [confettiCount, setConfettiCount] = React.useState(120);
+  const [confettiDuration, setConfettiDuration] = React.useState(3.2);
+  const [confettiSpread, setConfettiSpread] = React.useState(420);
+  const [confettiSize, setConfettiSize] = React.useState(10);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.confettiEnabled === "boolean") setConfettiEnabled(p.confettiEnabled);
+      if (typeof p.confettiCount === "number") setConfettiCount(p.confettiCount);
+      if (typeof p.confettiDuration === "number") setConfettiDuration(p.confettiDuration);
+      if (typeof p.confettiSpread === "number") setConfettiSpread(p.confettiSpread);
+      if (typeof p.confettiSize === "number") setConfettiSize(p.confettiSize);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
     <div className="h-screen">
+      {confettiEnabled && (
+        <ConfettiCelebration
+          key={`${confettiCount}-${confettiDuration}-${confettiSpread}-${confettiSize}`}
+          pieceCount={confettiCount}
+          duration={confettiDuration}
+          spread={confettiSpread}
+          pieceSize={confettiSize}
+        />
+      )}
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
