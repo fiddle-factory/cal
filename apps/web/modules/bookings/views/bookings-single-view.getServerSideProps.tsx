@@ -208,6 +208,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   });
 
   if (!canViewHiddenData) {
+    bookingInfo.assignmentReason = [];
     for (const key in bookingInfo.responses) {
       const field = eventTypeRaw.bookingFields.find((field) => field.name === key);
       if (field && !!field.hidden) {
