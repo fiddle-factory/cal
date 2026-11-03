@@ -1,6 +1,10 @@
+import React, { useRef, useState } from "react";
+
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
+
+import { BookingFireworks } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
   title: string;
@@ -28,14 +32,49 @@ export function DecoyBookingSuccessCard({
   location,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [showFireworks, setShowFireworks] = useState(true);
+  const [burstCount, setBurstCount] = useState(9);
+  const [particleCount, setParticleCount] = useState(48);
+  const [duration, setDuration] = useState(3);
+  const [speed, setSpeed] = useState(1);
+  const [gravity, setGravity] = useState(0.06);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="DecoyBookingSuccessCard-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.showFireworks === "boolean") setShowFireworks(p.showFireworks);
+      if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
+      if (typeof p.particleCount === "number") setParticleCount(p.particleCount);
+      if (typeof p.duration === "number") setDuration(p.duration);
+      if (typeof p.speed === "number") setSpeed(p.speed);
+      if (typeof p.gravity === "number") setGravity(p.gravity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
 
   return (
-    <div className="h-screen">
+    <div className="h-screen" data-config-id="DecoyBookingSuccessCard-controls">
+      <BookingFireworks
+        targetRef={cardRef}
+        enabled={showFireworks}
+        burstCount={burstCount}
+        particleCount={particleCount}
+        duration={duration}
+        speed={speed}
+        gravity={gravity}
+      />
       <main className="mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
               <div
+                ref={cardRef}
                 className="bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
                 role="dialog"
                 aria-modal="true"
