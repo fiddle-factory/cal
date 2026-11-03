@@ -91,7 +91,7 @@ export function AddToCalendarDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title={t("yo_calendar")} description={t("choose_calendar_to_add_event")}>
+      <DialogContent title={t("yo_calendar")} description="lalalalal">
         <div className="flex flex-col gap-2">
           {calendarLinks.map(({ id, link }) =>
             id === "ics" ? (
