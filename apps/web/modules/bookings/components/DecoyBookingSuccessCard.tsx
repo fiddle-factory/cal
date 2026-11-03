@@ -2,6 +2,8 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
 
+import { BookingConfetti } from "./BookingConfetti";
+
 export interface DecoyBookingSuccessCardProps {
   title: string;
   formattedDate: string;
@@ -13,6 +15,8 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** Plays a confetti burst over the card on load. */
+  celebrate?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -26,6 +30,7 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  celebrate = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
 
@@ -36,10 +41,11 @@ export function DecoyBookingSuccessCard({
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
               <div
-                className="bg-default dark:bg-cal-muted border-booker border-booker-width inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
+                className="bg-default dark:bg-cal-muted border-booker border-booker-width relative inline-block transform overflow-hidden rounded-lg px-8 pb-4 pt-5 text-left align-bottom transition-all sm:my-8 sm:w-full sm:max-w-xl sm:py-8 sm:align-middle"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                {celebrate && <BookingConfetti />}
                 <div>
                   <div className="bg-cal-success mx-auto flex h-12 w-12 items-center justify-center rounded-full">
                     <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
