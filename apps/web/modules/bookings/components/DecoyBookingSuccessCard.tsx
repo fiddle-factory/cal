@@ -2,8 +2,10 @@ import React from "react";
 
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
+import { Button } from "@calcom/ui/components/button";
 import { Icon } from "@calcom/ui/components/icon";
 
+import { AddToCalendarDialog } from "./AddToCalendarDialog";
 import { BookingFireworks } from "./BookingFireworks";
 
 export interface DecoyBookingSuccessCardProps {
@@ -17,6 +19,11 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** ISO start/end of the booking, used to build the "Add to calendar" links. */
+  startTimeISO?: string | null;
+  endTimeISO?: string | null;
+  /** Opens the calendar picker on mount (used by Storybook states). */
+  defaultCalendarPickerOpen?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -30,8 +37,12 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  startTimeISO,
+  endTimeISO,
+  defaultCalendarPickerOpen = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [calendarPickerOpen, setCalendarPickerOpen] = React.useState(defaultCalendarPickerOpen);
   const [fireworksEnabled, setFireworksEnabled] = React.useState(true);
   const [burstCount, setBurstCount] = React.useState(8);
   const [particleCount, setParticleCount] = React.useState(60);
@@ -142,6 +153,29 @@ export function DecoyBookingSuccessCard({
                       </>
                     )}
                   </div>
+                  {startTimeISO && endTimeISO && (
+                    <>
+                      <hr className="border-subtle mt-8" />
+                      <div className="flex justify-center pt-8">
+                        <Button
+                          color="secondary"
+                          StartIcon="calendar"
+                          data-testid="add-to-calendar-button"
+                          onClick={() => setCalendarPickerOpen(true)}>
+                          {t("add_to_calendar")}
+                        </Button>
+                      </div>
+                      <AddToCalendarDialog
+                        open={calendarPickerOpen}
+                        onOpenChange={setCalendarPickerOpen}
+                        title={title}
+                        startTime={startTimeISO}
+                        endTime={endTimeISO}
+                        attendeeName={attendeeName}
+                        hostName={hostName}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </div>
