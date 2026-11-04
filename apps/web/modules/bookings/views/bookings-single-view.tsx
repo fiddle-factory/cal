@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { BookingConfirmationFireworks } from "../components/BookingConfirmationFireworks";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -99,7 +100,7 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+export default function Success(props: PageProps & { showFireworks?: boolean }) {
   const { t } = useLocale();
   const router = useRouter();
   const routerQuery = useRouterQuery();
@@ -482,7 +483,13 @@ export default function Success(props: PageProps) {
       <BookingPageTagManager
         eventType={{ ...eventType, metadata: eventTypeMetaDataSchemaWithTypedApps.parse(eventType.metadata) }}
       />
-      <main className={classNames(shouldAlignCentrally ? "mx-auto" : "", isEmbed ? "" : "max-w-3xl")}>
+      {props.showFireworks && !isEventCancelled && <BookingConfirmationFireworks />}
+      <main
+        className={classNames(
+          shouldAlignCentrally ? "mx-auto" : "",
+          isEmbed ? "" : "max-w-3xl",
+          props.showFireworks && "relative z-10"
+        )}>
         <div className={classNames("overflow-y-auto", isEmbed ? "" : "z-50 ")}>
           <div
             className={classNames(
