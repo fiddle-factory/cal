@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { BookingConfetti } from "../components/BookingConfetti";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -99,7 +100,7 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+export default function Success(props: PageProps & { showConfetti?: boolean }) {
   const { t } = useLocale();
   const router = useRouter();
   const routerQuery = useRouterQuery();
@@ -456,6 +457,7 @@ export default function Success(props: PageProps) {
 
   return (
     <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
+      {props.showConfetti && !isFeedbackMode && <BookingConfetti />}
       {!isEmbed && !isFeedbackMode && (
         <EventReservationSchema
           reservationId={bookingInfo.uid}
