@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { BookingConfetti } from "../components/BookingConfetti";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -456,6 +457,9 @@ export default function Success(props: PageProps) {
 
   return (
     <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
+      {!isFeedbackMode && isReschedulable && !needsConfirmation && !isAwaitingPayment && (
+        <BookingConfetti />
+      )}
       {!isEmbed && !isFeedbackMode && (
         <EventReservationSchema
           reservationId={bookingInfo.uid}
