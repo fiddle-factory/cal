@@ -99,8 +99,16 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+export type BookingSuccessProps = PageProps & {
+  /** Renders a denser layout: tighter spacing, smaller status icon and typography, condensed details list. */
+  compact?: boolean;
+};
+
+export default function Success(props: BookingSuccessProps) {
   const { t } = useLocale();
+  const compact = props.compact ?? false;
+  const detailRowSpacing = compact ? "mb-3" : "mb-6";
+  const detailSectionSpacing = compact ? "mt-4" : "mt-9";
   const router = useRouter();
   const routerQuery = useRouterQuery();
   const pathname = usePathname();
@@ -500,7 +508,8 @@ export default function Success(props: PageProps) {
                   "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
-                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
+                  "text-left align-bottom transition-all sm:w-full sm:align-middle",
+                  compact ? "px-5 pb-3 pt-4 text-sm sm:py-5" : "px-8 pb-4 pt-5 sm:py-8"
                 )}
                 role="dialog"
                 aria-modal="true"
@@ -523,7 +532,8 @@ export default function Success(props: PageProps) {
                       )}
                       <div
                         className={classNames(
-                          "mx-auto flex h-12 w-12 items-center justify-center rounded-full",
+                          "mx-auto flex items-center justify-center rounded-full",
+                          compact ? "h-8 w-8" : "h-12 w-12",
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
@@ -535,36 +545,62 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon
+                            name="check"
+                            className={classNames(
+                              "text-green-600 dark:text-green-400",
+                              compact ? "h-4 w-4" : "h-5 w-5"
+                            )}
+                          />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
-                          <Icon name="calendar" className="text-emphasis h-5 w-5" />
+                          <Icon
+                            name="calendar"
+                            className={classNames("text-emphasis", compact ? "h-4 w-4" : "h-5 w-5")}
+                          />
                         )}
-                        {isCancelled && <Icon name="x" className="h-5 w-5 text-red-600 dark:text-red-200" />}
+                        {isCancelled && (
+                          <Icon
+                            name="x"
+                            className={classNames(
+                              "text-red-600 dark:text-red-200",
+                              compact ? "h-4 w-4" : "h-5 w-5"
+                            )}
+                          />
+                        )}
                       </div>
                     </div>
-                    <div className="mb-8 mt-6 text-center last:mb-0">
+                    <div className={classNames("text-center last:mb-0", compact ? "mb-4 mt-3" : "mb-8 mt-6")}>
                       <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
+                        className={classNames(
+                          "text-emphasis font-semibold leading-6",
+                          compact ? "text-lg" : "text-2xl"
+                        )}
                         data-testid={isCancelled ? "cancelled-headline" : ""}
                         id="modal-headline">
                         {successPageHeadline}
                       </h3>
 
-                      <div className="mt-3">
+                      <div className={compact ? "mt-1" : "mt-3"}>
                         <p className="text-default">{getTitle()}</p>
                       </div>
                       {props.paymentStatus &&
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div
+                        className={classNames(
+                          "border-subtle text-default grid border-t text-left rtl:text-right",
+                          compact
+                            ? "mt-4 grid-cols-3 gap-x-3 pt-4"
+                            : "mt-8 grid-cols-3 gap-x-4 pt-8 sm:gap-x-0"
+                        )}>
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
                               {isCancelled ? t("reason") : t("reschedule_reason")}
                             </div>
-                            <div className="col-span-2 mb-6 last:mb-0">
+                            <div className={classNames("col-span-2 last:mb-0", detailRowSpacing)}>
                               <p className="wrap-break-word">{cancellationReason}</p>
                             </div>
                           </>
@@ -574,7 +610,7 @@ export default function Success(props: PageProps) {
                           !(bookingInfo.eventType?.hideOrganizerEmail && !isHost) && (
                             <>
                               <div className="font-medium">{t("cancelled_by")}</div>
-                              <div className="col-span-2 mb-6 last:mb-0">
+                              <div className={classNames("col-span-2 last:mb-0", detailRowSpacing)}>
                                 <p className="wrap-break-word">{bookingInfo?.cancelledBy}</p>
                               </div>
                             </>
@@ -582,7 +618,7 @@ export default function Success(props: PageProps) {
                         {previousBooking && (
                           <>
                             <div className="font-medium">{t("rescheduled_by")}</div>
-                            <div className="col-span-2 mb-6 last:mb-0">
+                            <div className={classNames("col-span-2 last:mb-0", detailRowSpacing)}>
                               <p className="wrap-break-word">{previousBooking?.rescheduledBy}</p>
                               <Link className="text-sm underline" href={`/booking/${previousBooking?.uid}`}>
                                 {t("original_booking")}
@@ -592,7 +628,7 @@ export default function Success(props: PageProps) {
                         )}
                         <div className="font-medium">{t("what")}</div>
                         <div
-                          className="wrap-break-word col-span-2 mb-6 last:mb-0"
+                          className={classNames("wrap-break-word col-span-2 last:mb-0", detailRowSpacing)}
                           data-testid="booking-title">
                           {isRoundRobin
                             ? typeof bookingInfo.title === "string"
@@ -601,7 +637,7 @@ export default function Success(props: PageProps) {
                             : eventName}
                         </div>
                         <div className="font-medium">{t("when")}</div>
-                        <div className="col-span-2 mb-6 last:mb-0">
+                        <div className={classNames("col-span-2 last:mb-0", detailRowSpacing)}>
                           {reschedule && !!formerTime && (
                             <p className="line-through">
                               <RecurringBookings
@@ -632,7 +668,7 @@ export default function Success(props: PageProps) {
                             <div className="font-medium">{t("who")}</div>
                             <div className="col-span-2 last:mb-0">
                               {bookingInfo?.user && (
-                                <div className="mb-3">
+                                <div className={compact ? "mb-2" : "mb-3"}>
                                   <div>
                                     <span data-testid="booking-host-name" className="mr-2">
                                       {bookingInfo.user.name}
@@ -720,16 +756,20 @@ export default function Success(props: PageProps) {
 
                         {bookingInfo?.description && (
                           <>
-                            <div className="mt-9 font-medium">{t("additional_notes")}</div>
-                            <div className="col-span-2 mb-2 mt-9">
+                            <div className={classNames(detailSectionSpacing, "font-medium")}>
+                              {t("additional_notes")}
+                            </div>
+                            <div className={classNames("col-span-2 mb-2", detailSectionSpacing)}>
                               <p className="wrap-break-word whitespace-pre-line">{bookingInfo.description}</p>
                             </div>
                           </>
                         )}
                         {!!utmParams && canViewHiddenData && (
                           <>
-                            <div className="mt-9 pr-2 font-medium sm:pr-0">{t("utm_params")}</div>
-                            <div className="col-span-2 mb-2 ml-3 mt-9 sm:ml-0">
+                            <div className={classNames(detailSectionSpacing, "pr-2 font-medium sm:pr-0")}>
+                              {t("utm_params")}
+                            </div>
+                            <div className={classNames("col-span-2 mb-2 ml-3 sm:ml-0", detailSectionSpacing)}>
                               <button
                                 data-testid="utm-dropdown"
                                 onClick={() => {
@@ -771,8 +811,10 @@ export default function Success(props: PageProps) {
                           bookingInfo.assignmentReason.length > 0 &&
                           bookingInfo.assignmentReason[0].reasonEnum && (
                             <>
-                              <div className="mt-9 font-medium">{t("assignment_reason")}</div>
-                              <div className="col-span-2 mb-2 mt-9">
+                              <div className={classNames(detailSectionSpacing, "font-medium")}>
+                                {t("assignment_reason")}
+                              </div>
+                              <div className={classNames("col-span-2 mb-2", detailSectionSpacing)}>
                                 <Badge variant="gray" className="mb-2">
                                   {t(
                                     assignmentReasonBadgeTitleMap(
@@ -789,7 +831,11 @@ export default function Success(props: PageProps) {
                             </>
                           )}
                       </div>
-                      <div className="text-bookingdark dark:border-darkgray-200 mt-8 text-left dark:text-gray-300">
+                      <div
+                        className={classNames(
+                          "text-bookingdark dark:border-darkgray-200 text-left dark:text-gray-300",
+                          compact ? "mt-4" : "mt-8"
+                        )}>
                         {eventType.bookingFields.map((field) => {
                           if (!field) return null;
 
@@ -811,7 +857,7 @@ export default function Success(props: PageProps) {
                             <Fragment key={field.name}>
                               {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized via markdownToSafeHTML */}
                               <div
-                                className="text-emphasis mt-4 font-medium"
+                                className={classNames("text-emphasis font-medium", compact ? "mt-2" : "mt-4")}
                                 dangerouslySetInnerHTML={{
                                   __html: markdownToSafeHTML(label),
                                 }}
@@ -833,7 +879,7 @@ export default function Success(props: PageProps) {
                     </div>
                     {requiresLoginToUpdate && (
                       <>
-                        <hr className="border-subtle mb-8" />
+                        <hr className={classNames("border-subtle", compact ? "mb-4" : "mb-8")} />
                         <div className="text-center">
                           <span className="text-emphasis ltr:mr-2 rtl:ml-2">
                             {t("need_to_make_a_change")}
@@ -865,7 +911,7 @@ export default function Success(props: PageProps) {
                             canReschedule) ||
                             (!isBookingInPast && canCancel)) && (
                             <>
-                              <hr className="border-subtle mb-8" />
+                              <hr className={classNames("border-subtle", compact ? "mb-4" : "mb-8")} />
                               <div className="text-center last:pb-0">
                                 <span className="text-emphasis ltr:mr-2 rtl:ml-2">
                                   {t("need_to_make_a_change")}
@@ -951,8 +997,12 @@ export default function Success(props: PageProps) {
                     )}
                     {!needsConfirmation && !isCancellationMode && isReschedulable && !!calculatedDuration && (
                       <>
-                        <hr className="border-subtle mt-8" />
-                        <div className="text-default align-center flex flex-row justify-center pt-8">
+                        <hr className={classNames("border-subtle", compact ? "mt-4" : "mt-8")} />
+                        <div
+                          className={classNames(
+                            "text-default align-center flex flex-row justify-center",
+                            compact ? "pt-4" : "pt-8"
+                          )}>
                           <span className="text-default flex self-center font-medium ltr:mr-2 rtl:ml-2 ">
                             {t("add_to_calendar")}
                           </span>
