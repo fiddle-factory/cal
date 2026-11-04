@@ -2,6 +2,8 @@ import { useLocale } from "@calcom/lib/hooks/useLocale";
 import { Badge } from "@calcom/ui/components/badge";
 import { Icon } from "@calcom/ui/components/icon";
 
+import { BookingFireworks } from "./BookingFireworks";
+
 export interface DecoyBookingSuccessCardProps {
   title: string;
   formattedDate: string;
@@ -13,6 +15,8 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** Shows an animated fireworks celebration behind the card. */
+  celebration?: boolean;
 }
 
 export function DecoyBookingSuccessCard({
@@ -26,12 +30,14 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  celebration = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
 
   return (
-    <div className="h-screen">
-      <main className="mx-auto max-w-3xl">
+    <div className="relative h-screen">
+      {celebration && <BookingFireworks />}
+      <main className="relative z-10 mx-auto max-w-3xl">
         <div className="overflow-y-auto">
           <div className="flex items-end justify-center px-4 pb-20 pt-4 text-center sm:flex sm:p-0">
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
