@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { BookingFireworks } from "../components/BookingFireworks";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -454,6 +455,14 @@ export default function Success(props: PageProps) {
     return isRecurringBooking ? t("meeting_is_scheduled_recurring") : t("meeting_is_scheduled");
   })();
 
+  const showFireworks =
+    !!isSuccessBookingPage &&
+    !isFeedbackMode &&
+    !isCancelled &&
+    !needsConfirmation &&
+    !isAwaitingPayment &&
+    !isPastBooking;
+
   return (
     <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
       {!isEmbed && !isFeedbackMode && (
@@ -487,11 +496,12 @@ export default function Success(props: PageProps) {
           <div
             className={classNames(
               shouldAlignCentrally ? "text-center" : "",
-              "flex items-end justify-center px-4 pb-20 pt-4 sm:flex sm:p-0"
+              "relative flex items-end justify-center px-4 pb-20 pt-4 sm:flex sm:p-0"
             )}>
+            {showFireworks && <BookingFireworks />}
             <div
               className={classNames(
-                "main my-4 flex flex-col transition-opacity sm:my-0 ",
+                "main relative z-10 my-4 flex flex-col transition-opacity sm:my-0 ",
                 isEmbed ? "" : " inset-0"
               )}
               aria-hidden="true">
