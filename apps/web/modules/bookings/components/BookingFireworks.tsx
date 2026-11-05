@@ -16,6 +16,10 @@ const BURST_POSITIONS: { top: number; left: number }[] = [
 ];
 
 const PARTICLES_PER_BURST = 14;
+// Burst radius in px at size 1.
+const BASE_BURST_RADIUS = 70;
+
+const clampPercent = (value: number) => Math.max(2, Math.min(98, value));
 
 const KEYFRAMES = `
 @keyframes cal-fw-particle {
@@ -42,7 +46,7 @@ export function BookingFireworks() {
   const [colorC, setColorC] = useState("#60a5fa");
   const [burstCount, setBurstCount] = useState(6);
   const [duration, setDuration] = useState(2.4);
-  const [burstSize, setBurstSize] = useState(70);
+  const [size, setSize] = useState(1);
   const [loop, setLoop] = useState(false);
 
   // geneditor-listener-start
@@ -56,7 +60,7 @@ export function BookingFireworks() {
       if (typeof p.colorC === "string") setColorC(p.colorC);
       if (typeof p.burstCount === "number") setBurstCount(p.burstCount);
       if (typeof p.duration === "number") setDuration(p.duration);
-      if (typeof p.burstSize === "number") setBurstSize(p.burstSize);
+      if (typeof p.size === "number") setSize(p.size);
       if (typeof p.loop === "boolean") setLoop(p.loop);
     };
     el.addEventListener("animation:update", handler);
@@ -67,6 +71,13 @@ export function BookingFireworks() {
   const colors = [colorA, colorB, colorC];
   const iterations = loop ? "infinite" : 2;
   const bursts = BURST_POSITIONS.slice(0, Math.max(0, Math.min(BURST_POSITIONS.length, burstCount)));
+  // Overall size: scales burst radius, particle dimensions and how far bursts spread from the centre.
+  const scale = Math.max(0.1, size);
+  const burstRadius = BASE_BURST_RADIUS * scale;
+  const particleWidth = 3 * scale;
+  const particleHeight = 10 * scale;
+  // Replay the animation when tuning values so changes are visible even after a non-looping run ended.
+  const replayKey = `${size}-${duration}-${burstCount}-${loop}`;
 
   return (
     <div
@@ -74,6 +85,7 @@ export function BookingFireworks() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden motion-reduce:hidden">
       <style>{KEYFRAMES}</style>
+      <React.Fragment key={replayKey}>
       {bursts.map((pos, burstIndex) => {
         const color = colors[burstIndex % colors.length];
         const delay = (burstIndex * duration) / Math.max(bursts.length, 1) / 1.5;
@@ -87,13 +99,16 @@ export function BookingFireworks() {
           <div
             key={`${pos.top}-${pos.left}`}
             className="absolute h-0 w-0"
-            style={{ top: `${pos.top}%`, left: `${pos.left}%` }}>
+            style={{
+              top: `${clampPercent(50 + (pos.top - 50) * scale)}%`,
+              left: `${clampPercent(50 + (pos.left - 50) * scale)}%`,
+            }}>
             <span
               className="absolute left-0 top-0 rounded-full"
               style={{
                 ...timing,
-                width: burstSize * 0.9,
-                height: burstSize * 0.9,
+                width: burstRadius * 0.9,
+                height: burstRadius * 0.9,
                 background: `radial-gradient(circle, ${color}99 0%, ${color}00 70%)`,
                 animationName: "cal-fw-flash",
                 animationTimingFunction: "ease-out",
@@ -109,17 +124,17 @@ export function BookingFireworks() {
                   style={
                     {
                       ...timing,
-                      left: -1.5,
-                      top: -10,
-                      width: 3,
-                      height: 10,
+                      left: -particleWidth / 2,
+                      top: -particleHeight,
+                      width: particleWidth,
+                      height: particleHeight,
                       transformOrigin: "50% 100%",
                       background: `linear-gradient(to top, ${particleColor}00, ${particleColor})`,
-                      boxShadow: `0 0 6px ${particleColor}`,
+                      boxShadow: `0 0 ${6 * scale}px ${particleColor}`,
                       animationName: "cal-fw-particle",
                       animationTimingFunction: "cubic-bezier(0.15, 0.7, 0.3, 1)",
                       "--fw-angle": `${angle}deg`,
-                      "--fw-distance": `${burstSize * (particleIndex % 2 === 0 ? 1 : 0.8)}px`,
+                      "--fw-distance": `${burstRadius * (particleIndex % 2 === 0 ? 1 : 0.8)}px`,
                     } as CSSProperties
                   }
                 />
@@ -128,6 +143,7 @@ export function BookingFireworks() {
           </div>
         );
       })}
+      </React.Fragment>
     </div>
   );
 }
