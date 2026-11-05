@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { BookingConfetti } from "../components/BookingConfetti";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -497,7 +498,7 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
@@ -505,6 +506,11 @@ export default function Success(props: PageProps) {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                {!isFeedbackMode &&
+                  isReschedulable &&
+                  !isCancelled &&
+                  !needsConfirmation &&
+                  !isAwaitingPayment && <BookingConfetti />}
                 {!isFeedbackMode && (
                   <>
                     <div
