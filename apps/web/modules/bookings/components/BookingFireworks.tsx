@@ -38,8 +38,8 @@ const KEYFRAMES = `
  * The bursts are decorative only and are hidden for users who prefer reduced motion.
  */
 export function BookingFireworks({ children }: BookingFireworksProps) {
-  const [burstColor, setBurstColor] = React.useState("#f59e0b");
-  const [accentColor, setAccentColor] = React.useState("#ec4899");
+  const [burstColor, setBurstColor] = React.useState("#317548");
+  const [accentColor, setAccentColor] = React.useState("#ede24a");
   const [burstCount, setBurstCount] = React.useState(6);
   const [particleCount, setParticleCount] = React.useState(14);
   const [duration, setDuration] = React.useState(1.6);
