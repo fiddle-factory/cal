@@ -15,6 +15,8 @@ export interface DecoyBookingSuccessCardProps {
   attendeeName: string | null;
   attendeeEmail: string | null;
   location: string | null;
+  /** Renders the card in its hover state without pointer interaction (used for previews). */
+  forceHover?: boolean;
 }
 
 type ConfettiPiece = {
@@ -188,10 +190,32 @@ const FLOWER_PALETTES: [string, string, string, string][] = [
   ["#2C5F5B", "#3F8E4E", "#EBC873", "#6BB5B0"],
 ];
 
-function Flower({ palette }: { palette: [string, string, string, string] }) {
+function Flower({
+  palette,
+  active,
+  spin,
+  lift,
+  duration,
+  delay,
+}: {
+  palette: [string, string, string, string];
+  active: boolean;
+  spin: number;
+  lift: number;
+  duration: number;
+  delay: number;
+}) {
   const [tile, petals, bloom, center] = palette;
   return (
-    <svg aria-hidden="true" viewBox="0 0 100 100" className="h-11 w-11 sm:h-12 sm:w-12">
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 100 100"
+      className="h-11 w-11 motion-reduce:transition-none sm:h-12 sm:w-12"
+      style={{
+        transform: active ? `translateY(-${lift}px) rotate(${spin}deg)` : "translateY(0) rotate(0deg)",
+        transition: `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`,
+        transitionDelay: active ? `${delay}ms` : "0ms",
+      }}>
       <rect x="2" y="2" width="96" height="96" rx="34" fill={tile} />
       <path d={FLOWER_PETALS} fill={petals} />
       <path d={FLOWER_BLOOM} fill={bloom} />
@@ -212,8 +236,15 @@ export function DecoyBookingSuccessCard({
   attendeeName,
   attendeeEmail,
   location,
+  forceHover = false,
 }: DecoyBookingSuccessCardProps) {
   const { t } = useLocale();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const [hoverLift, setHoverLift] = React.useState(4);
+  const [hoverShadowColor, setHoverShadowColor] = React.useState("#7A3530");
+  const [hoverShadowOpacity, setHoverShadowOpacity] = React.useState(0.35);
+  const [flowerSpin, setFlowerSpin] = React.useState(12);
+  const [hoverDuration, setHoverDuration] = React.useState(300);
   const [confettiEnabled, setConfettiEnabled] = React.useState(true);
   const [confettiPrimaryColor, setConfettiPrimaryColor] = React.useState("#3F4468");
   const [confettiSuccessColor, setConfettiSuccessColor] = React.useState("#2C5F5B");
@@ -241,6 +272,28 @@ export function DecoyBookingSuccessCard({
   }, []);
   // geneditor-listener-end
 
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.hoverLift === "number") setHoverLift(p.hoverLift);
+      if (typeof p.hoverShadowColor === "string") setHoverShadowColor(p.hoverShadowColor);
+      if (typeof p.hoverShadowOpacity === "number") setHoverShadowOpacity(p.hoverShadowOpacity);
+      if (typeof p.flowerSpin === "number") setFlowerSpin(p.flowerSpin);
+      if (typeof p.hoverDuration === "number") setHoverDuration(p.hoverDuration);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const hovered = forceHover || isHovered;
+  const shadowAlpha = Math.round(Math.min(Math.max(hoverShadowOpacity, 0), 1) * 255)
+    .toString(16)
+    .padStart(2, "0");
+
   const confettiColors = [confettiPrimaryColor, confettiSuccessColor, confettiAccentColor, "#7A3530", "#8A8CC8", "#C0D8DE"];
   const confettiKey = [
     confettiPieceCount,
@@ -260,7 +313,18 @@ export function DecoyBookingSuccessCard({
             <div className="main inset-0 my-4 flex flex-col transition-opacity sm:my-0" aria-hidden="true">
               <div
                 data-config-id="DecoyBookingSuccessCard-div-4"
-                className="relative inline-block transform overflow-hidden rounded-2xl bg-[#EDAA3E] px-8 pb-8 pt-8 text-left align-bottom text-[#1C1B1F] shadow-[0_1px_0_rgba(28,27,31,0.08)] transition-all sm:my-12 sm:w-full sm:max-w-xl sm:px-10 sm:py-10 sm:align-middle"
+                data-hovered={hovered ? "true" : undefined}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className="relative inline-block transform overflow-hidden rounded-2xl bg-[#EDAA3E] px-8 pb-8 pt-8 text-left align-bottom text-[#1C1B1F] shadow-[0_1px_0_rgba(28,27,31,0.08)] transition-all motion-reduce:transition-none sm:my-12 sm:w-full sm:max-w-xl sm:px-10 sm:py-10 sm:align-middle"
+                style={{
+                  transform: hovered ? `translateY(-${hoverLift}px)` : "translateY(0)",
+                  boxShadow: hovered
+                    ? `0 ${hoverLift * 3}px ${hoverLift * 6}px -${hoverLift}px ${hoverShadowColor}${shadowAlpha}`
+                    : undefined,
+                  transitionDuration: `${hoverDuration}ms`,
+                  transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
@@ -344,8 +408,16 @@ export function DecoyBookingSuccessCard({
                   </div>
                 </div>
                 <div className="mt-2 flex justify-end gap-2 rtl:justify-start">
-                  {FLOWER_PALETTES.map((palette) => (
-                    <Flower key={palette.join("")} palette={palette} />
+                  {FLOWER_PALETTES.map((palette, index) => (
+                    <Flower
+                      key={palette.join("")}
+                      palette={palette}
+                      active={hovered}
+                      spin={index % 2 === 0 ? flowerSpin : -flowerSpin}
+                      lift={Math.round(hoverLift / 2)}
+                      duration={hoverDuration * 1.5}
+                      delay={index * 40}
+                    />
                   ))}
                 </div>
               </div>
