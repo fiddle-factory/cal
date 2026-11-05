@@ -21,6 +21,7 @@ import {
   useIsBackgroundTransparent,
   useIsEmbed,
 } from "@calcom/embed-core/embed-iframe";
+import { ChristmasDecorations } from "@calcom/web/modules/bookings/components/ChristmasDecorations";
 import { Price } from "@calcom/web/modules/bookings/components/event-meta/Price";
 import { getCalendarLinks, CalendarLinkType } from "@calcom/features/bookings/lib/getCalendarLinks";
 import { RATING_OPTIONS, validateRating } from "@calcom/features/bookings/lib/rating";
@@ -497,7 +498,7 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
@@ -505,6 +506,7 @@ export default function Success(props: PageProps) {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <ChristmasDecorations />
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -550,6 +552,11 @@ export default function Success(props: PageProps) {
                         id="modal-headline">
                         {successPageHeadline}
                       </h3>
+                      <div aria-hidden="true" className="mx-auto mt-3 flex items-center justify-center gap-2">
+                        <span className="h-0.5 w-10 rounded-full bg-[#1b7a3e]" />
+                        <span className="text-sm leading-none text-[#c62828]">✻</span>
+                        <span className="h-0.5 w-10 rounded-full bg-[#c62828]" />
+                      </div>
 
                       <div className="mt-3">
                         <p className="text-default">{getTitle()}</p>
