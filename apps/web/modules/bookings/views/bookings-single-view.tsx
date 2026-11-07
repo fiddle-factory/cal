@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { ChristmasFestiveCard, ChristmasOrnamentCheck } from "../components/ChristmasFestiveCard";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -99,7 +100,7 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+export default function Success(props: PageProps & { festiveTheme?: "christmas" }) {
   const { t } = useLocale();
   const router = useRouter();
   const routerQuery = useRouterQuery();
@@ -113,7 +114,9 @@ export default function Success(props: PageProps) {
     requiresLoginToUpdate,
     rescheduledToUid,
     canViewHiddenData,
+    festiveTheme,
   } = props;
+  const isChristmas = festiveTheme === "christmas";
 
   const {
     allRemainingBookings,
@@ -500,11 +503,13 @@ export default function Success(props: PageProps) {
                   "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
-                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
+                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle",
+                  isChristmas && "relative"
                 )}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <ChristmasFestiveCard enabled={isChristmas}>
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -526,7 +531,7 @@ export default function Success(props: PageProps) {
                           "mx-auto flex h-12 w-12 items-center justify-center rounded-full",
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
-                          !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
+                          !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment && !isChristmas
                             ? "bg-cal-success"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
@@ -534,9 +539,15 @@ export default function Success(props: PageProps) {
                             : "",
                           isCancelled ? "bg-error" : ""
                         )}>
-                        {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        )}
+                        {!giphyImage &&
+                          !needsConfirmation &&
+                          !isAwaitingPayment &&
+                          isReschedulable &&
+                          (isChristmas ? (
+                            <ChristmasOrnamentCheck />
+                          ) : (
+                            <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          ))}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
                         )}
@@ -1121,6 +1132,7 @@ export default function Success(props: PageProps) {
                       </div>
                     </>
                   ))}
+                </ChristmasFestiveCard>
               </div>
               {isGmail && !isFeedbackMode && (
                 <Alert
