@@ -451,7 +451,7 @@ export default function Success(props: PageProps) {
       return t("event_is_in_the_past");
     }
 
-    return isRecurringBooking ? t("meeting_is_scheduled_recurring") : t("meeting_is_scheduled");
+    return isRecurringBooking ? t("meeting_is_scheduled_recurring") : "Lets go";
   })();
 
   return (
