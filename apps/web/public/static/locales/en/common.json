@@ -4218,5 +4218,14 @@
   "audit_logs_permission_check_error": "An error occurred while checking permissions.",
   "account_already_exists_please_login": "An account with this email already exists. Please log in to accept the invitation.",
   "unverified_email_oauth_error": "Please verify your email address before signing in with Google or SAML. Sign in with your password to resend the verification email.",
+  "kanban_happening_now": "Happening now",
+  "kanban_no_show": "No-show",
+  "kanban_repeats_daily": "Daily · {{count}} times",
+  "kanban_repeats_weekly": "Weekly · {{count}} times",
+  "kanban_repeats_monthly": "Monthly · {{count}} times",
+  "kanban_show_cancelled": "Show canceled",
+  "kanban_board_label": "Bookings board",
+  "kanban_column_options": "{{column}} options",
+  "kanban_column_empty": "No bookings",
   "ADD_NEW_STRINGS_ABOVE_THIS_LINE_TO_PREVENT_MERGE_CONFLICTS": "↑↑↑↑↑↑↑↑↑↑↑↑↑ Add your new strings above here ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑"
 }
