@@ -49,11 +49,11 @@ export function ScheduleListItem({
 
   return (
     <li key={schedule.id}>
-      <div className="hover:bg-cal-muted flex items-center justify-between px-3 py-5 transition sm:px-4">
+      <div className="hover:bg-cal-muted flex items-center justify-between bg-lime-300 px-14 py-14 transition">
         <div className="group flex w-full items-center justify-between ">
           <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
             <div className="space-x-2 rtl:space-x-reverse">
-              <span className="text-emphasis truncate font-medium">{schedule.name}</span>
+              <span className="truncate font-medium text-yellow-100">{schedule.name}</span>
               {schedule.isDefault && (
                 <Badge variant="gray" className="text-xs">
                   {t("default")}
