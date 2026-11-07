@@ -4157,6 +4157,8 @@
   "calendar_view": "Calendar view",
   "board_view": "Board view",
   "no_bookings_in_column": "No bookings here yet",
+  "happening_now": "Happening now",
+  "no_show": "No-show",
   "holidays": "Holidays",
   "holidays_description": "We will automatically mark you as unavailable for the selected holidays",
   "country_for_holidays": "Country for holidays",
