@@ -295,6 +295,33 @@ export default function Success(props: PageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventType, needsConfirmation]);
 
+  // Orange glow around the confirmation card (Tailwind orange-500)
+  const [glowColor, setGlowColor] = useState("#f97316");
+  const [glowOpacity, setGlowOpacity] = useState(0.45);
+  const [glowBlur, setGlowBlur] = useState(40);
+  const [glowSpread, setGlowSpread] = useState(4);
+  const glowHex = /^#[0-9a-fA-F]{6}$/.test(glowColor) ? glowColor : "#f97316";
+  const glowRgba = `rgba(${parseInt(glowHex.slice(1, 3), 16)}, ${parseInt(glowHex.slice(3, 5), 16)}, ${parseInt(
+    glowHex.slice(5, 7),
+    16
+  )}, ${glowOpacity})`;
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="BookingConfirmation-glow"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.glowColor === "string") setGlowColor(p.glowColor);
+      if (typeof p.glowOpacity === "number") setGlowOpacity(p.glowOpacity);
+      if (typeof p.glowBlur === "number") setGlowBlur(p.glowBlur);
+      if (typeof p.glowSpread === "number") setGlowSpread(p.glowSpread);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   useEffect(() => {
     setCalculatedDuration(dayjs(bookingInfo.endTime).diff(dayjs(bookingInfo.startTime), "minutes"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -502,6 +529,8 @@ export default function Success(props: PageProps) {
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
                 )}
+                data-config-id="BookingConfirmation-glow"
+                style={{ boxShadow: `0 0 ${glowBlur}px ${glowSpread}px ${glowRgba}` }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
