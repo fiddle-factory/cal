@@ -99,7 +99,17 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+export type SchedulingFailure = {
+  /** Short, user-facing explanation of why the booking could not be created. */
+  reason?: string | null;
+};
+
+type SuccessProps = PageProps & {
+  /** When set, renders the "couldn't be scheduled" state for the attempted booking. */
+  schedulingFailure?: SchedulingFailure | null;
+};
+
+export default function Success(props: SuccessProps) {
   const { t } = useLocale();
   const router = useRouter();
   const routerQuery = useRouterQuery();
@@ -306,6 +316,12 @@ export default function Success(props: PageProps) {
     if (isCancelled) {
       return "";
     }
+    if (isSchedulingFailed) {
+      return t("meeting_could_not_be_scheduled_description", {
+        host: bookingInfo.user?.name || props.profile.name || "Nameless",
+        interpolation: { escapeValue: false },
+      });
+    }
     if (isAwaitingPayment && !isCancelled) {
       return t("complete_your_booking_subject", {
         title: eventName,
@@ -370,7 +386,13 @@ export default function Success(props: PageProps) {
   const providerName = guessEventLocationType(location)?.label;
   const rescheduleProviderName = guessEventLocationType(rescheduleLocation)?.label;
   const isBookingInPast = new Date(bookingInfo.endTime) < new Date();
-  const isReschedulable = !isCancelled;
+  const isSchedulingFailed = !!props.schedulingFailure;
+  const isReschedulable = !isCancelled && !isSchedulingFailed;
+  const bookerUrl = `${eventType.team ? "/team" : ""}/${props.profile.slug}/${eventType.slug}`;
+  const retryBookingUrl = `${bookerUrl}?${new URLSearchParams({
+    date: dayjs(bookingInfo.startTime).tz(tz).format("YYYY-MM-DD"),
+    slot: dayjs(bookingInfo.startTime).toISOString(),
+  }).toString()}`;
 
   const bookingCancelledEventProps = {
     booking: bookingInfo,
@@ -421,6 +443,10 @@ export default function Success(props: PageProps) {
   });
 
   const successPageHeadline = (() => {
+    if (isSchedulingFailed) {
+      return t("meeting_could_not_be_scheduled");
+    }
+
     if (isAwaitingPayment && !isCancelled) {
       return props.paymentStatus?.paymentOption === "HOLD"
         ? t("meeting_awaiting_payment_method")
@@ -456,7 +482,7 @@ export default function Success(props: PageProps) {
 
   return (
     <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
-      {!isEmbed && !isFeedbackMode && (
+      {!isEmbed && !isFeedbackMode && !isSchedulingFailed && (
         <EventReservationSchema
           reservationId={bookingInfo.uid}
           eventName={eventName}
@@ -532,7 +558,7 @@ export default function Success(props: PageProps) {
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
                             : "",
-                          isCancelled ? "bg-error" : ""
+                          isCancelled || isSchedulingFailed ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
                           <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -541,12 +567,17 @@ export default function Success(props: PageProps) {
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
                         )}
                         {isCancelled && <Icon name="x" className="h-5 w-5 text-red-600 dark:text-red-200" />}
+                        {isSchedulingFailed && !isCancelled && (
+                          <Icon name="circle-alert" className="h-5 w-5 text-red-600 dark:text-red-200" />
+                        )}
                       </div>
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
                       <h3
                         className="text-emphasis text-2xl font-semibold leading-6"
-                        data-testid={isCancelled ? "cancelled-headline" : ""}
+                        data-testid={
+                          isCancelled ? "cancelled-headline" : isSchedulingFailed ? "scheduling-failed-headline" : ""
+                        }
                         id="modal-headline">
                         {successPageHeadline}
                       </h3>
@@ -559,7 +590,15 @@ export default function Success(props: PageProps) {
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
                       <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
-                        {(isCancelled || reschedule) && cancellationReason && (
+                        {isSchedulingFailed && props.schedulingFailure?.reason && (
+                          <>
+                            <div className="font-medium">{t("reason")}</div>
+                            <div className="col-span-2 mb-6 last:mb-0" data-testid="scheduling-failed-reason">
+                              <p className="wrap-break-word">{props.schedulingFailure.reason}</p>
+                            </div>
+                          </>
+                        )}
+                        {!isSchedulingFailed && (isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
                               {isCancelled ? t("reason") : t("reschedule_reason")}
@@ -672,7 +711,7 @@ export default function Success(props: PageProps) {
                             </div>
                           </>
                         )}
-                        {locationToDisplay && !isCancelled && (
+                        {locationToDisplay && !isCancelled && !isSchedulingFailed && (
                           <>
                             <div className="mt-3 font-medium">{t("where")}</div>
                             <div className="col-span-2 mt-3" data-testid="where">
@@ -937,6 +976,23 @@ export default function Success(props: PageProps) {
                           />
                         </>
                       ))}
+                    {isSchedulingFailed && (
+                      <>
+                        <hr className="border-subtle mb-8" />
+                        <div className="flex flex-col-reverse justify-center gap-2 sm:flex-row">
+                          <Button color="secondary" href={bookerUrl} data-testid="pick-another-time">
+                            {t("pick_another_time")}
+                          </Button>
+                          <Button
+                            color="primary"
+                            StartIcon="rotate-ccw"
+                            href={retryBookingUrl}
+                            data-testid="retry-booking">
+                            {t("try_again")}
+                          </Button>
+                        </div>
+                      </>
+                    )}
                     {isRerouting && typeof window !== "undefined" && window.opener && (
                       <div className="flex justify-center">
                         <Button
