@@ -41,7 +41,7 @@ interface BookingCalendarContainerProps {
   bookingsV3Enabled: boolean;
 }
 
-interface BookingCalendarInnerProps extends BookingCalendarContainerProps {
+export interface BookingCalendarInnerProps extends BookingCalendarContainerProps {
   data?: {
     bookings: BookingsGetOutput["bookings"];
     recurringInfo: BookingsGetOutput["recurringInfo"];
@@ -56,7 +56,7 @@ interface BookingCalendarInnerProps extends BookingCalendarContainerProps {
   isFetchingNextPage: boolean;
 }
 
-function BookingCalendarInner({
+export function BookingCalendarInner({
   status,
   permissions,
   bookingsV3Enabled,
