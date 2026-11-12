@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { WaveTitle } from "../components/WaveTitle";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -544,12 +545,11 @@ export default function Success(props: PageProps) {
                       </div>
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
-                      <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
+                      <WaveTitle
+                        text={successPageHeadline}
                         data-testid={isCancelled ? "cancelled-headline" : ""}
-                        id="modal-headline">
-                        {successPageHeadline}
-                      </h3>
+                        id="modal-headline"
+                      />
 
                       <div className="mt-3">
                         <p className="text-default">{getTitle()}</p>
