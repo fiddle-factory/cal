@@ -21,6 +21,7 @@ import {
   useIsBackgroundTransparent,
   useIsEmbed,
 } from "@calcom/embed-core/embed-iframe";
+import { NewYearConfetti, NewYearRibbon } from "@calcom/web/modules/bookings/components/NewYearConfetti";
 import { Price } from "@calcom/web/modules/bookings/components/event-meta/Price";
 import { getCalendarLinks, CalendarLinkType } from "@calcom/features/bookings/lib/getCalendarLinks";
 import { RATING_OPTIONS, validateRating } from "@calcom/features/bookings/lib/rating";
@@ -497,7 +498,7 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
@@ -505,6 +506,7 @@ export default function Success(props: PageProps) {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <NewYearRibbon />
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -523,19 +525,31 @@ export default function Success(props: PageProps) {
                       )}
                       <div
                         className={classNames(
-                          "mx-auto flex h-12 w-12 items-center justify-center rounded-full",
-                          isRoundRobin &&
-                            "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
+                          "isolate mx-auto flex h-12 w-12 items-center justify-center rounded-full",
+                          isRoundRobin
+                            ? "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8"
+                            : "relative",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? "shadow-sm"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
                             : "",
                           isCancelled ? "bg-error" : ""
-                        )}>
+                        )}
+                        style={
+                          !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
+                            ? {
+                                background: "linear-gradient(135deg, #FDE68A 0%, #FACC15 55%, #F59E0B 100%)",
+                                boxShadow: "0 0 0 3px rgba(250, 204, 21, 0.25)",
+                              }
+                            : undefined
+                        }>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <>
+                            <NewYearConfetti />
+                            <Icon name="check" className="relative z-10 h-5 w-5" style={{ color: "#78350F" }} />
+                          </>
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
