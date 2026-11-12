@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { NewYearBanner } from "../components/NewYearBanner";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -99,7 +100,12 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+export type SuccessProps = PageProps & {
+  /** Optional seasonal styling for the confirmation card. */
+  seasonalTheme?: "new-year";
+};
+
+export default function Success(props: SuccessProps) {
   const { t } = useLocale();
   const router = useRouter();
   const routerQuery = useRouterQuery();
@@ -113,7 +119,9 @@ export default function Success(props: PageProps) {
     requiresLoginToUpdate,
     rescheduledToUid,
     canViewHiddenData,
+    seasonalTheme,
   } = props;
+  const isNewYear = seasonalTheme === "new-year";
 
   const {
     allRemainingBookings,
@@ -499,7 +507,10 @@ export default function Success(props: PageProps) {
                 className={classNames(
                   "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
-                    " bg-default dark:bg-cal-muted border-booker border-booker-width",
+                    classNames(
+                      " bg-default dark:bg-cal-muted border-booker-width",
+                      isNewYear ? "border-violet-300 shadow-sm dark:border-violet-800" : "border-booker"
+                    ),
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
                 )}
                 role="dialog"
@@ -507,6 +518,7 @@ export default function Success(props: PageProps) {
                 aria-labelledby="modal-headline">
                 {!isFeedbackMode && (
                   <>
+                    {isNewYear && <NewYearBanner className="-mx-8 -mt-5 mb-6 sm:-mt-8" />}
                     <div
                       className={classNames(isRoundRobin && "min-h-24 min-w-32 relative mx-auto h-24 w-32")}>
                       {isRoundRobin && bookingInfo.user && (
@@ -527,7 +539,9 @@ export default function Success(props: PageProps) {
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? isNewYear
+                              ? "bg-violet-100 ring-2 ring-slate-200 dark:bg-violet-900/40 dark:ring-slate-600"
+                              : "bg-cal-success"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
@@ -535,7 +549,15 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon
+                            name="check"
+                            className={classNames(
+                              "h-5 w-5",
+                              isNewYear
+                                ? "text-violet-600 dark:text-violet-300"
+                                : "text-green-600 dark:text-green-400"
+                            )}
+                          />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -883,7 +905,10 @@ export default function Success(props: PageProps) {
                                               ? `?rescheduledBy=${encodeURIComponent(currentUserEmail)}`
                                               : ""
                                           }`}
-                                          className="underline"
+                                          className={classNames(
+                                            "underline",
+                                            isNewYear && "decoration-violet-400 underline-offset-2"
+                                          )}
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
@@ -898,6 +923,7 @@ export default function Success(props: PageProps) {
                                       data-testid="cancel"
                                       className={classNames(
                                         "text-default underline",
+                                        isNewYear && "decoration-violet-400 underline-offset-2",
                                         props.recurringBookings && "ltr:mr-2 rtl:ml-2"
                                       )}
                                       onClick={() => setIsCancellationMode(true)}>
@@ -960,7 +986,12 @@ export default function Success(props: PageProps) {
                             {googleCalendarLink && (
                               <Link
                                 href={googleCalendarLink}
-                                className="text-default border-subtle h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
+                                className={classNames(
+                                  "text-default h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2",
+                                  isNewYear
+                                    ? "border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-transparent"
+                                    : "border-subtle"
+                                )}
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 inline-block h-4 w-4"
@@ -975,7 +1006,12 @@ export default function Success(props: PageProps) {
                             {microsoftOutlookLink && (
                               <Link
                                 href={microsoftOutlookLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className={classNames(
+                                  "text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2",
+                                  isNewYear
+                                    ? "border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-transparent"
+                                    : "border-subtle"
+                                )}
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -990,7 +1026,12 @@ export default function Success(props: PageProps) {
                             {microsoftOfficeLink && (
                               <Link
                                 href={microsoftOfficeLink}
-                                className="text-default border-subtle mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className={classNames(
+                                  "text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2",
+                                  isNewYear
+                                    ? "border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-transparent"
+                                    : "border-subtle"
+                                )}
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -1005,7 +1046,12 @@ export default function Success(props: PageProps) {
                             {icsLink && (
                               <Link
                                 href={icsLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className={classNames(
+                                  "text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2",
+                                  isNewYear
+                                    ? "border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-transparent"
+                                    : "border-subtle"
+                                )}
                                 download={`${eventType.title}.ics`}>
                                 <svg
                                   version="1.1"
