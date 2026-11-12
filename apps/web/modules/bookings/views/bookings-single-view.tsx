@@ -99,6 +99,58 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
+function StickerHeadline({ headline, "data-testid": testId }: { headline: string; "data-testid"?: string }) {
+  const [stickerTilt, setStickerTilt] = useState(-3);
+  const [shadowOffset, setShadowOffset] = useState(3);
+  const [showEmoji, setShowEmoji] = useState(true);
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="StickerHeadline-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.stickerTilt === "number") setStickerTilt(p.stickerTilt);
+      if (typeof p.shadowOffset === "number") setShadowOffset(p.shadowOffset);
+      if (typeof p.showEmoji === "boolean") setShowEmoji(p.showEmoji);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const trimmed = headline.trim();
+  const splitAt = trimmed.lastIndexOf(" ");
+  const lead = splitAt > -1 ? trimmed.slice(0, splitAt) : "";
+  const keyword = splitAt > -1 ? trimmed.slice(splitAt + 1) : trimmed;
+
+  return (
+    <h3
+      className="text-emphasis font-heading text-2xl font-semibold leading-9"
+      data-testid={testId}
+      data-config-id="StickerHeadline-controls"
+      id="modal-headline">
+      {lead && <>{lead} </>}
+      <span
+        className="bg-visualization-5-subtle text-emphasis border-emphasis relative inline-block whitespace-nowrap rounded-md border-2 px-2 font-bold"
+        style={{
+          transform: `rotate(${stickerTilt}deg)`,
+          boxShadow: `${shadowOffset}px ${shadowOffset}px 0 0 var(--cal-text-emphasis)`,
+        }}>
+        {keyword}
+        {showEmoji && (
+          <span
+            aria-hidden="true"
+            className="absolute -right-4 -top-4 inline-block text-xl"
+            style={{ transform: `rotate(${-stickerTilt * 4}deg)` }}>
+            🎉
+          </span>
+        )}
+      </span>
+    </h3>
+  );
+}
+
 export default function Success(props: PageProps) {
   const { t } = useLocale();
   const router = useRouter();
@@ -454,6 +506,10 @@ export default function Success(props: PageProps) {
     return isRecurringBooking ? t("meeting_is_scheduled_recurring") : t("meeting_is_scheduled");
   })();
 
+  const isScheduledHeadline =
+    successPageHeadline === t("meeting_is_scheduled") ||
+    successPageHeadline === t("meeting_is_scheduled_recurring");
+
   return (
     <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
       {!isEmbed && !isFeedbackMode && (
@@ -544,12 +600,19 @@ export default function Success(props: PageProps) {
                       </div>
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
-                      <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
-                        data-testid={isCancelled ? "cancelled-headline" : ""}
-                        id="modal-headline">
-                        {successPageHeadline}
-                      </h3>
+                      {isScheduledHeadline ? (
+                        <StickerHeadline
+                          headline={successPageHeadline}
+                          data-testid={isCancelled ? "cancelled-headline" : ""}
+                        />
+                      ) : (
+                        <h3
+                          className="text-emphasis text-2xl font-semibold leading-6"
+                          data-testid={isCancelled ? "cancelled-headline" : ""}
+                          id="modal-headline">
+                          {successPageHeadline}
+                        </h3>
+                      )}
 
                       <div className="mt-3">
                         <p className="text-default">{getTitle()}</p>
