@@ -545,7 +545,7 @@ export default function Success(props: PageProps) {
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
                       <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
+                        className="font-heading from-visualization-2-emphasis via-visualization-1-emphasis to-visualization-6-emphasis bg-gradient-to-r bg-clip-text py-1 text-3xl font-bold leading-tight tracking-tight text-transparent"
                         data-testid={isCancelled ? "cancelled-headline" : ""}
                         id="modal-headline">
                         {successPageHeadline}
