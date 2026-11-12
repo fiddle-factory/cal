@@ -22,6 +22,11 @@ import {
   useIsEmbed,
 } from "@calcom/embed-core/embed-iframe";
 import { Price } from "@calcom/web/modules/bookings/components/event-meta/Price";
+import {
+  CHRISTMAS_GOLD,
+  CHRISTMAS_GREEN,
+  ChristmasBanner,
+} from "@calcom/web/modules/bookings/components/ChristmasBanner";
 import { getCalendarLinks, CalendarLinkType } from "@calcom/features/bookings/lib/getCalendarLinks";
 import { RATING_OPTIONS, validateRating } from "@calcom/features/bookings/lib/rating";
 import { isWithinMinimumRescheduleNotice as isWithinMinimumRescheduleNoticeUtil } from "@calcom/features/bookings/lib/reschedule/isWithinMinimumRescheduleNotice";
@@ -502,11 +507,13 @@ export default function Success(props: PageProps) {
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
                 )}
+                style={{ borderColor: CHRISTMAS_GOLD }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
                 {!isFeedbackMode && (
                   <>
+                    <ChristmasBanner title={t("merry_christmas")} />
                     <div
                       className={classNames(isRoundRobin && "min-h-24 min-w-32 relative mx-auto h-24 w-32")}>
                       {isRoundRobin && bookingInfo.user && (
@@ -527,15 +534,20 @@ export default function Success(props: PageProps) {
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? "border-2"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
                             : "",
                           isCancelled ? "bg-error" : ""
-                        )}>
+                        )}
+                        style={
+                          !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
+                            ? { backgroundColor: CHRISTMAS_GREEN, borderColor: CHRISTMAS_GOLD }
+                            : undefined
+                        }>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon name="check" className="h-5 w-5" style={{ color: CHRISTMAS_GOLD }} />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -558,7 +570,9 @@ export default function Success(props: PageProps) {
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div
+                        className="text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0"
+                        style={{ borderColor: CHRISTMAS_GOLD }}>
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
@@ -833,7 +847,7 @@ export default function Success(props: PageProps) {
                     </div>
                     {requiresLoginToUpdate && (
                       <>
-                        <hr className="border-subtle mb-8" />
+                        <hr className="mb-8" style={{ borderColor: CHRISTMAS_GOLD }} />
                         <div className="text-center">
                           <span className="text-emphasis ltr:mr-2 rtl:ml-2">
                             {t("need_to_make_a_change")}
@@ -865,7 +879,7 @@ export default function Success(props: PageProps) {
                             canReschedule) ||
                             (!isBookingInPast && canCancel)) && (
                             <>
-                              <hr className="border-subtle mb-8" />
+                              <hr className="mb-8" style={{ borderColor: CHRISTMAS_GOLD }} />
                               <div className="text-center last:pb-0">
                                 <span className="text-emphasis ltr:mr-2 rtl:ml-2">
                                   {t("need_to_make_a_change")}
@@ -883,7 +897,8 @@ export default function Success(props: PageProps) {
                                               ? `?rescheduledBy=${encodeURIComponent(currentUserEmail)}`
                                               : ""
                                           }`}
-                                          className="underline"
+                                          className="font-medium underline"
+                                          style={{ color: CHRISTMAS_GREEN, textDecorationColor: CHRISTMAS_GOLD }}
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
@@ -897,9 +912,10 @@ export default function Success(props: PageProps) {
                                     <button
                                       data-testid="cancel"
                                       className={classNames(
-                                        "text-default underline",
+                                        "font-medium underline",
                                         props.recurringBookings && "ltr:mr-2 rtl:ml-2"
                                       )}
+                                      style={{ color: CHRISTMAS_GREEN, textDecorationColor: CHRISTMAS_GOLD }}
                                       onClick={() => setIsCancellationMode(true)}>
                                       {t("cancel")}
                                     </button>
@@ -951,7 +967,7 @@ export default function Success(props: PageProps) {
                     )}
                     {!needsConfirmation && !isCancellationMode && isReschedulable && !!calculatedDuration && (
                       <>
-                        <hr className="border-subtle mt-8" />
+                        <hr className="mt-8" style={{ borderColor: CHRISTMAS_GOLD }} />
                         <div className="text-default align-center flex flex-row justify-center pt-8">
                           <span className="text-default flex self-center font-medium ltr:mr-2 rtl:ml-2 ">
                             {t("add_to_calendar")}
@@ -960,7 +976,7 @@ export default function Success(props: PageProps) {
                             {googleCalendarLink && (
                               <Link
                                 href={googleCalendarLink}
-                                className="text-default border-subtle h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
+                                className="h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2" style={{ borderColor: CHRISTMAS_GOLD, color: CHRISTMAS_GREEN }}
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 inline-block h-4 w-4"
@@ -975,7 +991,7 @@ export default function Success(props: PageProps) {
                             {microsoftOutlookLink && (
                               <Link
                                 href={microsoftOutlookLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-sm border px-3 py-2" style={{ borderColor: CHRISTMAS_GOLD, color: CHRISTMAS_GREEN }}
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -990,7 +1006,7 @@ export default function Success(props: PageProps) {
                             {microsoftOfficeLink && (
                               <Link
                                 href={microsoftOfficeLink}
-                                className="text-default border-subtle mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-sm border px-3 py-2" style={{ borderColor: CHRISTMAS_GOLD, color: CHRISTMAS_GREEN }}
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -1005,7 +1021,7 @@ export default function Success(props: PageProps) {
                             {icsLink && (
                               <Link
                                 href={icsLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-sm border px-3 py-2" style={{ borderColor: CHRISTMAS_GOLD, color: CHRISTMAS_GREEN }}
                                 download={`${eventType.title}.ics`}>
                                 <svg
                                   version="1.1"
@@ -1025,7 +1041,7 @@ export default function Success(props: PageProps) {
 
                     {session === null && !(userIsOwner || props.hideBranding) && (
                       <>
-                        <hr className="border-subtle mt-8" />
+                        <hr className="mt-8" style={{ borderColor: CHRISTMAS_GOLD }} />
                         <div className="text-default pt-8 text-center text-xs">
                           <a href="https://cal.com/signup">
                             {t("create_booking_link_with_calcom", { appName: APP_NAME })}
