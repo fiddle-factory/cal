@@ -99,8 +99,14 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+type SuccessProps = PageProps & {
+  /** Optional seasonal styling for the confirmation card */
+  seasonalTheme?: "thanksgiving";
+};
+
+export default function Success(props: SuccessProps) {
   const { t } = useLocale();
+  const isThanksgiving = props.seasonalTheme === "thanksgiving";
   const router = useRouter();
   const routerQuery = useRouterQuery();
   const pathname = usePathname();
@@ -500,7 +506,8 @@ export default function Success(props: PageProps) {
                   "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
-                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
+                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle",
+                  isThanksgiving && "border-t-4 border-t-amber-500 dark:border-t-amber-400"
                 )}
                 role="dialog"
                 aria-modal="true"
@@ -527,7 +534,9 @@ export default function Success(props: PageProps) {
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? isThanksgiving
+                              ? "bg-amber-100 dark:bg-amber-900/40"
+                              : "bg-cal-success"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
@@ -535,7 +544,15 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon
+                            name="check"
+                            className={classNames(
+                              "h-5 w-5",
+                              isThanksgiving
+                                ? "text-red-800 dark:text-red-300"
+                                : "text-green-600 dark:text-green-400"
+                            )}
+                          />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -544,6 +561,36 @@ export default function Success(props: PageProps) {
                       </div>
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
+                      {isThanksgiving && (
+                        <div className="mb-4 flex justify-center">
+                          <span className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-sm font-medium text-red-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
+                            <svg
+                              aria-hidden="true"
+                              className="h-4 w-4"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg">
+                              <path
+                                d="M12 7c-1.2-1-3-1.4-4.6-1C4.6 6.7 3 9.6 3 13s1.6 6.3 4.4 7c1.6.4 3.4 0 4.6-1 1.2 1 3 1.4 4.6 1 2.8-.7 4.4-3.6 4.4-7s-1.6-6.3-4.4-7c-1.6-.4-3.4 0-4.6 1z"
+                                className="fill-amber-500 dark:fill-amber-400"
+                              />
+                              <path
+                                d="M12 7v12M8.5 7.5c-.8 2-.8 9 0 11M15.5 7.5c.8 2 .8 9 0 11"
+                                className="stroke-amber-700 dark:stroke-amber-600"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                              />
+                              <path
+                                d="M12 7c0-1.5.5-3 2-4"
+                                className="stroke-green-700 dark:stroke-green-500"
+                                strokeWidth="1.75"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            {t("happy_thanksgiving")}
+                          </span>
+                        </div>
+                      )}
                       <h3
                         className="text-emphasis text-2xl font-semibold leading-6"
                         data-testid={isCancelled ? "cancelled-headline" : ""}
@@ -558,7 +605,11 @@ export default function Success(props: PageProps) {
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div
+                        className={classNames(
+                          "text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0",
+                          isThanksgiving ? "border-amber-300 dark:border-amber-700" : "border-subtle"
+                        )}>
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
@@ -883,7 +934,11 @@ export default function Success(props: PageProps) {
                                               ? `?rescheduledBy=${encodeURIComponent(currentUserEmail)}`
                                               : ""
                                           }`}
-                                          className="underline"
+                                          className={classNames(
+                                            "underline",
+                                            isThanksgiving &&
+                                              "text-red-800 decoration-amber-500 dark:text-red-300"
+                                          )}
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
@@ -897,7 +952,10 @@ export default function Success(props: PageProps) {
                                     <button
                                       data-testid="cancel"
                                       className={classNames(
-                                        "text-default underline",
+                                        "underline",
+                                        isThanksgiving
+                                          ? "text-red-800 decoration-amber-500 dark:text-red-300"
+                                          : "text-default",
                                         props.recurringBookings && "ltr:mr-2 rtl:ml-2"
                                       )}
                                       onClick={() => setIsCancellationMode(true)}>
