@@ -5,7 +5,8 @@ import classNames from "classnames";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { Toaster } from "sonner";
 import { z } from "zod";
 
@@ -99,10 +100,72 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
+// Plays a one-off celebratory entrance via the Web Animations API. Uses the individual `scale`
+// property so it composes with inline `transform` (e.g. sticker tilt). Skipped for reduced motion.
+function useCelebrationEntrance<T extends HTMLElement>(
+  ref: RefObject<T>,
+  keyframes: Keyframe[],
+  options: KeyframeAnimationOptions
+) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof el.animate !== "function") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const animation = el.animate(keyframes, { fill: "backwards", ...options });
+    return () => animation.cancel();
+    // Entrance should play once on mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
+const SLAP_EASING = "cubic-bezier(0.34, 1.56, 0.64, 1)";
+
+function CelebrationCheck() {
+  const ref = useRef<HTMLSpanElement>(null);
+  useCelebrationEntrance(
+    ref,
+    [
+      { scale: "0", opacity: 0 },
+      { scale: "1.2", opacity: 1, offset: 0.6 },
+      { scale: "1", opacity: 1 },
+    ],
+    { duration: 500, easing: SLAP_EASING }
+  );
+  return (
+    <span ref={ref} className="inline-flex">
+      <Icon name="check" className="h-6 w-6 text-green-600 dark:text-green-400" strokeWidth={3} />
+    </span>
+  );
+}
+
 function StickerHeadline({ headline, "data-testid": testId }: { headline: string; "data-testid"?: string }) {
   const [stickerTilt, setStickerTilt] = useState(-3);
-  const [shadowOffset, setShadowOffset] = useState(3);
+  const [shadowOffset, setShadowOffset] = useState(5);
   const [showEmoji, setShowEmoji] = useState(true);
+  const stickerRef = useRef<HTMLSpanElement>(null);
+  const emojiRef = useRef<HTMLSpanElement>(null);
+
+  // Sticker "slaps" on: drops in large, overshoots small, settles with a bounce.
+  useCelebrationEntrance(
+    stickerRef,
+    [
+      { scale: "2", opacity: 0 },
+      { scale: "0.88", opacity: 1, offset: 0.55 },
+      { scale: "1.06", opacity: 1, offset: 0.8 },
+      { scale: "1", opacity: 1 },
+    ],
+    { duration: 600, delay: 200, easing: "ease-out" }
+  );
+  // Emoji pops in right after the sticker lands.
+  useCelebrationEntrance(
+    emojiRef,
+    [
+      { scale: "0", opacity: 0 },
+      { scale: "1.4", opacity: 1, offset: 0.6 },
+      { scale: "1", opacity: 1 },
+    ],
+    { duration: 450, delay: 650, easing: SLAP_EASING }
+  );
 
   // geneditor-listener-start
   useEffect(() => {
@@ -126,22 +189,25 @@ function StickerHeadline({ headline, "data-testid": testId }: { headline: string
 
   return (
     <h3
-      className="text-emphasis font-heading text-2xl font-semibold leading-9"
+      className="text-emphasis font-heading text-3xl font-bold leading-[3rem] tracking-tight"
       data-testid={testId}
       data-config-id="StickerHeadline-controls"
       id="modal-headline">
       {lead && <>{lead} </>}
       <span
-        className="bg-visualization-5-subtle text-emphasis border-emphasis relative inline-block whitespace-nowrap rounded-md border-2 px-2 font-bold"
+        ref={stickerRef}
+        className="bg-visualization-5-emphasis dark:bg-visualization-5-subtle text-emphasis relative ml-1 inline-block whitespace-nowrap rounded-lg border-[3px] px-3 font-extrabold"
         style={{
           transform: `rotate(${stickerTilt}deg)`,
+          borderColor: "var(--cal-text-emphasis)",
           boxShadow: `${shadowOffset}px ${shadowOffset}px 0 0 var(--cal-text-emphasis)`,
         }}>
         {keyword}
         {showEmoji && (
           <span
+            ref={emojiRef}
             aria-hidden="true"
-            className="absolute -right-4 -top-4 inline-block text-xl"
+            className="absolute -right-5 -top-5 inline-block text-2xl"
             style={{ transform: `rotate(${-stickerTilt * 4}deg)` }}>
             🎉
           </span>
@@ -585,13 +651,21 @@ export default function Success(props: PageProps) {
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
                             ? "bg-cal-success"
                             : "",
+                          !giphyImage &&
+                            !isRoundRobin &&
+                            isReschedulable &&
+                            !needsConfirmation &&
+                            !isAwaitingPayment &&
+                            !isCancelled
+                            ? "-rotate-3 border-[3px] border-[var(--cal-text-emphasis)] shadow-[3px_3px_0_0_var(--cal-text-emphasis)]"
+                            : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
                             : "",
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <CelebrationCheck />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
