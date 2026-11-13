@@ -74,6 +74,12 @@ function BookingCalendarInner({
 
   const rowData = useBookingCalendarData({ data, status });
 
+  const { data: holidaySettings } = trpc.viewer.holidays.getUserSettings.useQuery({});
+  const holidays = useMemo(
+    () => holidaySettings?.holidays?.filter((holiday) => holiday.enabled) ?? [],
+    [holidaySettings?.holidays]
+  );
+
   // Extract bookings from table data
   const bookings = useMemo(() => {
     return rowData
@@ -155,6 +161,7 @@ function BookingCalendarInner({
           bookings={bookings}
           currentWeekStart={currentWeekStart}
           onWeekStartChange={setCurrentWeekStart}
+          holidays={holidays}
         />
       )}
 

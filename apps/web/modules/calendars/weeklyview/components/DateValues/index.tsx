@@ -15,8 +15,13 @@ type Props = {
 };
 
 export function DateValues({ showBorder, borderColor, days, containerNavRef }: Props) {
-  const { i18n } = useLocale();
+  const { i18n, t } = useLocale();
   const timezone = useCalendarStore((state) => state.timezone);
+  const events = useCalendarStore((state) => state.events);
+  const allDayEvents = events.filter((event) => event.options?.allDay);
+  const hasAllDayEvents = allDayEvents.some((event) =>
+    days.some((day) => dayjs(event.start).isSame(day, "day"))
+  );
   const showTimezone = useCalendarStore((state) => state.showTimezone ?? false);
 
   const formatDate = (date: dayjs.Dayjs): string => {
@@ -110,6 +115,42 @@ export function DateValues({ showBorder, borderColor, days, containerNavRef }: P
           );
         })}
       </div>
+      {hasAllDayEvents && (
+        <div className="-mr-px hidden pb-2 sm:flex" data-testid="calendar-all-day-row">
+          <div
+            className={classNames(
+              "col-end-1 flex w-16 items-start justify-center pt-1",
+              showBorder &&
+                (borderColor === "subtle" ? "border-l-subtle border-l" : "border-l-default border-l")
+            )}>
+            <span className="text-muted text-[10px] font-medium uppercase">{t("all_day")}</span>
+          </div>
+          {days.map((day) => {
+            const dayEvents = allDayEvents.filter((event) => dayjs(event.start).isSame(day, "day"));
+            return (
+              <div key={day.toString()} className="flex min-w-0 flex-1 flex-col gap-1 px-0.5">
+                {dayEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    title={event.title}
+                    className={classNames(
+                      "bg-subtle text-emphasis flex min-w-0 items-center gap-1.5 overflow-hidden rounded-md px-1.5 py-1 text-xs font-medium leading-4",
+                      event.options?.className
+                    )}>
+                    {event.options?.color && (
+                      <span
+                        className="h-3 w-[3px] shrink-0 rounded-sm"
+                        style={{ backgroundColor: event.options.color }}
+                      />
+                    )}
+                    <span className="truncate">{event.title}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

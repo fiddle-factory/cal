@@ -6,6 +6,8 @@ import dayjs from "@calcom/dayjs";
 import { useTimePreferences } from "@calcom/features/bookings/lib";
 import { Calendar } from "@calcom/web/modules/calendars/weeklyview/components/Calendar";
 import type { CalendarEvent } from "@calcom/features/calendars/weeklyview/types/events";
+import { getHolidayEmoji } from "@calcom/lib/holidays/getHolidayEmoji";
+import type { Holiday } from "@calcom/lib/holidays/types";
 import { useGetTheme } from "@calcom/lib/hooks/useTheme";
 import { useBanners } from "@calcom/web/modules/shell/banners/useBanners";
 
@@ -16,12 +18,15 @@ type BookingCalendarViewProps = {
   bookings: BookingOutput[];
   currentWeekStart: dayjs.Dayjs;
   onWeekStartChange: (weekStart: dayjs.Dayjs) => void;
+  /** Holidays shown as all-day markers above the time grid */
+  holidays?: Pick<Holiday, "id" | "name" | "date">[];
 };
 
 export function BookingCalendarView({
   bookings,
   currentWeekStart,
   onWeekStartChange,
+  holidays = [],
 }: BookingCalendarViewProps) {
   const setSelectedBookingUid = useBookingDetailsSheetStore((state) => state.setSelectedBookingUid);
   const selectedBookingUid = useBookingDetailsSheetStore((state) => state.selectedBookingUid);
@@ -41,7 +46,7 @@ export function BookingCalendarView({
   const events = useMemo<CalendarEvent[]>(() => {
     const hasDarkTheme = !forcedTheme && resolvedTheme === "dark";
 
-    return bookings
+    const bookingEvents: CalendarEvent[] = bookings
       .filter((booking) => {
         const bookingStart = dayjs(booking.startTime);
         return (
@@ -72,7 +77,26 @@ export function BookingCalendarView({
           },
         };
       });
-  }, [bookings, currentWeekStart, resolvedTheme, forcedTheme]);
+
+    const weekEnd = currentWeekStart.add(7, "day");
+    const holidayEvents: CalendarEvent[] = holidays
+      .filter((holiday) => {
+        const holidayStart = dayjs(holiday.date);
+        return !holidayStart.isBefore(currentWeekStart, "day") && holidayStart.isBefore(weekEnd, "day");
+      })
+      .map((holiday, idx) => {
+        const start = dayjs(holiday.date).startOf("day");
+        return {
+          id: bookingEvents.length + idx,
+          title: `${getHolidayEmoji(holiday.name)} ${holiday.name}`,
+          start: start.toDate(),
+          end: start.endOf("day").toDate(),
+          options: { allDay: true, hideTime: true },
+        };
+      });
+
+    return [...bookingEvents, ...holidayEvents];
+  }, [bookings, holidays, currentWeekStart, resolvedTheme, forcedTheme]);
 
   return (
     <>
