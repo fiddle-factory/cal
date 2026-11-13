@@ -11,6 +11,8 @@ export interface CalendarEvent {
     status?: BookingStatus;
     hideTime?: boolean;
     allDay?: boolean;
+    /** Optional emoji shown before the title of all-day events (e.g. holidays) */
+    emoji?: string;
     color?: string;
     className?: string;
     bookingUid?: string;

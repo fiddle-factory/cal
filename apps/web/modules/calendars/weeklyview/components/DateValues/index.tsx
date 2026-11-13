@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 import dayjs from "@calcom/dayjs";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -15,9 +15,24 @@ type Props = {
 };
 
 export function DateValues({ showBorder, borderColor, days, containerNavRef }: Props) {
-  const { i18n } = useLocale();
+  const { i18n, t } = useLocale();
   const timezone = useCalendarStore((state) => state.timezone);
   const showTimezone = useCalendarStore((state) => state.showTimezone ?? false);
+  const events = useCalendarStore((state) => state.events);
+
+  const allDayEventsByDay = useMemo(() => {
+    const allDayEvents = events.filter((event) => event.options?.allDay);
+    return days.map((day) =>
+      allDayEvents.filter((event) => {
+        const start = dayjs(event.start);
+        const end = dayjs(event.end);
+        // Treat the end as exclusive so an event ending at midnight doesn't spill into the next day
+        const lastDay = end.isAfter(start) ? end.subtract(1, "minute") : start;
+        return !day.isBefore(start, "day") && !day.isAfter(lastDay, "day");
+      })
+    );
+  }, [events, days]);
+  const hasAllDayEvents = allDayEventsByDay.some((dayEvents) => dayEvents.length > 0);
 
   const formatDate = (date: dayjs.Dayjs): string => {
     return new Intl.DateTimeFormat(i18n.language, { weekday: "short" }).format(date.toDate());
@@ -87,14 +102,15 @@ export function DateValues({ showBorder, borderColor, days, containerNavRef }: P
             <span className="text-muted text-xs font-medium">{getTimezoneDisplay()}</span>
           )}
         </div>
-        {days.map((day) => {
+        {days.map((day, i) => {
           const isToday = dayjs().isSame(day, "day");
+          const hasAllDayEvent = allDayEventsByDay[i].length > 0;
           return (
             <div
               key={day.toString()}
               className={classNames(
                 "flex flex-1 items-center justify-center py-3 text-xs font-medium uppercase",
-                isToday && "text-default"
+                (isToday || hasAllDayEvent) && "text-default"
               )}>
               <span>
                 {formatDate(day)}{" "}
@@ -110,6 +126,54 @@ export function DateValues({ showBorder, borderColor, days, containerNavRef }: P
           );
         })}
       </div>
+      {hasAllDayEvents && (
+        <div
+          className={classNames(
+            "hidden border-t sm:flex",
+            borderColor === "subtle" ? "border-t-subtle" : "border-t-default"
+          )}
+          data-testid="calendar-all-day-row">
+          <div
+            className={classNames(
+              "flex w-16 flex-none items-start justify-center py-1.5",
+              showBorder &&
+                (borderColor === "subtle" ? "border-l-subtle border-l" : "border-l-default border-l")
+            )}>
+            <span className="text-muted text-[10px] font-medium leading-5">{t("all_day")}</span>
+          </div>
+          <div
+            className={classNames(
+              "flex flex-1 divide-x",
+              borderColor === "subtle" ? "divide-subtle" : "divide-default"
+            )}>
+            {days.map((day, i) => (
+              <div key={day.toString()} className="flex min-w-0 flex-1 flex-col gap-1 p-1">
+                {allDayEventsByDay[i].map((event) => (
+                  <div
+                    key={event.id}
+                    title={event.title}
+                    className={classNames(
+                      "bg-subtle text-emphasis border-subtle flex min-w-0 items-center gap-1 rounded-[6px] border px-[6px] text-xs font-medium leading-5",
+                      event.options?.className
+                    )}
+                    style={
+                      event.options?.color
+                        ? { boxShadow: `inset 3px 0 0 ${event.options.color}` }
+                        : undefined
+                    }>
+                    {event.options?.emoji && (
+                      <span aria-hidden="true" className="shrink-0">
+                        {event.options.emoji}
+                      </span>
+                    )}
+                    <span className="truncate">{event.title}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
