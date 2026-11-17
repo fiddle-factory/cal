@@ -8,7 +8,7 @@ const BULB_PALETTE_SIZE = 4;
  * Festive string of twinkling lights draped along the top edge of a card.
  * The parent must be `relative` (and ideally `overflow-hidden`).
  */
-export function ChristmasLights() {
+export function ChristmasLights({ bulbColorC = "#fff4d6" }: { bulbColorC?: string } = {}) {
   const [showLights, setShowLights] = useState(true);
   const [bulbCount, setBulbCount] = useState(12);
   const [twinkleSpeed, setTwinkleSpeed] = useState(2.4);
@@ -38,7 +38,7 @@ export function ChristmasLights() {
 
   const count = Math.max(2, Math.round(bulbCount));
   // Alternate warm gold, berry red, soft cream, berry red
-  const palette = [bulbColorA, bulbColorB, "#fff4d6", bulbColorB];
+  const palette = [bulbColorA, bulbColorB, bulbColorC, bulbColorB];
   const segment = 40;
   const wirePath = Array.from({ length: count })
     .map((_, i) => `Q${i * segment + segment / 2} 22 ${(i + 1) * segment} 4`)

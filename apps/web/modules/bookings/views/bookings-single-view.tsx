@@ -70,36 +70,63 @@ import type { PageProps } from "./bookings-single-view.getServerSideProps";
 // Overrides the Cal design tokens within the confirmation card only. The inline style wins over
 // both the light and dark (.dark) token sets, so every text token below is tuned to stay ≥ 4.5:1
 // (WCAG AA) on every card surface: evergreen base, bg-subtle/emphasis and the burgundy glow/badges.
-const christmasCardTheme = {
-  "--cal-bg": "#0f2e22",
-  "--cal-bg-muted": "#0f2e22",
-  "--cal-bg-subtle": "#173d2e",
-  "--cal-bg-emphasis": "#1f4a39",
-  "--cal-bg-success": "#7a1f2b",
-  "--cal-bg-error": "#7a1f2b",
-  "--cal-bg-info": "#7a1f2b",
-  "--cal-bg-attention": "#7a1f2b",
-  "--cal-text": "#ede3cc",
-  "--cal-text-emphasis": "#f3d27a",
-  "--cal-text-subtle": "#e0d5b8",
-  "--cal-text-muted": "#d2c6a6",
-  // Badge text (Host badge etc.) on burgundy — otherwise these fall back to the per-mode defaults.
-  "--cal-text-info": "#fbf3dc",
-  "--cal-text-success": "#fbf3dc",
-  "--cal-text-error": "#fbf3dc",
-  "--cal-text-attention": "#fbf3dc",
-  // Primary buttons: gold with evergreen label in both modes.
-  "--cal-brand": "#f3d27a",
-  "--cal-brand-emphasis": "#e6c25f",
-  "--cal-brand-text": "#0f2e22",
-  "--cal-border": "rgba(201, 162, 39, 0.55)",
-  "--cal-border-subtle": "rgba(201, 162, 39, 0.35)",
-  "--cal-border-booker": "#c9a227",
-  "--cal-border-booker-width": "1px",
-  backgroundImage:
-    "radial-gradient(120% 60% at 50% 115%, rgba(122, 31, 43, 0.55) 0%, rgba(122, 31, 43, 0) 70%)",
-  boxShadow: "0 0 0 4px rgba(122, 31, 43, 0.35), 0 18px 40px -12px rgba(15, 46, 34, 0.6)",
-} as CSSProperties;
+const hexToRgba = (hex: string, alpha: number) => {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h.slice(0, 6);
+  const n = parseInt(full, 16);
+  if (Number.isNaN(n)) return hex;
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+};
+
+type ChristmasCardColors = {
+  cardBackground: string;
+  surfaceGreen: string;
+  primaryText: string;
+  secondaryText: string;
+  mutedText: string;
+  accentGold: string;
+  borderGold: string;
+  burgundy: string;
+  buttonBackground: string;
+  buttonText: string;
+};
+
+const buildChristmasCardTheme = (c: ChristmasCardColors) =>
+  ({
+    "--cal-bg": c.cardBackground,
+    "--cal-bg-muted": c.cardBackground,
+    "--cal-bg-subtle": c.surfaceGreen,
+    "--cal-bg-emphasis": "#1f4a39",
+    "--cal-bg-success": c.burgundy,
+    "--cal-bg-error": c.burgundy,
+    "--cal-bg-info": c.burgundy,
+    "--cal-bg-attention": c.burgundy,
+    "--cal-text": c.primaryText,
+    "--cal-text-emphasis": c.accentGold,
+    "--cal-text-subtle": c.secondaryText,
+    "--cal-text-muted": c.mutedText,
+    // Badge text (Host badge etc.) on burgundy — otherwise these fall back to the per-mode defaults.
+    "--cal-text-info": "#fbf3dc",
+    "--cal-text-success": "#fbf3dc",
+    "--cal-text-error": "#fbf3dc",
+    "--cal-text-attention": "#fbf3dc",
+    // Primary buttons: gold with evergreen label in both modes.
+    "--cal-brand": c.buttonBackground,
+    "--cal-brand-emphasis": "#e6c25f",
+    "--cal-brand-text": c.buttonText,
+    "--cal-border": hexToRgba(c.borderGold, 0.55),
+    "--cal-border-subtle": hexToRgba(c.borderGold, 0.35),
+    "--cal-border-booker": c.borderGold,
+    "--cal-border-booker-width": "1px",
+    backgroundImage: `radial-gradient(120% 60% at 50% 115%, ${hexToRgba(c.burgundy, 0.55)} 0%, ${hexToRgba(
+      c.burgundy,
+      0
+    )} 70%)`,
+    boxShadow: `0 0 0 4px ${hexToRgba(c.burgundy, 0.35)}, 0 18px 40px -12px ${hexToRgba(
+      c.cardBackground,
+      0.6
+    )}`,
+  } as CSSProperties);
 
 const stringToBoolean = z
   .string()
@@ -227,6 +254,70 @@ export default function Success(props: PageProps) {
   const googleCalendarLink = calendarLinks.find((link) => link.id === CalendarLinkType.GOOGLE_CALENDAR)?.link;
 
   const isBackgroundTransparent = useIsBackgroundTransparent();
+
+  // Christmas card theme colours (live-tunable).
+  const [cardBackground, setCardBackground] = useState("#0f2e22");
+  const [surfaceGreen, setSurfaceGreen] = useState("#173d2e");
+  const [primaryText, setPrimaryText] = useState("#ede3cc");
+  const [secondaryText, setSecondaryText] = useState("#e0d5b8");
+  const [mutedText, setMutedText] = useState("#d2c6a6");
+  const [accentGold, setAccentGold] = useState("#f3d27a");
+  const [borderGold, setBorderGold] = useState("#c9a227");
+  const [burgundy, setBurgundy] = useState("#7a1f2b");
+  const [checkmarkColor, setCheckmarkColor] = useState("#f3d27a");
+  const [buttonBackground, setButtonBackground] = useState("#f3d27a");
+  const [buttonText, setButtonText] = useState("#0f2e22");
+  const [bulbColorC, setBulbColorC] = useState("#fff4d6");
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="ChristmasCard-palette"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.cardBackground === "string") setCardBackground(p.cardBackground);
+      if (typeof p.surfaceGreen === "string") setSurfaceGreen(p.surfaceGreen);
+      if (typeof p.primaryText === "string") setPrimaryText(p.primaryText);
+      if (typeof p.secondaryText === "string") setSecondaryText(p.secondaryText);
+      if (typeof p.mutedText === "string") setMutedText(p.mutedText);
+      if (typeof p.accentGold === "string") setAccentGold(p.accentGold);
+      if (typeof p.borderGold === "string") setBorderGold(p.borderGold);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="ChristmasCard-accents"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.burgundy === "string") setBurgundy(p.burgundy);
+      if (typeof p.checkmarkColor === "string") setCheckmarkColor(p.checkmarkColor);
+      if (typeof p.buttonBackground === "string") setButtonBackground(p.buttonBackground);
+      if (typeof p.buttonText === "string") setButtonText(p.buttonText);
+      if (typeof p.bulbColorC === "string") setBulbColorC(p.bulbColorC);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const christmasCardTheme = buildChristmasCardTheme({
+    cardBackground,
+    surfaceGreen,
+    primaryText,
+    secondaryText,
+    mutedText,
+    accentGold,
+    borderGold,
+    burgundy,
+    buttonBackground,
+    buttonText,
+  });
+
   const isEmbed = useIsEmbed();
   const shouldAlignCentrallyInEmbed = useEmbedNonStylesConfig("align") !== "left";
   const shouldAlignCentrally = !isEmbed || shouldAlignCentrallyInEmbed;
@@ -531,6 +622,7 @@ export default function Success(props: PageProps) {
                 "main my-4 flex flex-col transition-opacity sm:my-0 ",
                 isEmbed ? "" : " inset-0"
               )}
+              data-config-id="ChristmasCard-accents"
               aria-hidden="true">
               <div
                 className={classNames(
@@ -540,10 +632,11 @@ export default function Success(props: PageProps) {
                   "px-8 pb-4 pt-12 text-left align-bottom transition-all sm:w-full sm:pb-8 sm:pt-14 sm:align-middle"
                 )}
                 style={!isBackgroundTransparent ? christmasCardTheme : undefined}
+                data-config-id="ChristmasCard-palette"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
-                <ChristmasLights />
+                <ChristmasLights bulbColorC={bulbColorC} />
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -574,7 +667,7 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="text-emphasis h-5 w-5" />
+                          <Icon name="check" className="text-emphasis h-5 w-5" style={{ color: checkmarkColor }} />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
