@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 
 import { availabilityAsString } from "@calcom/lib/availability";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
+import { nameOfDay } from "@calcom/lib/weekday";
 import { sortAvailabilityStrings } from "@calcom/lib/weekstart";
 import type { RouterOutputs } from "@calcom/trpc/react";
 import { Dialog } from "@calcom/features/components/controlled-dialog";
@@ -47,11 +48,22 @@ export function ScheduleListItem({
 
   type AvailabilityItem = (typeof schedule.availability)[number];
 
+  const availabilitySummary = schedule.availability
+    .filter((availability: AvailabilityItem) => !!availability.days.length)
+    .map((availability: AvailabilityItem) =>
+      availabilityAsString(availability, {
+        locale: i18n.language,
+        hour12: displayOptions?.hour12,
+      })
+    )
+    // sort the availability strings as per user's weekstart (settings)
+    .sort(sortAvailabilityStrings(i18n.language, displayOptions?.weekStart));
+
   return (
     <li key={schedule.id}>
-      <div className="hover:bg-cal-muted flex items-center justify-between px-3 py-5 transition sm:px-4">
-        <div className="group flex w-full items-center justify-between ">
-          <Link href={redirectUrl} className="grow truncate text-sm" title={schedule.name}>
+      <div className="hover:bg-cal-muted flex items-center justify-between gap-2 px-3 py-4 transition sm:px-4">
+        <div className="group flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <Link href={redirectUrl} className="min-w-0 grow truncate text-sm" title={schedule.name}>
             <div className="space-x-2 rtl:space-x-reverse">
               <span className="text-emphasis truncate font-medium">{schedule.name}</span>
               {schedule.isDefault && (
@@ -60,38 +72,20 @@ export function ScheduleListItem({
                 </Badge>
               )}
             </div>
-            <p className="text-subtle mt-1">
-              {schedule.availability
-                .filter(
-                  (availability: AvailabilityItem) => !!availability.days.length
-                )
-                .map((availability: AvailabilityItem) =>
-                  availabilityAsString(availability, {
-                    locale: i18n.language,
-                    hour12: displayOptions?.hour12,
-                  })
-                )
-                // sort the availability strings as per user's weekstart (settings)
-                .sort(
-                  sortAvailabilityStrings(
-                    i18n.language,
-                    displayOptions?.weekStart
-                  )
-                )
-                .map((availabilityString: string) => (
-                  <Fragment key={availabilityString}>
-                    {availabilityString}
-                    <br />
-                  </Fragment>
-                ))}
-              {(schedule.timeZone || displayOptions?.timeZone) && (
-                <span className="my-1 flex items-center first-letter:text-xs">
-                  <Icon name="globe" className="h-3.5 w-3.5" />
-                  &nbsp;{schedule.timeZone ?? displayOptions?.timeZone}
-                </span>
-              )}
-            </p>
+            {(schedule.timeZone || displayOptions?.timeZone) && (
+              <p className="text-subtle mt-1 flex items-center">
+                <Icon name="globe" className="h-3.5 w-3.5" />
+                &nbsp;{schedule.timeZone ?? displayOptions?.timeZone}
+              </p>
+            )}
+            <p className="sr-only">{availabilitySummary.join(", ")}</p>
           </Link>
+          <WeekTimeline
+            availability={schedule.availability}
+            locale={i18n.language}
+            hour12={displayOptions?.hour12}
+            unavailableLabel={t("unavailable")}
+          />
         </div>
         <Dropdown>
           <DropdownMenuTrigger asChild>
@@ -168,5 +162,67 @@ export function ScheduleListItem({
         </Dialog>
       </div>
     </li>
+  );
+}
+
+type TimelineAvailability = { days: number[]; startTime: Date; endTime: Date };
+
+// Monday → Sunday, as day indexes where 0 is Sunday.
+const TIMELINE_DAYS = [1, 2, 3, 4, 5, 6, 0];
+
+const hourOf = (date: Date) => date.getUTCHours() + date.getUTCMinutes() / 60;
+
+function WeekTimeline({
+  availability,
+  locale,
+  hour12,
+  unavailableLabel,
+}: {
+  availability: TimelineAvailability[];
+  locale: string;
+  hour12?: boolean;
+  unavailableLabel: string;
+}) {
+  const formatTime = (date: Date) =>
+    new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "numeric", hour12 }).format(
+      new Date(date.toISOString().slice(0, -1))
+    );
+
+  return (
+    <div className="flex shrink-0 items-end gap-1" aria-hidden="true">
+      {TIMELINE_DAYS.map((day) => {
+        const ranges = availability
+          .filter((item) => item.days.includes(day))
+          .map((item) => {
+            const start = hourOf(item.startTime);
+            const rawEnd = hourOf(item.endTime);
+            const end = rawEnd <= start ? 24 : rawEnd;
+            return { start, end, label: `${formatTime(item.startTime)} - ${formatTime(item.endTime)}` };
+          })
+          .sort((a, b) => a.start - b.start);
+        const dayName = nameOfDay(locale, day, "short");
+        const tooltip = `${dayName}: ${
+          ranges.length ? ranges.map((range) => range.label).join(", ") : unavailableLabel
+        }`;
+
+        return (
+          <div key={day} className="flex w-8 flex-col items-center gap-1" title={tooltip}>
+            <div className="bg-subtle relative h-12 w-3 overflow-hidden rounded-sm">
+              {ranges.map((range) => (
+                <div
+                  key={`${range.start}-${range.end}`}
+                  className="bg-brand-default absolute inset-x-0 rounded-sm"
+                  style={{
+                    top: `${(range.start / 24) * 100}%`,
+                    height: `${Math.max(((range.end - range.start) / 24) * 100, 4)}%`,
+                  }}
+                />
+              ))}
+            </div>
+            <span className={ranges.length ? "text-default text-xs" : "text-muted text-xs"}>{dayName}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
