@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { WinterSnowfall } from "../components/WinterSnowfall";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -455,7 +456,15 @@ export default function Success(props: PageProps) {
   })();
 
   return (
-    <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
+    <div
+      className={classNames(
+        isEmbed ? "" : "h-screen",
+        // Snowy winter theme: icy blue + silver token overrides
+        "relative isolate [--cal-bg-success:hsla(199,90%,93%,1)] [--cal-border-booker:hsla(203,62%,86%,1)] [--cal-border-subtle:hsla(207,40%,89%,1)] [--cal-text-emphasis:hsla(213,48%,18%,1)] [--cal-text:hsla(213,22%,32%,1)]",
+        "dark:[--cal-bg-success:hsla(205,50%,22%,1)] dark:[--cal-border-booker:hsla(206,30%,30%,1)] dark:[--cal-border-subtle:hsla(210,22%,22%,1)] dark:[--cal-text-emphasis:hsla(200,40%,96%,1)] dark:[--cal-text:hsla(205,20%,82%,1)]"
+      )}
+      data-testid="success-page">
+      {!isEmbed && <WinterSnowfall />}
       {!isEmbed && !isFeedbackMode && (
         <EventReservationSchema
           reservationId={bookingInfo.uid}
@@ -499,7 +508,7 @@ export default function Success(props: PageProps) {
                 className={classNames(
                   "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
-                    " bg-default dark:bg-cal-muted border-booker border-booker-width",
+                    " bg-default/75 dark:bg-cal-muted/70 border-booker border-booker-width shadow-xl shadow-sky-200/50 ring-1 ring-white/70 backdrop-blur-md dark:shadow-black/40 dark:ring-white/5",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
                 )}
                 role="dialog"
@@ -535,7 +544,7 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon name="check" className="h-5 w-5 text-sky-600 dark:text-sky-300" />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
