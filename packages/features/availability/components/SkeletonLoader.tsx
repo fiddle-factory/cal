@@ -6,7 +6,7 @@ import { SkeletonText } from "@calcom/ui/components/skeleton";
 
 function SkeletonLoader() {
   return (
-    <ul className="divide-subtle border-subtle bg-default animate-pulse divide-y rounded-md border sm:mx-0 sm:overflow-hidden">
+    <ul className="grid animate-pulse grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <SkeletonItem />
       <SkeletonItem />
       <SkeletonItem />
@@ -18,21 +18,16 @@ export default SkeletonLoader;
 
 function SkeletonItem() {
   return (
-    <li>
-      <div className="flex items-center justify-between py-5  ltr:pl-4 rtl:pr-4 sm:ltr:pl-0 sm:rtl:pr-0">
-        <div className="items-between flex w-full flex-col justify-center sm:px-6">
-          <SkeletonText className="my-1 h-4 w-32" />
-          <SkeletonText className="my-1 h-2 w-24" />
-          <SkeletonText className="my-1 h-2 w-40" />
-        </div>
-        <Button
-          className="mx-5"
-          type="button"
-          variant="icon"
-          color="secondary"
-          StartIcon="ellipsis"
-          disabled
-        />
+    <li className="border-subtle bg-default relative flex flex-col rounded-md border">
+      <div className="flex flex-col gap-3 p-4">
+        <SkeletonText className="h-4 w-32" />
+        <SkeletonText className="h-3 w-44" />
+      </div>
+      <div className="border-subtle border-t px-4 py-3">
+        <SkeletonText className="h-3 w-28" />
+      </div>
+      <div className="absolute top-3 ltr:right-3 rtl:left-3">
+        <Button type="button" variant="icon" color="secondary" StartIcon="ellipsis" disabled />
       </div>
     </li>
   );

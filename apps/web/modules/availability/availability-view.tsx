@@ -138,10 +138,13 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
         </div>
       ) : (
         <>
-          <div className="border-subtle bg-default overflow-hidden rounded-md border">
-            <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
-              {availabilities.schedules.map((schedule) => (
+          <ul
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+            data-testid="schedules"
+            ref={animationParentRef}>
+            {availabilities.schedules.map((schedule) => (
                 <ScheduleListItem
+                  variant="card"
                   redirectUrl={`/availability/${schedule.id}`}
                   displayOptions={{
                     hour12: user?.timeFormat ? user.timeFormat === 12 : undefined,
@@ -156,9 +159,8 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
                   duplicateFunction={duplicateMutation.mutate}
                 />
               ))}
-            </ul>
-          </div>
-          <div className="text-default mb-16 mt-4 block text-center text-sm">
+          </ul>
+          <div className="text-default mb-16 mt-6 block text-center text-sm">
             {t("temporarily_out_of_office")}{" "}
             <Link href="settings/my-account/out-of-office" className="underline">
               {t("add_a_redirect")}
