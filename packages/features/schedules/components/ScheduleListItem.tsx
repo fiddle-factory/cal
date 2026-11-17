@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import React, { useState } from "react";
 
 import { availabilityAsString } from "@calcom/lib/availability";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
@@ -170,6 +170,13 @@ type TimelineAvailability = { days: number[]; startTime: Date; endTime: Date };
 // Monday → Sunday, as day indexes where 0 is Sunday.
 const TIMELINE_DAYS = [1, 2, 3, 4, 5, 6, 0];
 
+const TIMELINE_DEFAULT_COLORS = {
+  available: "#111827", // bg-brand-default
+  track: "#eeeff2", // bg-subtle
+  dayLabel: "#3c3e44", // text-default
+  unavailableLabel: "#9ca3b0", // text-muted
+};
+
 const hourOf = (date: Date) => date.getUTCHours() + date.getUTCMinutes() / 60;
 
 function WeekTimeline({
@@ -183,6 +190,39 @@ function WeekTimeline({
   hour12?: boolean;
   unavailableLabel: string;
 }) {
+  // Light-mode token values; while a colour equals its default the theme token is used,
+  // so dark mode (and custom brand colours) keep working until a colour is adjusted.
+  const [availableColor, setAvailableColor] = useState(TIMELINE_DEFAULT_COLORS.available);
+  const [trackColor, setTrackColor] = useState(TIMELINE_DEFAULT_COLORS.track);
+  const [dayLabelColor, setDayLabelColor] = useState(TIMELINE_DEFAULT_COLORS.dayLabel);
+  const [unavailableLabelColor, setUnavailableLabelColor] = useState(TIMELINE_DEFAULT_COLORS.unavailableLabel);
+
+  // geneditor-listener-start
+  React.useEffect(() => {
+    const el = document.querySelector('[data-config-id="Layout-div-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.availableColor === "string") setAvailableColor(p.availableColor);
+      if (typeof p.trackColor === "string") setTrackColor(p.trackColor);
+      if (typeof p.dayLabelColor === "string") setDayLabelColor(p.dayLabelColor);
+      if (typeof p.unavailableLabelColor === "string") setUnavailableLabelColor(p.unavailableLabelColor);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const override = (value: string, fallback: string) =>
+    value.toLowerCase() === fallback ? undefined : value;
+  const availableOverride = override(availableColor, TIMELINE_DEFAULT_COLORS.available);
+  const trackOverride = override(trackColor, TIMELINE_DEFAULT_COLORS.track);
+  const dayLabelOverride = override(dayLabelColor, TIMELINE_DEFAULT_COLORS.dayLabel);
+  const unavailableLabelOverride = override(
+    unavailableLabelColor,
+    TIMELINE_DEFAULT_COLORS.unavailableLabel
+  );
+
   const formatTime = (date: Date) =>
     new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "numeric", hour12 }).format(
       new Date(date.toISOString().slice(0, -1))
@@ -207,7 +247,9 @@ function WeekTimeline({
 
         return (
           <div key={day} className="flex w-8 flex-col items-center gap-1" title={tooltip}>
-            <div className="bg-subtle relative h-12 w-3 overflow-hidden rounded-sm">
+            <div
+              className="bg-subtle relative h-12 w-3 overflow-hidden rounded-sm"
+              style={trackOverride ? { backgroundColor: trackOverride } : undefined}>
               {ranges.map((range) => (
                 <div
                   key={`${range.start}-${range.end}`}
@@ -215,11 +257,24 @@ function WeekTimeline({
                   style={{
                     top: `${(range.start / 24) * 100}%`,
                     height: `${Math.max(((range.end - range.start) / 24) * 100, 4)}%`,
+                    ...(availableOverride ? { backgroundColor: availableOverride } : {}),
                   }}
                 />
               ))}
             </div>
-            <span className={ranges.length ? "text-default text-xs" : "text-muted text-xs"}>{dayName}</span>
+            <span
+              className={ranges.length ? "text-default text-xs" : "text-muted text-xs"}
+              style={
+                ranges.length
+                  ? dayLabelOverride
+                    ? { color: dayLabelOverride }
+                    : undefined
+                  : unavailableLabelOverride
+                  ? { color: unavailableLabelOverride }
+                  : undefined
+              }>
+              {dayName}
+            </span>
           </div>
         );
       })}
