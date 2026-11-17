@@ -569,7 +569,7 @@ export default function Success(props: PageProps) {
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
                       <h3
-                        className="text-2xl font-semibold leading-6 text-red-700 dark:text-red-400"
+                        className="text-2xl font-semibold leading-6 text-red-800 dark:text-red-300"
                         data-testid={isCancelled ? "cancelled-headline" : ""}
                         id="modal-headline">
                         {successPageHeadline}
@@ -907,7 +907,7 @@ export default function Success(props: PageProps) {
                                               ? `?rescheduledBy=${encodeURIComponent(currentUserEmail)}`
                                               : ""
                                           }`}
-                                          className="font-medium text-red-700 underline decoration-green-600 underline-offset-2 dark:text-red-400"
+                                          className="font-medium text-red-800 underline decoration-green-700 underline-offset-2 dark:text-red-300 dark:decoration-green-400"
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
@@ -921,7 +921,7 @@ export default function Success(props: PageProps) {
                                     <button
                                       data-testid="cancel"
                                       className={classNames(
-                                        "font-medium text-red-700 underline decoration-green-600 underline-offset-2 dark:text-red-400",
+                                        "font-medium text-red-800 underline decoration-green-700 underline-offset-2 dark:text-red-300 dark:decoration-green-400",
                                         props.recurringBookings && "ltr:mr-2 rtl:ml-2"
                                       )}
                                       onClick={() => setIsCancellationMode(true)}>
@@ -984,7 +984,7 @@ export default function Success(props: PageProps) {
                             {googleCalendarLink && (
                               <Link
                                 href={googleCalendarLink}
-                                className="text-green-800 dark:text-green-300 hover:bg-red-50 dark:hover:bg-red-950/40 border-green-200 dark:border-green-900 h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
+                                className="text-green-900 dark:text-green-200 hover:bg-red-50 dark:hover:bg-red-950/40 border-green-200 dark:border-green-900 h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 inline-block h-4 w-4"
@@ -999,7 +999,7 @@ export default function Success(props: PageProps) {
                             {microsoftOutlookLink && (
                               <Link
                                 href={microsoftOutlookLink}
-                                className="border-green-200 dark:border-green-900 text-green-800 dark:text-green-300 hover:bg-red-50 dark:hover:bg-red-950/40 mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="border-green-200 dark:border-green-900 text-green-900 dark:text-green-200 hover:bg-red-50 dark:hover:bg-red-950/40 mx-2 h-10 w-10 rounded-sm border px-3 py-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -1014,7 +1014,7 @@ export default function Success(props: PageProps) {
                             {microsoftOfficeLink && (
                               <Link
                                 href={microsoftOfficeLink}
-                                className="text-green-800 dark:text-green-300 hover:bg-red-50 dark:hover:bg-red-950/40 border-green-200 dark:border-green-900 mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="text-green-900 dark:text-green-200 hover:bg-red-50 dark:hover:bg-red-950/40 border-green-200 dark:border-green-900 mx-2 h-10 w-10 rounded-sm border px-3 py-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -1029,7 +1029,7 @@ export default function Success(props: PageProps) {
                             {icsLink && (
                               <Link
                                 href={icsLink}
-                                className="border-green-200 dark:border-green-900 text-green-800 dark:text-green-300 hover:bg-red-50 dark:hover:bg-red-950/40 mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="border-green-200 dark:border-green-900 text-green-900 dark:text-green-200 hover:bg-red-50 dark:hover:bg-red-950/40 mx-2 h-10 w-10 rounded-sm border px-3 py-2"
                                 download={`${eventType.title}.ics`}>
                                 <svg
                                   version="1.1"
