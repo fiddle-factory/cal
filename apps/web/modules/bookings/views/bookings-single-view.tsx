@@ -67,7 +67,9 @@ import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
 // Cozy Christmas palette: evergreen surface, cream text, gold accents, burgundy highlights.
-// Overrides the Cal design tokens within the confirmation card only.
+// Overrides the Cal design tokens within the confirmation card only. The inline style wins over
+// both the light and dark (.dark) token sets, so every text token below is tuned to stay ≥ 4.5:1
+// (WCAG AA) on every card surface: evergreen base, bg-subtle/emphasis and the burgundy glow/badges.
 const christmasCardTheme = {
   "--cal-bg": "#0f2e22",
   "--cal-bg-muted": "#0f2e22",
@@ -75,10 +77,21 @@ const christmasCardTheme = {
   "--cal-bg-emphasis": "#1f4a39",
   "--cal-bg-success": "#7a1f2b",
   "--cal-bg-error": "#7a1f2b",
+  "--cal-bg-info": "#7a1f2b",
+  "--cal-bg-attention": "#7a1f2b",
   "--cal-text": "#ede3cc",
   "--cal-text-emphasis": "#f3d27a",
-  "--cal-text-subtle": "#cbbd98",
-  "--cal-text-muted": "#a8997a",
+  "--cal-text-subtle": "#e0d5b8",
+  "--cal-text-muted": "#d2c6a6",
+  // Badge text (Host badge etc.) on burgundy — otherwise these fall back to the per-mode defaults.
+  "--cal-text-info": "#fbf3dc",
+  "--cal-text-success": "#fbf3dc",
+  "--cal-text-error": "#fbf3dc",
+  "--cal-text-attention": "#fbf3dc",
+  // Primary buttons: gold with evergreen label in both modes.
+  "--cal-brand": "#f3d27a",
+  "--cal-brand-emphasis": "#e6c25f",
+  "--cal-brand-text": "#0f2e22",
   "--cal-border": "rgba(201, 162, 39, 0.55)",
   "--cal-border-subtle": "rgba(201, 162, 39, 0.35)",
   "--cal-border-booker": "#c9a227",
@@ -498,7 +511,7 @@ export default function Success(props: PageProps) {
           <Link
             href={allRemainingBookings ? "/bookings/recurring" : "/bookings/upcoming"}
             data-testid="back-to-bookings"
-            className="hover:bg-subtle text-subtle hover:text-default mt-2 inline-flex px-1 py-2 text-sm transition dark:hover:bg-transparent">
+            className="hover:bg-subtle text-default hover:text-emphasis mt-2 inline-flex px-1 py-2 text-sm transition dark:hover:bg-transparent">
             <Icon name="chevron-left" className="h-5 w-5 rtl:rotate-180" /> {t("back_to_bookings")}
           </Link>
         </div>
