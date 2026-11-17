@@ -497,7 +497,7 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
@@ -505,6 +505,7 @@ export default function Success(props: PageProps) {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <ChristmasCardDecorations />
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -527,7 +528,7 @@ export default function Success(props: PageProps) {
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? "bg-green-800 ring-4 ring-red-700/20 dark:bg-green-700"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
@@ -535,7 +536,7 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon name="check" className="h-5 w-5 text-white" />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -544,6 +545,11 @@ export default function Success(props: PageProps) {
                       </div>
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
+                      <p className="mb-3 flex items-center justify-center gap-2 text-sm font-semibold text-red-700 dark:text-red-400">
+                        <HollySprig className="h-5 w-5" />
+                        {t("seasonal_greeting_christmas")}
+                        <HollySprig className="h-5 w-5 -scale-x-100" />
+                      </p>
                       <h3
                         className="text-emphasis text-2xl font-semibold leading-6"
                         data-testid={isCancelled ? "cancelled-headline" : ""}
@@ -558,7 +564,7 @@ export default function Success(props: PageProps) {
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div className="text-default mt-8 grid grid-cols-3 border-green-800/25 dark:border-green-600/30 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
@@ -883,7 +889,7 @@ export default function Success(props: PageProps) {
                                               ? `?rescheduledBy=${encodeURIComponent(currentUserEmail)}`
                                               : ""
                                           }`}
-                                          className="underline"
+                                          className="font-medium text-red-700 underline dark:text-red-400"
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
@@ -897,7 +903,7 @@ export default function Success(props: PageProps) {
                                     <button
                                       data-testid="cancel"
                                       className={classNames(
-                                        "text-default underline",
+                                        "font-medium text-green-800 underline dark:text-green-400",
                                         props.recurringBookings && "ltr:mr-2 rtl:ml-2"
                                       )}
                                       onClick={() => setIsCancellationMode(true)}>
@@ -1335,6 +1341,54 @@ function RecurringBookings({
         timeZone: tz,
       })}{" "}
       <span className="text-bookinglight">({formatToLocalizedTimezone(date, language, tz)})</span>
+    </div>
+  );
+}
+
+function Snowflake({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      className={className}
+      aria-hidden="true">
+      <path d="M12 2v20M3.34 7l17.32 10M3.34 17 20.66 7" />
+      <path d="m9.5 3.5 2.5 2.5 2.5-2.5M9.5 20.5 12 18l2.5 2.5" />
+      <path d="m4.2 10.2 3.4-.9-.9-3.4M19.8 13.8l-3.4.9.9 3.4" />
+      <path d="m6.7 17.1.9-3.4-3.4-.9M17.3 6.9l-.9 3.4 3.4.9" />
+    </svg>
+  );
+}
+
+function HollySprig({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M12 13C9.5 13.5 6 12 4.5 8.5c1.3.2 2.2-.3 2.6-1.2.9.8 2 .9 2.9.3-.2 1.2.3 2.2 1.3 2.6L12 13Z"
+        className="fill-green-800 dark:fill-green-500"
+      />
+      <path
+        d="M12 13c2.5.5 6-1 7.5-4.5-1.3.2-2.2-.3-2.6-1.2-.9.8-2 .9-2.9.3.2 1.2-.3 2.2-1.3 2.6L12 13Z"
+        className="fill-green-700 dark:fill-green-600"
+      />
+      <circle cx="10.4" cy="15.2" r="2" className="fill-red-700 dark:fill-red-500" />
+      <circle cx="13.8" cy="15.6" r="2" className="fill-red-600 dark:fill-red-400" />
+      <circle cx="12" cy="18.3" r="2" className="fill-red-700 dark:fill-red-500" />
+    </svg>
+  );
+}
+
+function ChristmasCardDecorations() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none">
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-red-700 via-green-800 to-red-700" />
+      <Snowflake className="absolute left-4 top-5 h-6 w-6 text-red-700/25 dark:text-red-400/30" />
+      <Snowflake className="absolute left-11 top-12 h-3.5 w-3.5 text-green-800/25 dark:text-green-400/30" />
+      <Snowflake className="absolute right-4 top-5 h-6 w-6 text-green-800/25 dark:text-green-400/30" />
+      <Snowflake className="absolute right-11 top-12 h-3.5 w-3.5 text-red-700/25 dark:text-red-400/30" />
     </div>
   );
 }
