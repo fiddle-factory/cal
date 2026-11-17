@@ -5,6 +5,7 @@ import classNames from "classnames";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import type { CSSProperties } from "react";
 import { Fragment, useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { z } from "zod";
@@ -61,8 +62,31 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { ChristmasLights } from "../components/ChristmasLights";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
+
+// Cozy Christmas palette: evergreen surface, cream text, gold accents, burgundy highlights.
+// Overrides the Cal design tokens within the confirmation card only.
+const christmasCardTheme = {
+  "--cal-bg": "#0f2e22",
+  "--cal-bg-muted": "#0f2e22",
+  "--cal-bg-subtle": "#173d2e",
+  "--cal-bg-emphasis": "#1f4a39",
+  "--cal-bg-success": "#7a1f2b",
+  "--cal-bg-error": "#7a1f2b",
+  "--cal-text": "#ede3cc",
+  "--cal-text-emphasis": "#f3d27a",
+  "--cal-text-subtle": "#cbbd98",
+  "--cal-text-muted": "#a8997a",
+  "--cal-border": "rgba(201, 162, 39, 0.55)",
+  "--cal-border-subtle": "rgba(201, 162, 39, 0.35)",
+  "--cal-border-booker": "#c9a227",
+  "--cal-border-booker-width": "1px",
+  backgroundImage:
+    "radial-gradient(120% 60% at 50% 115%, rgba(122, 31, 43, 0.55) 0%, rgba(122, 31, 43, 0) 70%)",
+  boxShadow: "0 0 0 4px rgba(122, 31, 43, 0.35), 0 18px 40px -12px rgba(15, 46, 34, 0.6)",
+} as CSSProperties;
 
 const stringToBoolean = z
   .string()
@@ -497,14 +521,16 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
-                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
+                  "px-8 pb-4 pt-12 text-left align-bottom transition-all sm:w-full sm:pb-8 sm:pt-14 sm:align-middle"
                 )}
+                style={!isBackgroundTransparent ? christmasCardTheme : undefined}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <ChristmasLights />
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -527,7 +553,7 @@ export default function Success(props: PageProps) {
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? "bg-cal-success border-booker border"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
@@ -535,7 +561,7 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon name="check" className="text-emphasis h-5 w-5" />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
