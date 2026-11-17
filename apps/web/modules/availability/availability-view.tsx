@@ -9,6 +9,7 @@ import posthog from "posthog-js";
 
 import { BulkEditDefaultForEventsModal } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
 import type { BulkUpdatParams } from "@calcom/web/modules/event-types/components/BulkEditDefaultForEventsModal";
+import { DefaultScheduleCard } from "@calcom/features/schedules/components/DefaultScheduleCard";
 import { NewScheduleButton } from "@calcom/features/schedules/components/NewScheduleButton";
 import { ScheduleListItem } from "@calcom/features/schedules/components/ScheduleListItem";
 import { useCompatSearchParams } from "@calcom/lib/hooks/useCompatSearchParams";
@@ -18,7 +19,8 @@ import type { RouterOutputs } from "@calcom/trpc/react";
 import { trpc } from "@calcom/trpc/react";
 import useMeQuery from "@calcom/trpc/react/hooks/useMeQuery";
 import { EmptyScreen } from "@calcom/ui/components/empty-screen";
-import { ToggleGroup } from "@calcom/ui/components/form";
+import { TextField, ToggleGroup } from "@calcom/ui/components/form";
+import { Icon } from "@calcom/ui/components/icon";
 import { showToast } from "@calcom/ui/components/toast";
 
 type AvailabilityListProps = {
@@ -123,6 +125,20 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
   // Adds smooth delete button - item fades and old item slides into place
 
   const [animationParentRef] = useAutoAnimate<HTMLUListElement>();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const displayOptions = {
+    hour12: user?.timeFormat ? user.timeFormat === 12 : undefined,
+    timeZone: user?.timeZone,
+    weekStart: user?.weekStart || "Sunday",
+  };
+  const isDeletable = availabilities.schedules.length !== 1;
+  const defaultSchedule = availabilities.schedules.find((schedule) => schedule.isDefault);
+  const otherSchedules = availabilities.schedules.filter((schedule) => schedule !== defaultSchedule);
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredSchedules = normalizedSearch
+    ? otherSchedules.filter((schedule) => schedule.name.toLowerCase().includes(normalizedSearch))
+    : otherSchedules;
 
   return (
     <>
@@ -138,25 +154,63 @@ export function AvailabilityList({ availabilities }: AvailabilityListProps) {
         </div>
       ) : (
         <>
-          <div className="border-subtle bg-default overflow-hidden rounded-md border">
-            <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
-              {availabilities.schedules.map((schedule) => (
-                <ScheduleListItem
-                  redirectUrl={`/availability/${schedule.id}`}
-                  displayOptions={{
-                    hour12: user?.timeFormat ? user.timeFormat === 12 : undefined,
-                    timeZone: user?.timeZone,
-                    weekStart: user?.weekStart || "Sunday",
-                  }}
-                  key={schedule.id}
-                  schedule={schedule}
-                  isDeletable={availabilities.schedules.length !== 1}
-                  updateDefault={updateMutation.mutate}
-                  deleteFunction={deleteMutation.mutate}
-                  duplicateFunction={duplicateMutation.mutate}
-                />
-              ))}
-            </ul>
+          <div className="space-y-6">
+            {defaultSchedule && (
+              <DefaultScheduleCard
+                redirectUrl={`/availability/${defaultSchedule.id}`}
+                displayOptions={displayOptions}
+                schedule={defaultSchedule}
+                isDeletable={isDeletable}
+                updateDefault={updateMutation.mutate}
+                deleteFunction={deleteMutation.mutate}
+                duplicateFunction={duplicateMutation.mutate}
+              />
+            )}
+            {otherSchedules.length > 0 && (
+              <section>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-emphasis text-sm font-semibold">
+                    {defaultSchedule ? t("other_schedules") : t("availability")}{" "}
+                    <span className="text-subtle font-normal">({otherSchedules.length})</span>
+                  </h2>
+                  <TextField
+                    className="max-w-64"
+                    addOnLeading={<Icon name="search" className="text-subtle h-4 w-4" />}
+                    containerClassName="w-full max-w-64 focus:ring-offset-0!"
+                    type="search"
+                    size="sm"
+                    value={searchTerm}
+                    autoComplete="off"
+                    aria-label={t("search_schedules")}
+                    data-testid="schedules-search"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={t("search_schedules")}
+                  />
+                </div>
+                <div className="border-subtle bg-default overflow-hidden rounded-md border">
+                  <ul className="divide-subtle divide-y" data-testid="schedules" ref={animationParentRef}>
+                    {filteredSchedules.map((schedule) => (
+                      <ScheduleListItem
+                        variant="compact"
+                        redirectUrl={`/availability/${schedule.id}`}
+                        displayOptions={displayOptions}
+                        key={schedule.id}
+                        schedule={schedule}
+                        isDeletable={isDeletable}
+                        updateDefault={updateMutation.mutate}
+                        deleteFunction={deleteMutation.mutate}
+                        duplicateFunction={duplicateMutation.mutate}
+                      />
+                    ))}
+                  </ul>
+                  {filteredSchedules.length === 0 && (
+                    <p className="text-subtle px-4 py-6 text-center text-sm">
+                      {t("no_schedules_match_search", { searchTerm: searchTerm.trim() })}
+                    </p>
+                  )}
+                </div>
+              </section>
+            )}
           </div>
           <div className="text-default mb-16 mt-4 block text-center text-sm">
             {t("temporarily_out_of_office")}{" "}
