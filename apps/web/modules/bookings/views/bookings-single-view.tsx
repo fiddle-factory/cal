@@ -598,7 +598,7 @@ export default function Success(props: PageProps) {
         />
       )}
       {isLoggedIn && !isEmbed && !isFeedbackMode && (
-        <div className="-mb-4 ml-4 mt-2">
+        <div className="-mb-4 ml-4 mt-2 flex items-start justify-center">
           <Link
             href={allRemainingBookings ? "/bookings/recurring" : "/bookings/upcoming"}
             data-testid="back-to-bookings"
@@ -677,7 +677,7 @@ export default function Success(props: PageProps) {
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
                       <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
+                        className="text-emphasis text-2xl font-medium leading-6"
                         data-testid={isCancelled ? "cancelled-headline" : ""}
                         id="modal-headline">
                         {successPageHeadline}
@@ -998,7 +998,7 @@ export default function Success(props: PageProps) {
                             (!isBookingInPast && canCancel)) && (
                             <>
                               <hr className="border-subtle mb-8" />
-                              <div className="text-center last:pb-0">
+                              <div className="text-center last:pb-0 opacity-60">
                                 <span className="text-emphasis ltr:mr-2 rtl:ml-2">
                                   {t("need_to_make_a_change")}
                                 </span>
