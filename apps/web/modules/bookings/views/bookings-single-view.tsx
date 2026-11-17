@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { ChristmasLights, GiftRibbon, christmasThemeStyle } from "../components/ChristmasDecor";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -455,7 +456,11 @@ export default function Success(props: PageProps) {
   })();
 
   return (
-    <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
+    <div
+      className={isEmbed ? "" : "min-h-screen"}
+      style={isEmbed ? undefined : christmasThemeStyle}
+      data-testid="success-page">
+      {!isEmbed && <ChristmasLights />}
       {!isEmbed && !isFeedbackMode && (
         <EventReservationSchema
           reservationId={bookingInfo.uid}
@@ -497,7 +502,8 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  !isBackgroundTransparent && "shadow-[0_12px_32px_-12px_rgba(123,30,46,0.25)]",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
@@ -505,6 +511,7 @@ export default function Success(props: PageProps) {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                {!isBackgroundTransparent && <GiftRibbon />}
                 {!isFeedbackMode && (
                   <>
                     <div
