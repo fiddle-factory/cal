@@ -205,6 +205,32 @@ export default function Success(props: PageProps) {
   const [rateValue, setRateValue] = useState<number>(defaultRating);
   const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
 
+  // Festive (Christmas) theme tunables
+  const [showLights, setShowLights] = useState(true);
+  const [twinkleSpeed, setTwinkleSpeed] = useState(1.8);
+  const [glowSize, setGlowSize] = useState(8);
+  const [goldColor, setGoldColor] = useState("#c9a227");
+  const [burgundyColor, setBurgundyColor] = useState("#7a1f2b");
+  const [pineColor, setPineColor] = useState("#14532d");
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="BookingConfirmation-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.showLights === "boolean") setShowLights(p.showLights);
+      if (typeof p.twinkleSpeed === "number") setTwinkleSpeed(p.twinkleSpeed);
+      if (typeof p.glowSize === "number") setGlowSize(p.glowSize);
+      if (typeof p.goldColor === "string") setGoldColor(p.goldColor);
+      if (typeof p.burgundyColor === "string") setBurgundyColor(p.burgundyColor);
+      if (typeof p.pineColor === "string") setPineColor(p.pineColor);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const mutation = trpc.viewer.public.submitRating.useMutation({
     onSuccess: async () => {
       setIsFeedbackSubmitted(true);
@@ -455,7 +481,14 @@ export default function Success(props: PageProps) {
   })();
 
   return (
-    <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
+    <div
+      className={isEmbed ? "" : "min-h-screen"}
+      data-testid="success-page"
+      style={
+        isEmbed
+          ? undefined
+          : { backgroundImage: `radial-gradient(ellipse at top, ${pineColor} 0%, #0b2418 75%)` }
+      }>
       {!isEmbed && !isFeedbackMode && (
         <EventReservationSchema
           reservationId={bookingInfo.uid}
@@ -474,7 +507,7 @@ export default function Success(props: PageProps) {
           <Link
             href={allRemainingBookings ? "/bookings/recurring" : "/bookings/upcoming"}
             data-testid="back-to-bookings"
-            className="hover:bg-subtle text-subtle hover:text-default mt-2 inline-flex px-1 py-2 text-sm transition dark:hover:bg-transparent">
+            className="mt-2 inline-flex rounded-md px-1 py-2 text-sm text-[#f3e3b0] transition hover:bg-white/10 hover:text-white">
             <Icon name="chevron-left" className="h-5 w-5 rtl:rotate-180" /> {t("back_to_bookings")}
           </Link>
         </div>
@@ -496,15 +529,30 @@ export default function Success(props: PageProps) {
               )}
               aria-hidden="true">
               <div
+                data-config-id="BookingConfirmation-controls"
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
-                  !isBackgroundTransparent &&
-                    " bg-default dark:bg-cal-muted border-booker border-booker-width",
-                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
+                  "relative inline-block transform overflow-hidden rounded-xl border-4 border-double shadow-2xl sm:my-8 sm:max-w-xl",
+                  !isBackgroundTransparent && "bg-[#fffaf0] dark:bg-cal-muted",
+                  "px-8 pb-10 pt-14 text-left align-bottom transition-all sm:w-full sm:pb-12 sm:pt-16 sm:align-middle"
                 )}
+                style={{ borderColor: goldColor }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-2 rounded-lg border"
+                  style={{ borderColor: `${goldColor}55` }}
+                />
+                {showLights && (
+                  <FestiveStringLights
+                    goldColor={goldColor}
+                    burgundyColor={burgundyColor}
+                    pineColor={pineColor}
+                    twinkleSpeed={twinkleSpeed}
+                    glowSize={glowSize}
+                  />
+                )}
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -527,15 +575,24 @@ export default function Success(props: PageProps) {
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? "border-2 shadow-lg"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
                             : "",
                           isCancelled ? "bg-error" : ""
-                        )}>
+                        )}
+                        style={
+                          !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
+                            ? {
+                                backgroundColor: pineColor,
+                                borderColor: goldColor,
+                                boxShadow: `0 0 0 4px ${goldColor}33, 0 0 ${glowSize * 2}px ${goldColor}66`,
+                              }
+                            : undefined
+                        }>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon name="check" className="h-5 w-5" style={{ color: goldColor }} />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -545,10 +602,13 @@ export default function Success(props: PageProps) {
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
                       <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
+                        className="font-heading flex items-center justify-center gap-2 text-2xl font-semibold leading-6 dark:text-[#f5d77a]"
+                        style={{ color: burgundyColor }}
                         data-testid={isCancelled ? "cancelled-headline" : ""}
                         id="modal-headline">
-                        {successPageHeadline}
+                        <Icon name="sparkles" className="h-5 w-5 shrink-0" style={{ color: goldColor }} />
+                        <span>{successPageHeadline}</span>
+                        <Icon name="sparkles" className="h-5 w-5 shrink-0" style={{ color: goldColor }} />
                       </h3>
 
                       <div className="mt-3">
@@ -558,7 +618,9 @@ export default function Success(props: PageProps) {
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div
+                        className="text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0"
+                        style={{ borderColor: `${goldColor}80` }}>
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
@@ -590,7 +652,9 @@ export default function Success(props: PageProps) {
                             </div>
                           </>
                         )}
-                        <div className="font-medium">{t("what")}</div>
+                        <div className="font-medium dark:text-[#e8c66a]" style={{ color: pineColor }}>
+                          {t("what")}
+                        </div>
                         <div
                           className="wrap-break-word col-span-2 mb-6 last:mb-0"
                           data-testid="booking-title">
@@ -600,7 +664,9 @@ export default function Success(props: PageProps) {
                               : eventName
                             : eventName}
                         </div>
-                        <div className="font-medium">{t("when")}</div>
+                        <div className="font-medium dark:text-[#e8c66a]" style={{ color: pineColor }}>
+                          {t("when")}
+                        </div>
                         <div className="col-span-2 mb-6 last:mb-0">
                           {reschedule && !!formerTime && (
                             <p className="line-through">
@@ -629,7 +695,9 @@ export default function Success(props: PageProps) {
                         </div>
                         {(bookingInfo?.user || bookingInfo?.attendees) && (
                           <>
-                            <div className="font-medium">{t("who")}</div>
+                            <div className="font-medium dark:text-[#e8c66a]" style={{ color: pineColor }}>
+                              {t("who")}
+                            </div>
                             <div className="col-span-2 last:mb-0">
                               {bookingInfo?.user && (
                                 <div className="mb-3">
@@ -674,7 +742,9 @@ export default function Success(props: PageProps) {
                         )}
                         {locationToDisplay && !isCancelled && (
                           <>
-                            <div className="mt-3 font-medium">{t("where")}</div>
+                            <div className="mt-3 font-medium dark:text-[#e8c66a]" style={{ color: pineColor }}>
+                              {t("where")}
+                            </div>
                             <div className="col-span-2 mt-3" data-testid="where">
                               {!rescheduleLocation || locationToDisplay === rescheduleLocationToDisplay ? (
                                 <DisplayLocation
@@ -951,16 +1021,18 @@ export default function Success(props: PageProps) {
                     )}
                     {!needsConfirmation && !isCancellationMode && isReschedulable && !!calculatedDuration && (
                       <>
-                        <hr className="border-subtle mt-8" />
+                        <hr className="mt-8" style={{ borderColor: `${goldColor}80` }} />
                         <div className="text-default align-center flex flex-row justify-center pt-8">
-                          <span className="text-default flex self-center font-medium ltr:mr-2 rtl:ml-2 ">
+                          <span
+                            className="flex self-center font-medium ltr:mr-2 rtl:ml-2 dark:text-[#e8c66a]"
+                            style={{ color: pineColor }}>
                             {t("add_to_calendar")}
                           </span>
                           <div className="justify-left mt-1 flex text-left sm:mt-0">
                             {googleCalendarLink && (
                               <Link
                                 href={googleCalendarLink}
-                                className="text-default border-subtle h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
+                                className="text-default border-[#c9a227]/60 bg-white/60 transition-colors hover:border-[#c9a227] hover:bg-[#14532d] hover:text-[#f5d77a] h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 inline-block h-4 w-4"
@@ -975,7 +1047,7 @@ export default function Success(props: PageProps) {
                             {microsoftOutlookLink && (
                               <Link
                                 href={microsoftOutlookLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="border-[#c9a227]/60 bg-white/60 transition-colors hover:border-[#c9a227] hover:bg-[#14532d] hover:text-[#f5d77a] text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -990,7 +1062,7 @@ export default function Success(props: PageProps) {
                             {microsoftOfficeLink && (
                               <Link
                                 href={microsoftOfficeLink}
-                                className="text-default border-subtle mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="text-default border-[#c9a227]/60 bg-white/60 transition-colors hover:border-[#c9a227] hover:bg-[#14532d] hover:text-[#f5d77a] mx-2 h-10 w-10 rounded-sm border px-3 py-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -1005,7 +1077,7 @@ export default function Success(props: PageProps) {
                             {icsLink && (
                               <Link
                                 href={icsLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="border-[#c9a227]/60 bg-white/60 transition-colors hover:border-[#c9a227] hover:bg-[#14532d] hover:text-[#f5d77a] text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
                                 download={`${eventType.title}.ics`}>
                                 <svg
                                   version="1.1"
@@ -1149,6 +1221,91 @@ export default function Success(props: PageProps) {
       </main>
       <Toaster position="bottom-right" />
     </div>
+  );
+}
+
+const FESTIVE_LIGHT_SEGMENTS = 10;
+
+function FestiveStringLights({
+  goldColor,
+  burgundyColor,
+  pineColor,
+  twinkleSpeed,
+  glowSize,
+}: {
+  goldColor: string;
+  burgundyColor: string;
+  pineColor: string;
+  twinkleSpeed: number;
+  glowSize: number;
+}) {
+  const bulbColors = [goldColor, burgundyColor, "#fff1c1", pineColor];
+  const segmentWidth = 100 / FESTIVE_LIGHT_SEGMENTS;
+  const wirePath = Array.from({ length: FESTIVE_LIGHT_SEGMENTS }, (_, i) => {
+    const x = i * segmentWidth;
+    return `${i === 0 ? "M0,3 " : ""}Q${x + segmentWidth / 2},15 ${x + segmentWidth},3`;
+  }).join(" ");
+  const speed = Math.max(twinkleSpeed, 0.2);
+
+  return (
+    <>
+      {/* String of lights draped along the top edge */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-10">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 20" preserveAspectRatio="none">
+          <path
+            d={wirePath}
+            fill="none"
+            stroke={goldColor}
+            strokeOpacity={0.8}
+            strokeWidth={1.25}
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+        {Array.from({ length: FESTIVE_LIGHT_SEGMENTS }, (_, i) => {
+          const color = bulbColors[i % bulbColors.length];
+          return (
+            <div
+              key={i}
+              className="absolute flex flex-col items-center"
+              style={{
+                left: `${segmentWidth * i + segmentWidth / 2}%`,
+                top: 16,
+                transform: `translateX(-50%) rotate(${i % 2 === 0 ? -10 : 10}deg)`,
+                transformOrigin: "top center",
+              }}>
+              <div className="h-1.5 w-1.5 rounded-[1px]" style={{ backgroundColor: goldColor }} />
+              <div
+                className="h-3.5 w-2.5 animate-pulse rounded-full"
+                style={{
+                  backgroundColor: color,
+                  boxShadow: `0 0 ${glowSize}px ${glowSize / 2}px ${color}`,
+                  animationDuration: `${speed}s`,
+                  animationDelay: `${((i * 0.37) % 1) * speed}s`,
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      {/* Gold sparkle accents along the bottom edge */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-6 bottom-3 flex items-center justify-between">
+        {Array.from({ length: 9 }, (_, i) => (
+          <Icon
+            key={i}
+            name="sparkles"
+            className={classNames("animate-pulse", i % 2 === 0 ? "h-3 w-3" : "h-2 w-2")}
+            style={{
+              color: goldColor,
+              filter: `drop-shadow(0 0 ${glowSize / 2}px ${goldColor})`,
+              animationDuration: `${speed * 1.4}s`,
+              animationDelay: `${((i * 0.53) % 1) * speed}s`,
+            }}
+          />
+        ))}
+      </div>
+    </>
   );
 }
 
