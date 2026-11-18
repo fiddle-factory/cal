@@ -65,7 +65,7 @@ export function ScheduleListItem({
         <div className="group flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <Link href={redirectUrl} className="min-w-0 grow truncate text-sm" title={schedule.name}>
             <div className="space-x-2 rtl:space-x-reverse">
-              <span className="text-emphasis truncate font-medium">{schedule.name}</span>
+              <span className="text-emphasis truncate text-sm font-medium">{schedule.name}</span>
               {schedule.isDefault && (
                 <Badge variant="gray" className="text-xs">
                   {t("default")}
@@ -192,8 +192,8 @@ function WeekTimeline({
 }) {
   // Light-mode token values; while a colour equals its default the theme token is used,
   // so dark mode (and custom brand colours) keep working until a colour is adjusted.
-  const [availableColor, setAvailableColor] = useState(TIMELINE_DEFAULT_COLORS.available);
-  const [trackColor, setTrackColor] = useState(TIMELINE_DEFAULT_COLORS.track);
+  const [availableColor, setAvailableColor] = useState("#af1818");
+  const [trackColor, setTrackColor] = useState("#d1daf6");
   const [dayLabelColor, setDayLabelColor] = useState(TIMELINE_DEFAULT_COLORS.dayLabel);
   const [unavailableLabelColor, setUnavailableLabelColor] = useState(TIMELINE_DEFAULT_COLORS.unavailableLabel);
 
