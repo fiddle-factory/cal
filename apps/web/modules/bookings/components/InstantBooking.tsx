@@ -1,12 +1,13 @@
-import { createContext, useContext } from "react";
-
 import type { BookerEvent } from "@calcom/features/bookings/types";
+import { getUserAvatarUrl } from "@calcom/lib/getAvatarUrl";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import type { User } from "@calcom/prisma/client";
 import classNames from "@calcom/ui/classNames";
-import { UserAvatarGroupWithOrg } from "@calcom/ui/components/avatar";
+import { Avatar, UserAvatarGroupWithOrg } from "@calcom/ui/components/avatar";
 import { Button } from "@calcom/ui/components/button";
 import { Tooltip } from "@calcom/ui/components/tooltip";
+import { createContext, useContext, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Lifecycle of the booker's "Talk to someone now" (instant meeting) card, shown on team booking pages.
@@ -78,6 +79,20 @@ export const InstantBooking = ({
     },
   };
 
+  if (status !== "available") {
+    return (
+      <InstantMeetingTakeover
+        status={status}
+        title={copy[status].title}
+        description={copy[status].description}
+        memberName={memberName}
+        onCancel={onCancel}
+        onJoinCall={onJoinCall}
+        event={event}
+      />
+    );
+  }
+
   const connectButton = (
     <Button
       color="primary"
@@ -123,44 +138,161 @@ export const InstantBooking = ({
         </div>
       </div>
       <div className="mt-2 flex shrink-0 items-center gap-2 sm:ms-auto sm:mt-0">
-        {status === "connecting" && (
-          <>
-            <Button
-              color="secondary"
-              size="sm"
-              onClick={() => onCancel?.()}
-              className="w-full justify-center rounded-lg sm:w-auto">
-              {t("cancel")}
-            </Button>
-            <Button
-              color="primary"
-              size="sm"
-              loading
-              disabled
-              className="w-full justify-center rounded-lg sm:w-auto">
-              {t("connecting")}
-            </Button>
-          </>
+        {isCoolingDown ? (
+          <Tooltip content={t("just_connected_description")}>
+            <span className="inline-flex w-full sm:w-auto">{connectButton}</span>
+          </Tooltip>
+        ) : (
+          connectButton
         )}
-        {status === "connected" && (
-          <Button
-            color="primary"
-            size="sm"
-            StartIcon="video"
-            onClick={() => onJoinCall?.()}
-            className="w-full justify-center rounded-lg sm:w-auto">
-            {t("join_call")}
-          </Button>
-        )}
-        {status === "available" &&
-          (isCoolingDown ? (
-            <Tooltip content={t("just_connected_description")}>
-              <span className="inline-flex w-full sm:w-auto">{connectButton}</span>
-            </Tooltip>
-          ) : (
-            connectButton
-          ))}
       </div>
     </div>
+  );
+};
+
+type InstantMeetingTakeoverProps = Pick<
+  IInstantBookingProps,
+  "memberName" | "onCancel" | "onJoinCall" | "event"
+> & {
+  status: Exclude<InstantMeetingStatus, "available">;
+  title: string;
+  description: string;
+};
+
+/**
+ * Full-viewport takeover shown while connecting to, and once connected with, a team member.
+ * Rendered in a portal so it covers the whole booker regardless of the card's positioned/animated wrapper.
+ */
+const InstantMeetingTakeover = ({
+  status,
+  title,
+  description,
+  memberName,
+  onCancel,
+  onJoinCall,
+  event,
+}: InstantMeetingTakeoverProps) => {
+  const { t } = useLocale();
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const [pulseEnabled, setPulseEnabled] = useState(true);
+  const [pulseDuration, setPulseDuration] = useState(1);
+  const [pulseOpacity, setPulseOpacity] = useState(0.6);
+
+  useEffect(() => {
+    setPortalTarget(document.body);
+  }, []);
+
+  useEffect(() => {
+    if (status !== "connecting" || !onCancel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [status, onCancel]);
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="InstantMeetingTakeover-controls"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.pulseEnabled === "boolean") setPulseEnabled(p.pulseEnabled);
+      if (typeof p.pulseDuration === "number") setPulseDuration(p.pulseDuration);
+      if (typeof p.pulseOpacity === "number") setPulseOpacity(p.pulseOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, [portalTarget, status]);
+  // geneditor-listener-end
+
+  if (!portalTarget) return null;
+
+  const member = memberName ? event.subsetOfUsers.find((user) => user.name === memberName) : undefined;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="instant-meeting-takeover-title"
+      data-testid="instant-booking-takeover"
+      data-status={status}
+      data-config-id="InstantMeetingTakeover-controls"
+      className="bg-default fixed inset-0 z-50 flex overflow-y-auto">
+      <div
+        role="status"
+        aria-live="polite"
+        className="animate-fade-in-up m-auto flex w-full max-w-md flex-col items-center px-6 py-12 text-center">
+        <div className="relative flex min-h-32 min-w-32 items-center justify-center p-6">
+          {status === "connecting" && (
+            <>
+              {pulseEnabled && (
+                <span
+                  className="bg-attention absolute inset-0 animate-ping rounded-full"
+                  style={{ animationDuration: `${pulseDuration}s`, opacity: pulseOpacity }}
+                />
+              )}
+              <span className="bg-attention absolute inset-2 animate-pulse rounded-full" />
+            </>
+          )}
+          {status === "connected" && <span className="bg-success absolute inset-0 rounded-full" />}
+          <div className="relative">
+            {status === "connected" ? (
+              <Avatar
+                size="xl"
+                className="border-default border-2"
+                imageSrc={member ? getUserAvatarUrl(member) : undefined}
+                alt={memberName || ""}
+              />
+            ) : (
+              <UserAvatarGroupWithOrg
+                size="lg"
+                organization={{
+                  slug: event.entity.orgSlug,
+                  name: event.entity.name || "",
+                  logoUrl: event.entity.logoUrl ?? null,
+                }}
+                users={event.subsetOfUsers.slice(0, 2)}
+                disableHref
+              />
+            )}
+            <span
+              className={classNames(
+                "border-default absolute bottom-1 right-1 h-4 w-4 rounded-full border-2",
+                statusDotClassNames[status]
+              )}
+            />
+          </div>
+        </div>
+        <h2
+          id="instant-meeting-takeover-title"
+          className="font-heading text-emphasis mt-8 text-2xl leading-tight sm:text-3xl">
+          {title}
+        </h2>
+        <p className="text-subtle mt-3 text-base leading-6">{description}</p>
+        <div className="mt-8 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:items-center">
+          {status === "connecting" ? (
+            <Button
+              color="secondary"
+              size="lg"
+              onClick={() => onCancel?.()}
+              className="w-full justify-center rounded-lg sm:w-auto sm:min-w-40">
+              {t("cancel")}
+            </Button>
+          ) : (
+            <Button
+              color="primary"
+              size="lg"
+              StartIcon="video"
+              autoFocus
+              onClick={() => onJoinCall?.()}
+              className="w-full justify-center rounded-lg px-8 py-3 text-base sm:w-auto sm:min-w-56">
+              {t("join_call")}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>,
+    portalTarget
   );
 };
