@@ -205,6 +205,31 @@ export default function Success(props: PageProps) {
   const [rateValue, setRateValue] = useState<number>(defaultRating);
   const [isFeedbackSubmitted, setIsFeedbackSubmitted] = useState(false);
 
+  // Orange glow around the confirmation card (Tailwind orange-500)
+  const [glowColor, setGlowColor] = useState("#f97316");
+  const [glowIntensity, setGlowIntensity] = useState(0.45);
+  const [glowBlur, setGlowBlur] = useState(48);
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.glowColor === "string") setGlowColor(p.glowColor);
+      if (typeof p.glowIntensity === "number") setGlowIntensity(p.glowIntensity);
+      if (typeof p.glowBlur === "number") setGlowBlur(p.glowBlur);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
+  const glowAlphaHex = Math.round(Math.min(Math.max(glowIntensity, 0), 1) * 255)
+    .toString(16)
+    .padStart(2, "0");
+  const glowBoxShadow = `0 0 ${glowBlur}px ${Math.round(glowBlur / 6)}px ${glowColor}${glowAlphaHex}`;
+
   const mutation = trpc.viewer.public.submitRating.useMutation({
     onSuccess: async () => {
       setIsFeedbackSubmitted(true);
@@ -502,6 +527,7 @@ export default function Success(props: PageProps) {
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
                 )}
+                style={{ boxShadow: glowBoxShadow }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
