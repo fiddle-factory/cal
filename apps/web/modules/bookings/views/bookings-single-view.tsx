@@ -497,14 +497,17 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
-                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
+                  "px-8 pb-4 pt-7 text-left align-bottom transition-all sm:w-full sm:pb-8 sm:pt-10 sm:align-middle"
                 )}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <FestiveRibbon />
+                <HollySprig className="absolute left-3 top-4 h-10 w-10 -rotate-12" />
+                <HollySprig className="absolute right-3 top-4 h-10 w-10 rotate-12 -scale-x-100" />
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -527,7 +530,7 @@ export default function Success(props: PageProps) {
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? "bg-green-700 ring-4 ring-red-100 dark:bg-green-600 dark:ring-red-900/50"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
@@ -535,7 +538,7 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon name="check" className="h-5 w-5 text-white" />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -545,11 +548,18 @@ export default function Success(props: PageProps) {
                     </div>
                     <div className="mb-8 mt-6 text-center last:mb-0">
                       <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
+                        className="font-heading text-2xl font-semibold leading-7 text-red-700 dark:text-red-400"
                         data-testid={isCancelled ? "cancelled-headline" : ""}
                         id="modal-headline">
                         {successPageHeadline}
                       </h3>
+                      <div className="mt-3 flex items-center justify-center gap-2" aria-hidden="true">
+                        <span className="h-px w-10 bg-green-700/40 dark:bg-green-500/40" />
+                        <Icon name="star" className="h-3 w-3 fill-green-700 text-green-700 dark:fill-green-500 dark:text-green-500" />
+                        <Icon name="gift" className="h-4 w-4 text-red-700 dark:text-red-400" />
+                        <Icon name="star" className="h-3 w-3 fill-green-700 text-green-700 dark:fill-green-500 dark:text-green-500" />
+                        <span className="h-px w-10 bg-green-700/40 dark:bg-green-500/40" />
+                      </div>
 
                       <div className="mt-3">
                         <p className="text-default">{getTitle()}</p>
@@ -558,7 +568,7 @@ export default function Success(props: PageProps) {
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div className="text-default mt-8 grid grid-cols-3 gap-x-4 border-t border-dashed border-red-300 pt-8 dark:border-red-800 text-left rtl:text-right sm:gap-x-0">
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
@@ -590,7 +600,7 @@ export default function Success(props: PageProps) {
                             </div>
                           </>
                         )}
-                        <div className="font-medium">{t("what")}</div>
+                        <div className="font-medium text-green-800 dark:text-green-400">{t("what")}</div>
                         <div
                           className="wrap-break-word col-span-2 mb-6 last:mb-0"
                           data-testid="booking-title">
@@ -600,7 +610,7 @@ export default function Success(props: PageProps) {
                               : eventName
                             : eventName}
                         </div>
-                        <div className="font-medium">{t("when")}</div>
+                        <div className="font-medium text-green-800 dark:text-green-400">{t("when")}</div>
                         <div className="col-span-2 mb-6 last:mb-0">
                           {reschedule && !!formerTime && (
                             <p className="line-through">
@@ -629,7 +639,7 @@ export default function Success(props: PageProps) {
                         </div>
                         {(bookingInfo?.user || bookingInfo?.attendees) && (
                           <>
-                            <div className="font-medium">{t("who")}</div>
+                            <div className="font-medium text-green-800 dark:text-green-400">{t("who")}</div>
                             <div className="col-span-2 last:mb-0">
                               {bookingInfo?.user && (
                                 <div className="mb-3">
@@ -637,7 +647,7 @@ export default function Success(props: PageProps) {
                                     <span data-testid="booking-host-name" className="mr-2">
                                       {bookingInfo.user.name}
                                     </span>
-                                    <Badge variant="blue">{t("Host")}</Badge>
+                                    <Badge variant="red">{t("Host")}</Badge>
                                   </div>
                                   {!bookingInfo.eventType?.hideOrganizerEmail && (
                                     <p className="text-default" data-testid="booking-host-email">
@@ -674,7 +684,7 @@ export default function Success(props: PageProps) {
                         )}
                         {locationToDisplay && !isCancelled && (
                           <>
-                            <div className="mt-3 font-medium">{t("where")}</div>
+                            <div className="mt-3 font-medium text-green-800 dark:text-green-400">{t("where")}</div>
                             <div className="col-span-2 mt-3" data-testid="where">
                               {!rescheduleLocation || locationToDisplay === rescheduleLocationToDisplay ? (
                                 <DisplayLocation
@@ -951,16 +961,16 @@ export default function Success(props: PageProps) {
                     )}
                     {!needsConfirmation && !isCancellationMode && isReschedulable && !!calculatedDuration && (
                       <>
-                        <hr className="border-subtle mt-8" />
+                        <hr className="mt-8 border-dashed border-red-300 dark:border-red-800" />
                         <div className="text-default align-center flex flex-row justify-center pt-8">
-                          <span className="text-default flex self-center font-medium ltr:mr-2 rtl:ml-2 ">
+                          <span className="flex self-center font-medium text-red-700 ltr:mr-2 rtl:ml-2 dark:text-red-400">
                             {t("add_to_calendar")}
                           </span>
                           <div className="justify-left mt-1 flex text-left sm:mt-0">
                             {googleCalendarLink && (
                               <Link
                                 href={googleCalendarLink}
-                                className="text-default border-subtle h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
+                                className="h-10 w-10 rounded-sm border border-green-700/40 px-3 py-2 text-green-800 transition hover:bg-green-50 dark:border-green-500/40 dark:text-green-400 dark:hover:bg-green-950 ltr:mr-2 rtl:ml-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 inline-block h-4 w-4"
@@ -975,7 +985,7 @@ export default function Success(props: PageProps) {
                             {microsoftOutlookLink && (
                               <Link
                                 href={microsoftOutlookLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-sm border border-green-700/40 px-3 py-2 text-green-800 transition hover:bg-green-50 dark:border-green-500/40 dark:text-green-400 dark:hover:bg-green-950"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -990,7 +1000,7 @@ export default function Success(props: PageProps) {
                             {microsoftOfficeLink && (
                               <Link
                                 href={microsoftOfficeLink}
-                                className="text-default border-subtle mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-sm border border-green-700/40 px-3 py-2 text-green-800 transition hover:bg-green-50 dark:border-green-500/40 dark:text-green-400 dark:hover:bg-green-950"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -1005,7 +1015,7 @@ export default function Success(props: PageProps) {
                             {icsLink && (
                               <Link
                                 href={icsLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-sm border border-green-700/40 px-3 py-2 text-green-800 transition hover:bg-green-50 dark:border-green-500/40 dark:text-green-400 dark:hover:bg-green-950"
                                 download={`${eventType.title}.ics`}>
                                 <svg
                                   version="1.1"
@@ -1336,5 +1346,43 @@ function RecurringBookings({
       })}{" "}
       <span className="text-bookinglight">({formatToLocalizedTimezone(date, language, tz)})</span>
     </div>
+  );
+}
+
+function FestiveRibbon() {
+  const segments = Array.from({ length: 12 }, (_, i) => i);
+  return (
+    <div className="absolute inset-x-0 top-0 flex h-1.5" aria-hidden="true">
+      {segments.map((i) => (
+        <span
+          key={i}
+          className={classNames(
+            "flex-1",
+            i % 2 === 0 ? "bg-red-700 dark:bg-red-500" : "bg-green-700 dark:bg-green-500"
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
+function HollySprig({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path
+        className="fill-green-700 dark:fill-green-600"
+        d="M24 26c-3-6-9-9-17-8 2 2 1 4 3 5-2 1-3 3-2 5 3-1 5 1 6 3 2-2 4-2 6-1 0-2 2-3 4-4z"
+      />
+      <path
+        className="fill-green-800 dark:fill-green-700"
+        d="M24 26c1-7 5-12 13-14-1 3 1 4 0 6 2 0 4 1 4 3-3 0-4 2-4 4-2-1-4 0-5 2-1-2-3-2-5-1z"
+      />
+      <circle className="fill-red-600 dark:fill-red-500" cx="22" cy="29" r="3.2" />
+      <circle className="fill-red-700 dark:fill-red-600" cx="27.5" cy="30" r="3.2" />
+      <circle className="fill-red-600 dark:fill-red-500" cx="24.5" cy="25" r="3.2" />
+      <circle className="fill-white/60" cx="21" cy="28" r="0.9" />
+      <circle className="fill-white/60" cx="26.5" cy="29" r="0.9" />
+      <circle className="fill-white/60" cx="23.5" cy="24" r="0.9" />
+    </svg>
   );
 }
