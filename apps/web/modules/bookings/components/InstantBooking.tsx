@@ -1,26 +1,106 @@
+import { createContext, useContext } from "react";
+
 import type { BookerEvent } from "@calcom/features/bookings/types";
 import { useLocale } from "@calcom/lib/hooks/useLocale";
 import type { User } from "@calcom/prisma/client";
+import classNames from "@calcom/ui/classNames";
 import { UserAvatarGroupWithOrg } from "@calcom/ui/components/avatar";
 import { Button } from "@calcom/ui/components/button";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 
-interface IInstantBookingProps {
+/**
+ * Lifecycle of the booker's "Talk to someone now" (instant meeting) card.
+ * - available: a host is online right now and the visitor can connect instantly.
+ * - connecting: an instant meeting was requested and we are waiting for a host to accept.
+ * - connected: a host accepted; the visitor can join the video call.
+ * - unavailable: nobody is available right now; the visitor should book a slot instead.
+ */
+export type InstantMeetingStatus = "available" | "connecting" | "connected" | "unavailable";
+
+export type InstantMeetingController = {
+  status: InstantMeetingStatus;
   onConnectNow: () => void;
+  onCancel?: () => void;
+  onJoinCall?: () => void;
+};
+
+/**
+ * Lets a host page (e.g. an embed or a Storybook story) drive the instant meeting card itself.
+ * When no controller is provided, the Booker derives the status from the event and booking data.
+ */
+export const InstantMeetingControllerContext = createContext<InstantMeetingController | null>(null);
+export const useInstantMeetingController = () => useContext(InstantMeetingControllerContext);
+
+interface IInstantBookingProps {
+  status?: InstantMeetingStatus;
+  onConnectNow: () => void;
+  onCancel?: () => void;
+  onJoinCall?: () => void;
   event: Pick<BookerEvent, "entity" | "schedulingType"> & {
     subsetOfUsers: (Pick<User, "name" | "username" | "avatarUrl"> & { bookerUrl: string })[];
   };
   cooldownMs?: number;
 }
 
-export const InstantBooking = ({ onConnectNow, event, cooldownMs = 0 }: IInstantBookingProps) => {
+const statusDotClassNames: Record<InstantMeetingStatus, string> = {
+  available: "bg-green-500",
+  connecting: "bg-attention animate-pulse",
+  connected: "bg-green-500",
+  unavailable: "bg-emphasis",
+};
+
+export const InstantBooking = ({
+  status = "available",
+  onConnectNow,
+  onCancel,
+  onJoinCall,
+  event,
+  cooldownMs = 0,
+}: IInstantBookingProps) => {
   const { t } = useLocale();
-  const disabled = cooldownMs > 0;
+  const isCoolingDown = cooldownMs > 0;
+  const hostName = event.entity.name || event.subsetOfUsers[0]?.name || t("someone");
+
+  const copy: Record<InstantMeetingStatus, { title: string; description: string }> = {
+    available: {
+      title: t("talk_to_someone_now"),
+      description: t("host_is_available_now", { name: hostName }),
+    },
+    connecting: {
+      title: t("connecting_you_to_host", { name: hostName }),
+      description: t("waiting_for_host_to_join"),
+    },
+    connected: {
+      title: t("host_joined_the_call", { name: hostName }),
+      description: t("your_call_is_ready"),
+    },
+    unavailable: {
+      title: t("no_one_available_right_now"),
+      description: t("pick_a_time_to_book_instead"),
+    },
+  };
+
+  const connectButton = (
+    <Button
+      color="primary"
+      size="sm"
+      StartIcon="phone-call"
+      disabled={isCoolingDown || status === "unavailable"}
+      onClick={() => onConnectNow()}
+      className="w-full justify-center rounded-lg sm:w-auto">
+      {t("connect_now")}
+    </Button>
+  );
 
   return (
-    <div className=" bg-default border-subtle mx-2 block items-center gap-3 rounded-xl border p-[6px] text-sm shadow-sm delay-1000 sm:flex">
+    <div
+      role="status"
+      aria-live="polite"
+      data-testid="instant-booking-card"
+      data-status={status}
+      className="bg-default border-subtle mx-2 block w-[calc(100vw-1rem)] max-w-md items-center gap-4 rounded-xl border p-[6px] text-sm shadow-sm sm:flex sm:w-auto sm:max-w-none">
       <div className="flex items-center gap-3 ps-1">
-        <div className="relative">
+        <div className={classNames("relative shrink-0", status === "unavailable" && "opacity-50")}>
           <UserAvatarGroupWithOrg
             size="sm"
             className="border-muted"
@@ -32,37 +112,57 @@ export const InstantBooking = ({ onConnectNow, event, cooldownMs = 0 }: IInstant
             users={event.subsetOfUsers.slice(0, 2)}
             disableHref
           />
-          <div className="border-muted absolute -bottom-0.5 -right-1 h-2 w-2 rounded-full border bg-green-500" />
+          <div
+            className={classNames(
+              "border-muted absolute -bottom-0.5 -right-1 h-2 w-2 rounded-full border",
+              statusDotClassNames[status]
+            )}
+          />
         </div>
-        <div>{t("dont_want_to_wait")}</div>
+        <div className="min-w-0">
+          <p className="text-emphasis font-semibold leading-5">{copy[status].title}</p>
+          <p className="text-subtle leading-5">{copy[status].description}</p>
+        </div>
       </div>
-      <div className="mt-2 flex items-center gap-3 sm:mt-0">
-        {disabled ? (
-          <Tooltip content={t("just_connected_description")}>
-            <span className="inline-flex">
-              <Button
-                disabled={disabled}
-                color="primary"
-                onClick={() => {
-                  onConnectNow();
-                }}
-                size="sm"
-                className="w-full justify-center rounded-lg sm:w-auto">
-                {t("connect_now")}
-              </Button>
-            </span>
-          </Tooltip>
-        ) : (
+      <div className="mt-2 flex shrink-0 items-center gap-2 sm:ms-auto sm:mt-0">
+        {status === "connecting" && (
+          <>
+            <Button
+              color="secondary"
+              size="sm"
+              onClick={() => onCancel?.()}
+              className="w-full justify-center rounded-lg sm:w-auto">
+              {t("cancel")}
+            </Button>
+            <Button
+              color="primary"
+              size="sm"
+              loading
+              disabled
+              className="w-full justify-center rounded-lg sm:w-auto">
+              {t("connecting")}
+            </Button>
+          </>
+        )}
+        {status === "connected" && (
           <Button
             color="primary"
-            onClick={() => {
-              onConnectNow();
-            }}
             size="sm"
+            StartIcon="video"
+            onClick={() => onJoinCall?.()}
             className="w-full justify-center rounded-lg sm:w-auto">
-            {t("connect_now")}
+            {t("join_call")}
           </Button>
         )}
+        {status === "available" &&
+          (isCoolingDown ? (
+            <Tooltip content={t("just_connected_description")}>
+              <span className="inline-flex w-full sm:w-auto">{connectButton}</span>
+            </Tooltip>
+          ) : (
+            connectButton
+          ))}
+        {status === "unavailable" && connectButton}
       </div>
     </div>
   );

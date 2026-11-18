@@ -32,7 +32,8 @@ import { DryRunMessage } from "./DryRunMessage";
 import { EventMeta } from "./EventMeta";
 import { HavingTroubleFindingTime } from "./HavingTroubleFindingTime";
 import { Header } from "./Header";
-import { InstantBooking } from "./InstantBooking";
+import { InstantBooking, useInstantMeetingController } from "./InstantBooking";
+import type { InstantMeetingController, InstantMeetingStatus } from "./InstantBooking";
 import { LargeCalendar } from "./LargeCalendar";
 import { OverlayCalendar } from "./OverlayCalendar/OverlayCalendar";
 import { RedirectToInstantMeetingModal } from "./RedirectToInstantMeetingModal";
@@ -155,6 +156,23 @@ const BookerComponent = ({
   } = bookings;
 
   const watchedCfToken = bookingForm.watch("cfToken");
+
+  const instantMeetingController = useInstantMeetingController();
+  const derivedInstantMeetingStatus: InstantMeetingStatus = !event.data?.showInstantEventConnectNowModal
+    ? "unavailable"
+    : instantVideoMeetingUrl
+      ? "connected"
+      : expiryTime
+        ? "connecting"
+        : "available";
+  const instantMeeting: InstantMeetingController = instantMeetingController ?? {
+    status: derivedInstantMeetingStatus,
+    onConnectNow: () => onConnectNowInstantMeeting(),
+    onCancel: () => onGoBackInstantMeeting(),
+    onJoinCall: () => {
+      if (instantVideoMeetingUrl) window.location.href = instantVideoMeetingUrl;
+    },
+  };
 
   const {
     isEmailVerificationModalVisible,
@@ -540,7 +558,8 @@ const BookerComponent = ({
         />
 
         {bookerState !== "booking" &&
-          event.data?.showInstantEventConnectNowModal &&
+          event.data &&
+          (event.data.isInstantEvent || event.data.showInstantEventConnectNowModal) &&
           areInstantMeetingParametersSet && (
             <div
               className={classNames(
@@ -551,9 +570,10 @@ const BookerComponent = ({
               <InstantBooking
                 event={event.data}
                 cooldownMs={instantConnectCooldownMs}
-                onConnectNow={() => {
-                  onConnectNowInstantMeeting();
-                }}
+                status={instantMeeting.status}
+                onConnectNow={instantMeeting.onConnectNow}
+                onCancel={instantMeeting.onCancel}
+                onJoinCall={instantMeeting.onJoinCall}
               />
             </div>
           )}
