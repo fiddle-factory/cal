@@ -25,6 +25,12 @@ const winterTokens = {
 	"--cal-brand-emphasis": "hsla(210, 72%, 24%, 1)",
 } as CSSProperties;
 
+// Dialogs render in a portal outside the themed scope, so re-apply the tokens to them
+// (and to their overlay) while a snowy page is mounted.
+const portalTokenCss = Object.entries(winterTokens as Record<string, string>)
+	.map(([name, value]) => `${name}: ${value};`)
+	.join(" ");
+
 const keyframes = `
 @keyframes snowy-winter-fall {
   0% { transform: translate3d(0, -10vh, 0); }
@@ -34,9 +40,19 @@ const keyframes = `
   0%, 100% { margin-left: 0; }
   50% { margin-left: 24px; }
 }
-[data-snowy-content] [role="dialog"] {
+[data-snowy-content] [role="dialog"],
+body:has([data-snowy-content]) [role="dialog"] {
   box-shadow: 0 20px 60px -20px rgba(30, 90, 150, 0.45), 0 0 0 4px rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(4px);
+}
+body:has([data-snowy-content]) [role="dialog"] {
+  ${portalTokenCss}
+  background-color: hsla(205, 100%, 99%, 0.97);
+  color: var(--cal-text);
+}
+body:has([data-snowy-content]) [data-state="open"].fadeIn:not([role="dialog"]) {
+  background-color: rgba(30, 70, 120, 0.35);
+  backdrop-filter: blur(2px);
 }
 @media (prefers-reduced-motion: reduce) {
   [data-snowflake] { animation: none !important; }
