@@ -158,13 +158,13 @@ const BookerComponent = ({
   const watchedCfToken = bookingForm.watch("cfToken");
 
   const instantMeetingController = useInstantMeetingController();
-  const derivedInstantMeetingStatus: InstantMeetingStatus = !event.data?.showInstantEventConnectNowModal
-    ? "unavailable"
-    : instantVideoMeetingUrl
-      ? "connected"
-      : expiryTime
-        ? "connecting"
-        : "available";
+  // "Talk to someone now" is a team booking page feature; individual events never show it.
+  const isTeamEvent = !!event.data?.team || !!event.data?.entity.teamSlug;
+  const derivedInstantMeetingStatus: InstantMeetingStatus = instantVideoMeetingUrl
+    ? "connected"
+    : expiryTime
+      ? "connecting"
+      : "available";
   const instantMeeting: InstantMeetingController = instantMeetingController ?? {
     status: derivedInstantMeetingStatus,
     onConnectNow: () => onConnectNowInstantMeeting(),
@@ -558,8 +558,8 @@ const BookerComponent = ({
         />
 
         {bookerState !== "booking" &&
-          event.data &&
-          (event.data.isInstantEvent || event.data.showInstantEventConnectNowModal) &&
+          isTeamEvent &&
+          event.data?.showInstantEventConnectNowModal &&
           areInstantMeetingParametersSet && (
             <div
               className={classNames(
@@ -571,6 +571,7 @@ const BookerComponent = ({
                 event={event.data}
                 cooldownMs={instantConnectCooldownMs}
                 status={instantMeeting.status}
+                memberName={instantMeeting.memberName}
                 onConnectNow={instantMeeting.onConnectNow}
                 onCancel={instantMeeting.onCancel}
                 onJoinCall={instantMeeting.onJoinCall}

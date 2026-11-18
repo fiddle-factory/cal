@@ -9,16 +9,18 @@ import { Button } from "@calcom/ui/components/button";
 import { Tooltip } from "@calcom/ui/components/tooltip";
 
 /**
- * Lifecycle of the booker's "Talk to someone now" (instant meeting) card.
- * - available: a host is online right now and the visitor can connect instantly.
- * - connecting: an instant meeting was requested and we are waiting for a host to accept.
- * - connected: a host accepted; the visitor can join the video call.
- * - unavailable: nobody is available right now; the visitor should book a slot instead.
+ * Lifecycle of the booker's "Talk to someone now" (instant meeting) card, shown on team booking pages.
+ * - available: a team member is online right now and the visitor can connect instantly.
+ * - connecting: an instant meeting was requested and we are waiting for a team member to accept.
+ * - connected: a team member accepted; the visitor can join the video call.
+ * When nobody from the team is available, the card is not shown at all.
  */
-export type InstantMeetingStatus = "available" | "connecting" | "connected" | "unavailable";
+export type InstantMeetingStatus = "available" | "connecting" | "connected";
 
 export type InstantMeetingController = {
   status: InstantMeetingStatus;
+  /** Name of the team member who accepted the call, when known. */
+  memberName?: string | null;
   onConnectNow: () => void;
   onCancel?: () => void;
   onJoinCall?: () => void;
@@ -33,6 +35,7 @@ export const useInstantMeetingController = () => useContext(InstantMeetingContro
 
 interface IInstantBookingProps {
   status?: InstantMeetingStatus;
+  memberName?: string | null;
   onConnectNow: () => void;
   onCancel?: () => void;
   onJoinCall?: () => void;
@@ -46,11 +49,11 @@ const statusDotClassNames: Record<InstantMeetingStatus, string> = {
   available: "bg-green-500",
   connecting: "bg-attention animate-pulse",
   connected: "bg-green-500",
-  unavailable: "bg-emphasis",
 };
 
 export const InstantBooking = ({
   status = "available",
+  memberName,
   onConnectNow,
   onCancel,
   onJoinCall,
@@ -59,24 +62,19 @@ export const InstantBooking = ({
 }: IInstantBookingProps) => {
   const { t } = useLocale();
   const isCoolingDown = cooldownMs > 0;
-  const hostName = event.entity.name || event.subsetOfUsers[0]?.name || t("someone");
 
   const copy: Record<InstantMeetingStatus, { title: string; description: string }> = {
     available: {
       title: t("talk_to_someone_now"),
-      description: t("host_is_available_now", { name: hostName }),
+      description: t("someone_from_the_team_is_available_now"),
     },
     connecting: {
-      title: t("connecting_you_to_host", { name: hostName }),
-      description: t("waiting_for_host_to_join"),
+      title: t("connecting_you_to_the_team"),
+      description: t("waiting_for_team_member_to_join"),
     },
     connected: {
-      title: t("host_joined_the_call", { name: hostName }),
+      title: t("team_member_is_ready_to_talk", { name: memberName || t("someone_from_the_team") }),
       description: t("your_call_is_ready"),
-    },
-    unavailable: {
-      title: t("no_one_available_right_now"),
-      description: t("pick_a_time_to_book_instead"),
     },
   };
 
@@ -85,7 +83,7 @@ export const InstantBooking = ({
       color="primary"
       size="sm"
       StartIcon="phone-call"
-      disabled={isCoolingDown || status === "unavailable"}
+      disabled={isCoolingDown}
       onClick={() => onConnectNow()}
       className="w-full justify-center rounded-lg sm:w-auto">
       {t("connect_now")}
@@ -100,7 +98,7 @@ export const InstantBooking = ({
       data-status={status}
       className="bg-default border-subtle mx-2 block w-[calc(100vw-1rem)] max-w-md items-center gap-4 rounded-xl border p-[6px] text-sm shadow-sm sm:flex sm:w-auto sm:max-w-none">
       <div className="flex items-center gap-3 ps-1">
-        <div className={classNames("relative shrink-0", status === "unavailable" && "opacity-50")}>
+        <div className="relative shrink-0">
           <UserAvatarGroupWithOrg
             size="sm"
             className="border-muted"
@@ -162,7 +160,6 @@ export const InstantBooking = ({
           ) : (
             connectButton
           ))}
-        {status === "unavailable" && connectButton}
       </div>
     </div>
   );
