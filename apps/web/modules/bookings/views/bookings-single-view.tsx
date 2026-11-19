@@ -483,7 +483,7 @@ export default function Success(props: PageProps) {
       <BookingPageTagManager
         eventType={{ ...eventType, metadata: eventTypeMetaDataSchemaWithTypedApps.parse(eventType.metadata) }}
       />
-      <main className={classNames(shouldAlignCentrally ? "mx-auto" : "", isEmbed ? "" : "max-w-3xl")}>
+      <main className={classNames("flex", shouldAlignCentrally ? "mx-auto" : "", isEmbed ? "" : "max-w-3xl")}>
         <div className={classNames("overflow-y-auto", isEmbed ? "" : "z-50 ")}>
           <div
             className={classNames(
@@ -560,7 +560,7 @@ export default function Success(props: PageProps) {
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div className="border-subtle text-default mt-8 grid grid-cols-3 items-end justify-center gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
@@ -1326,7 +1326,7 @@ function RecurringBookings({
   }
 
   return (
-    <div className={classNames(isCancelled ? "line-through" : "")}>
+    <div className={classNames("flex flex-col items-start justify-center", isCancelled ? "line-through" : "")}>
       {formatToLocalizedDate(date, language, "full", tz)}
       <br />
       {formatToLocalizedTime({ date, locale: language, hour12: !is24h, timeZone: tz })} -{" "}
