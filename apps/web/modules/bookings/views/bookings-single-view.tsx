@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { BookingCountdownTimer } from "../components/BookingCountdownTimer";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -507,6 +508,7 @@ export default function Success(props: PageProps) {
                 aria-labelledby="modal-headline">
                 {!isFeedbackMode && (
                   <>
+                    <BookingCountdownTimer seconds={10} />
                     <div
                       className={classNames(isRoundRobin && "min-h-24 min-w-32 relative mx-auto h-24 w-32")}>
                       {isRoundRobin && bookingInfo.user && (
