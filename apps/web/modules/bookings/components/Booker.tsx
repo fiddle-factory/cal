@@ -1,5 +1,5 @@
 import { AnimatePresence, LazyMotion, m } from "framer-motion";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import StickyBox from "react-sticky-box";
 import { Toaster } from "sonner";
 import { shallow } from "zustand/shallow";
@@ -139,6 +139,32 @@ const BookerComponent = ({
   const animationScope = useBookerResizeAnimation(layout, bookerState);
 
   const timeslotsRef = useRef<HTMLDivElement>(null);
+  // Soft orange glow around the main booking card (defaults to Tailwind orange-500)
+  const [glowColor, setGlowColor] = useState("#f97316");
+  const [glowBlur, setGlowBlur] = useState(48);
+  const [glowSpread, setGlowSpread] = useState(4);
+  const [glowOpacity, setGlowOpacity] = useState(0.35);
+  const glowAlpha = Math.round(Math.min(Math.max(glowOpacity, 0), 1) * 255)
+    .toString(16)
+    .padStart(2, "0");
+  const glowBoxShadow = `0 0 ${glowBlur}px ${glowSpread}px ${glowColor}${glowAlpha}`;
+
+  // geneditor-listener-start
+  useEffect(() => {
+    const el = document.querySelector('[data-config-id="SourceRouteStory-main-0"]');
+    if (!el) return;
+    const handler = (e: Event) => {
+      const p = (e as CustomEvent).detail as Record<string, unknown>;
+      if (typeof p.glowColor === "string") setGlowColor(p.glowColor);
+      if (typeof p.glowBlur === "number") setGlowBlur(p.glowBlur);
+      if (typeof p.glowSpread === "number") setGlowSpread(p.glowSpread);
+      if (typeof p.glowOpacity === "number") setGlowOpacity(p.glowOpacity);
+    };
+    el.addEventListener("animation:update", handler);
+    return () => el.removeEventListener("animation:update", handler);
+  }, []);
+  // geneditor-listener-end
+
   const isQuickAvailabilityCheckFeatureEnabled = useIsQuickAvailabilityCheckFeatureEnabled();
 
   const StickyOnDesktop = isMobile ? "div" : StickyBox;
@@ -350,6 +376,7 @@ const BookerComponent = ({
         <div
           ref={animationScope}
           data-testid="booker-container"
+          style={{ boxShadow: glowBoxShadow }}
           className={classNames(
             ...getBookerSizeClassNames(layout, bookerState, hideEventTypeDetails),
             `bg-default dark:bg-cal-muted grid max-w-full items-start dark:scheme-dark sm:transition-[width] sm:duration-300 sm:motion-reduce:transition-none md:flex-row`,
