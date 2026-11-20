@@ -61,6 +61,7 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { Snowflake, WinterSnowfall } from "../components/WinterSnowfall";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -455,7 +456,13 @@ export default function Success(props: PageProps) {
   })();
 
   return (
-    <div className={isEmbed ? "" : "h-screen"} data-testid="success-page">
+    <div
+      className={classNames(
+        "relative isolate",
+        isEmbed ? "" : "min-h-screen bg-linear-to-b from-sky-100 via-sky-50 to-white dark:from-sky-950 dark:via-slate-950 dark:to-slate-950"
+      )}
+      data-testid="success-page">
+      {!isEmbed && <WinterSnowfall />}
       {!isEmbed && !isFeedbackMode && (
         <EventReservationSchema
           reservationId={bookingInfo.uid}
@@ -482,7 +489,8 @@ export default function Success(props: PageProps) {
       <BookingPageTagManager
         eventType={{ ...eventType, metadata: eventTypeMetaDataSchemaWithTypedApps.parse(eventType.metadata) }}
       />
-      <main className={classNames(shouldAlignCentrally ? "mx-auto" : "", isEmbed ? "" : "max-w-3xl")}>
+      <main
+        className={classNames("relative z-10", shouldAlignCentrally ? "mx-auto" : "", isEmbed ? "" : "max-w-3xl")}>
         <div className={classNames("overflow-y-auto", isEmbed ? "" : "z-50 ")}>
           <div
             className={classNames(
@@ -497,18 +505,25 @@ export default function Success(props: PageProps) {
               aria-hidden="true">
               <div
                 className={classNames(
-                  "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
+                  "relative inline-block transform overflow-hidden rounded-2xl border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
-                    " bg-default dark:bg-cal-muted border-booker border-booker-width",
+                    " bg-default/90 dark:bg-cal-muted/90 border-sky-200 dark:border-sky-900 border-booker-width shadow-lg shadow-sky-200/60 ring-4 ring-white/70 backdrop-blur-sm dark:shadow-sky-950/60 dark:ring-sky-900/30",
                   "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
                 )}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-sky-200 via-white to-sky-200 dark:from-sky-800 dark:via-sky-600 dark:to-sky-800"
+                />
+                <Snowflake className="pointer-events-none absolute -z-10 -left-3 -top-3 h-16 w-16 text-sky-100 dark:text-sky-900" />
+                <Snowflake className="pointer-events-none absolute -z-10 right-6 top-6 h-6 w-6 text-sky-200 dark:text-sky-800" />
+                <Snowflake className="pointer-events-none absolute -z-10 -bottom-4 -right-4 h-20 w-20 text-sky-100 dark:text-sky-900" />
                 {!isFeedbackMode && (
                   <>
                     <div
-                      className={classNames(isRoundRobin && "min-h-24 min-w-32 relative mx-auto h-24 w-32")}>
+                      className={classNames("relative", isRoundRobin && "min-h-24 min-w-32 relative mx-auto h-24 w-32")}>
                       {isRoundRobin && bookingInfo.user && (
                         <Avatar
                           className="mx-auto flex items-center justify-center"
@@ -523,11 +538,11 @@ export default function Success(props: PageProps) {
                       )}
                       <div
                         className={classNames(
-                          "mx-auto flex h-12 w-12 items-center justify-center rounded-full",
+                          "mx-auto flex h-12 w-12 items-center justify-center rounded-full ring-4 ring-sky-100 dark:ring-sky-900/50",
                           isRoundRobin &&
                             "border-cal-bg dark:border-cal-bg-muted absolute bottom-0 right-0 z-10 h-12 w-12 border-8",
                           !giphyImage && isReschedulable && !needsConfirmation && !isAwaitingPayment
-                            ? "bg-cal-success"
+                            ? "bg-sky-100 dark:bg-sky-900"
                             : "",
                           !giphyImage && isReschedulable && (needsConfirmation || isAwaitingPayment)
                             ? "bg-subtle"
@@ -535,7 +550,7 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon name="check" className="h-5 w-5 text-sky-600 dark:text-sky-300" />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -543,9 +558,9 @@ export default function Success(props: PageProps) {
                         {isCancelled && <Icon name="x" className="h-5 w-5 text-red-600 dark:text-red-200" />}
                       </div>
                     </div>
-                    <div className="mb-8 mt-6 text-center last:mb-0">
+                    <div className="relative mb-8 mt-6 text-center last:mb-0">
                       <h3
-                        className="text-emphasis text-2xl font-semibold leading-6"
+                        className="text-2xl font-semibold leading-6 text-sky-900 dark:text-sky-100"
                         data-testid={isCancelled ? "cancelled-headline" : ""}
                         id="modal-headline">
                         {successPageHeadline}
@@ -553,12 +568,21 @@ export default function Success(props: PageProps) {
 
                       <div className="mt-3">
                         <p className="text-default">{getTitle()}</p>
+                        <div
+                          aria-hidden="true"
+                          className="mt-4 flex items-center justify-center gap-2 text-sky-300 dark:text-sky-700">
+                          <span className="h-px w-10 bg-sky-200 dark:bg-sky-800" />
+                          <Snowflake className="h-3 w-3" />
+                          <Snowflake className="h-4 w-4 text-sky-400 dark:text-sky-500" />
+                          <Snowflake className="h-3 w-3" />
+                          <span className="h-px w-10 bg-sky-200 dark:bg-sky-800" />
+                        </div>
                       </div>
                       {props.paymentStatus &&
                         (bookingInfo.status === BookingStatus.CANCELLED ||
                           bookingInfo.status === BookingStatus.REJECTED) && <h4>{paymentStatusMessage}</h4>}
 
-                      <div className="border-subtle text-default mt-8 grid grid-cols-3 gap-x-4 border-t pt-8 text-left rtl:text-right sm:gap-x-0">
+                      <div className="text-default mt-8 grid grid-cols-3 gap-x-4 border-t border-sky-100 pt-8 dark:border-sky-900 text-left rtl:text-right sm:gap-x-0">
                         {(isCancelled || reschedule) && cancellationReason && (
                           <>
                             <div className="font-medium">
@@ -833,7 +857,7 @@ export default function Success(props: PageProps) {
                     </div>
                     {requiresLoginToUpdate && (
                       <>
-                        <hr className="border-subtle mb-8" />
+                        <hr className="mb-8 border-sky-100 dark:border-sky-900" />
                         <div className="text-center">
                           <span className="text-emphasis ltr:mr-2 rtl:ml-2">
                             {t("need_to_make_a_change")}
@@ -865,7 +889,7 @@ export default function Success(props: PageProps) {
                             canReschedule) ||
                             (!isBookingInPast && canCancel)) && (
                             <>
-                              <hr className="border-subtle mb-8" />
+                              <hr className="mb-8 border-sky-100 dark:border-sky-900" />
                               <div className="text-center last:pb-0">
                                 <span className="text-emphasis ltr:mr-2 rtl:ml-2">
                                   {t("need_to_make_a_change")}
@@ -883,7 +907,7 @@ export default function Success(props: PageProps) {
                                               ? `?rescheduledBy=${encodeURIComponent(currentUserEmail)}`
                                               : ""
                                           }`}
-                                          className="underline"
+                                          className="text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:decoration-sky-700"
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
@@ -897,7 +921,7 @@ export default function Success(props: PageProps) {
                                     <button
                                       data-testid="cancel"
                                       className={classNames(
-                                        "text-default underline",
+                                        "text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:decoration-sky-700",
                                         props.recurringBookings && "ltr:mr-2 rtl:ml-2"
                                       )}
                                       onClick={() => setIsCancellationMode(true)}>
@@ -951,7 +975,7 @@ export default function Success(props: PageProps) {
                     )}
                     {!needsConfirmation && !isCancellationMode && isReschedulable && !!calculatedDuration && (
                       <>
-                        <hr className="border-subtle mt-8" />
+                        <hr className="mt-8 border-sky-100 dark:border-sky-900" />
                         <div className="text-default align-center flex flex-row justify-center pt-8">
                           <span className="text-default flex self-center font-medium ltr:mr-2 rtl:ml-2 ">
                             {t("add_to_calendar")}
@@ -960,7 +984,7 @@ export default function Success(props: PageProps) {
                             {googleCalendarLink && (
                               <Link
                                 href={googleCalendarLink}
-                                className="text-default border-subtle h-10 w-10 rounded-sm border px-3 py-2 ltr:mr-2 rtl:ml-2"
+                                className="h-10 w-10 rounded-md border border-sky-200 bg-sky-50/70 px-3 py-2 text-sky-700 transition hover:border-sky-300 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300 ltr:mr-2 rtl:ml-2"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 inline-block h-4 w-4"
@@ -975,7 +999,7 @@ export default function Success(props: PageProps) {
                             {microsoftOutlookLink && (
                               <Link
                                 href={microsoftOutlookLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-md border border-sky-200 bg-sky-50/70 px-3 py-2 text-sky-700 transition hover:border-sky-300 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -990,7 +1014,7 @@ export default function Success(props: PageProps) {
                             {microsoftOfficeLink && (
                               <Link
                                 href={microsoftOfficeLink}
-                                className="text-default border-subtle mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-md border border-sky-200 bg-sky-50/70 px-3 py-2 text-sky-700 transition hover:border-sky-300 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
                                 target="_blank">
                                 <svg
                                   className="-mt-1.5 mr-1 inline-block h-4 w-4"
@@ -1005,7 +1029,7 @@ export default function Success(props: PageProps) {
                             {icsLink && (
                               <Link
                                 href={icsLink}
-                                className="border-subtle text-default mx-2 h-10 w-10 rounded-sm border px-3 py-2"
+                                className="mx-2 h-10 w-10 rounded-md border border-sky-200 bg-sky-50/70 px-3 py-2 text-sky-700 transition hover:border-sky-300 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
                                 download={`${eventType.title}.ics`}>
                                 <svg
                                   version="1.1"
@@ -1025,7 +1049,7 @@ export default function Success(props: PageProps) {
 
                     {session === null && !(userIsOwner || props.hideBranding) && (
                       <>
-                        <hr className="border-subtle mt-8" />
+                        <hr className="mt-8 border-sky-100 dark:border-sky-900" />
                         <div className="text-default pt-8 text-center text-xs">
                           <a href="https://cal.com/signup">
                             {t("create_booking_link_with_calcom", { appName: APP_NAME })}
