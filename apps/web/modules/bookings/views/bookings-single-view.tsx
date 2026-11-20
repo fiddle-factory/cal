@@ -61,6 +61,8 @@ import CancelBooking from "@calcom/web/components/booking/CancelBooking";
 import EventReservationSchema from "@calcom/web/components/schemas/EventReservationSchema";
 import { timeZone } from "@calcom/web/lib/clock";
 
+import { ChristmasLights, christmasThemeStyle } from "../components/ChristmasTheme";
+import type { SeasonalTheme } from "../components/ChristmasTheme";
 import { usePaymentStatus } from "../hooks/usePaymentStatus";
 import type { PageProps } from "./bookings-single-view.getServerSideProps";
 
@@ -99,7 +101,7 @@ const useBrandColors = ({
   useCalcomTheme(brandTheme);
 };
 
-export default function Success(props: PageProps) {
+export default function Success(props: PageProps & { seasonalTheme?: SeasonalTheme }) {
   const { t } = useLocale();
   const router = useRouter();
   const routerQuery = useRouterQuery();
@@ -114,6 +116,7 @@ export default function Success(props: PageProps) {
     rescheduledToUid,
     canViewHiddenData,
   } = props;
+  const isChristmas = props.seasonalTheme === "christmas";
 
   const {
     allRemainingBookings,
@@ -500,11 +503,14 @@ export default function Success(props: PageProps) {
                   "inline-block transform overflow-hidden rounded-lg border sm:my-8 sm:max-w-xl",
                   !isBackgroundTransparent &&
                     " bg-default dark:bg-cal-muted border-booker border-booker-width",
-                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle"
+                  "px-8 pb-4 pt-5 text-left align-bottom transition-all sm:w-full sm:py-8 sm:align-middle",
+                  isChristmas && "relative rounded-xl pt-14 sm:pt-16"
                 )}
+                style={isChristmas ? christmasThemeStyle : undefined}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-headline">
+                {isChristmas && <ChristmasLights />}
                 {!isFeedbackMode && (
                   <>
                     <div
@@ -535,7 +541,13 @@ export default function Success(props: PageProps) {
                           isCancelled ? "bg-error" : ""
                         )}>
                         {!giphyImage && !needsConfirmation && !isAwaitingPayment && isReschedulable && (
-                          <Icon name="check" className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          <Icon
+                            name="check"
+                            className={classNames(
+                              "h-5 w-5",
+                              isChristmas ? "text-emphasis" : "text-green-600 dark:text-green-400"
+                            )}
+                          />
                         )}
                         {(needsConfirmation || isAwaitingPayment) && isReschedulable && (
                           <Icon name="calendar" className="text-emphasis h-5 w-5" />
@@ -883,7 +895,7 @@ export default function Success(props: PageProps) {
                                               ? `?rescheduledBy=${encodeURIComponent(currentUserEmail)}`
                                               : ""
                                           }`}
-                                          className="underline"
+                                          className={classNames("underline", isChristmas && "text-emphasis")}
                                           data-testid="reschedule-link">
                                           {t("reschedule")}
                                         </Link>
@@ -897,7 +909,8 @@ export default function Success(props: PageProps) {
                                     <button
                                       data-testid="cancel"
                                       className={classNames(
-                                        "text-default underline",
+                                        "underline",
+                                        isChristmas ? "text-emphasis" : "text-default",
                                         props.recurringBookings && "ltr:mr-2 rtl:ml-2"
                                       )}
                                       onClick={() => setIsCancellationMode(true)}>
