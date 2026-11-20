@@ -37,6 +37,8 @@ const SNOWFALL_KEYFRAMES = `
 }
 `;
 
+const BASE_FALL_SECONDS = 14;
+
 // Deterministic pseudo-random so server and client render the same flakes.
 const seeded = (i: number, salt: number) => {
   const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
@@ -48,7 +50,7 @@ export const WinterSnowfall = () => {
   const [showSnow, setShowSnow] = useState(true);
   const [snowColor, setSnowColor] = useState("#bae6fd");
   const [flakeCount, setFlakeCount] = useState(36);
-  const [fallDuration, setFallDuration] = useState(14);
+  const [fallSpeed, setFallSpeed] = useState(1);
   const [flakeOpacity, setFlakeOpacity] = useState(0.8);
   const [flakeSize, setFlakeSize] = useState(16);
 
@@ -61,7 +63,7 @@ export const WinterSnowfall = () => {
       if (typeof p.showSnow === "boolean") setShowSnow(p.showSnow);
       if (typeof p.snowColor === "string") setSnowColor(p.snowColor);
       if (typeof p.flakeCount === "number") setFlakeCount(p.flakeCount);
-      if (typeof p.fallDuration === "number") setFallDuration(p.fallDuration);
+      if (typeof p.fallSpeed === "number") setFallSpeed(p.fallSpeed);
       if (typeof p.flakeOpacity === "number") setFlakeOpacity(p.flakeOpacity);
       if (typeof p.flakeSize === "number") setFlakeSize(p.flakeSize);
     };
@@ -91,7 +93,8 @@ export const WinterSnowfall = () => {
       <style>{SNOWFALL_KEYFRAMES}</style>
       {showSnow &&
         flakes.map((flake, i) => {
-          const duration = fallDuration * flake.speed;
+          // Higher fall speed = shorter loop; base loop is ~14s at speed 1.
+          const duration = (BASE_FALL_SECONDS / Math.max(0.1, fallSpeed)) * flake.speed;
           return (
             <Snowflake
               key={i}
